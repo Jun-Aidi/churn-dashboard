@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background-color: #f5f3ee;
+    color: #1a1710;
+  }
+
+  #root {
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #e8e4da;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #c9a84c;
+  }
+}
+
+@layer components {
+  /* ── Fade in animation ── */
+  .fade-in {
+    animation: fadeIn 0.35s ease both;
+  }
+
+  .stagger-1 { animation-delay: 0.05s; }
+  .stagger-2 { animation-delay: 0.1s; }
+  .stagger-3 { animation-delay: 0.15s; }
+  .stagger-4 { animation-delay: 0.2s; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Progress bar animation ── */
+  .bar-animated {
+    transition: width 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  /* ── Risk badge ── */
+  .risk-badge {
+    @apply inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full;
+  }
+  .risk-badge-high {
+    @apply bg-high-bg text-high;
+  }
+  .risk-badge-med {
+    @apply bg-med-bg text-med;
+  }
+  .risk-badge-low {
+    @apply bg-low-bg text-low;
+  }
+
+  /* ── Btn base ── */
+  .btn {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-[9px] text-sm font-semibold cursor-pointer border-none transition-all duration-150 font-sans;
+  }
+  .btn-accent {
+    @apply bg-accent text-text hover:bg-[#b8962f];
+  }
+  .btn-ghost {
+    @apply bg-card text-text border border-border hover:bg-border;
+  }
+
+  /* ── Recharts custom tooltip ── */
+  .custom-tooltip {
+    @apply bg-card border border-border rounded-[9px] px-3 py-2 shadow-card text-xs font-sans;
+  }
+}
