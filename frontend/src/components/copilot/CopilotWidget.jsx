@@ -7,7 +7,7 @@ export default function CopilotWidget() {
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState([{
     id: 1, sender: 'bot', time: new Date(),
-    text: 'Halo! Saya Ghosting <i class="fa-solid fa-rocket" style="color: #4f8ef7;"></i>. Ada yang bisa saya bantu hari ini?',
+    text: 'Halo! Saya Ghosting <i class="fa-solid fa-comment-dots" style="color: #4f8ef7;"></i>. Ada yang bisa saya bantu hari ini?',
   }]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -37,7 +37,7 @@ export default function CopilotWidget() {
     <button onClick={() => setIsOpen(true)}
       className="fade-in fixed bottom-6 right-6 z-[9999] w-[60px] h-[60px] rounded-full border-none text-white flex items-center justify-center cursor-pointer hover:scale-105 transition-transform duration-200"
       style={{ background: 'linear-gradient(135deg, #4f8ef7 0%, #3b6fe0 100%)', boxShadow: '0 8px 24px rgba(79,142,247,0.4)' }}>
-      <i className="fa-solid fa-rocket text-2xl"></i>
+      <i className="fa-solid fa-comment-dots text-2xl"></i>
       <div className="absolute -top-[5px] -right-[5px] w-3.5 h-3.5 bg-red-600 rounded-full border-2 border-white" />
     </button>
   );
@@ -51,7 +51,7 @@ export default function CopilotWidget() {
         style={{ background: 'linear-gradient(135deg, #4f8ef7 0%, #3b6fe0 100%)' }}>
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-            <i className="fa-solid fa-rocket text-[18px]"></i>
+            <i className="fa-solid fa-comment-dots text-[18px]"></i>
           </div>
           <div>
             <div className="text-[15px] font-bold">Ghosting</div>
@@ -79,7 +79,7 @@ export default function CopilotWidget() {
                 style={{ alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start', flexDirection: msg.sender === 'user' ? 'row-reverse' : 'row' }}>
                 <div className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center"
                   style={{ background: msg.sender === 'user' ? 'var(--color-hover)' : '#e0e7ff', color: msg.sender === 'user' ? 'var(--color-muted)' : '#4f8ef7' }}>
-                  <i className={`fa-solid ${msg.sender === 'user' ? 'fa-user' : 'fa-rocket'} text-sm`}></i>
+                  <i className={`fa-solid ${msg.sender === 'user' ? 'fa-user' : 'fa-user-circle'} text-sm`}></i>
                 </div>
                 <div className="px-4 py-3 text-[13.5px] leading-relaxed whitespace-pre-wrap"
                   style={{
@@ -101,7 +101,7 @@ export default function CopilotWidget() {
             {isTyping && (
               <div className="flex gap-2.5 self-start">
                 <div className="w-7 h-7 rounded-full bg-[#e0e7ff] text-[#4f8ef7] flex items-center justify-center">
-                  <i className="fa-solid fa-rocket text-sm"></i>
+                  <i className="fa-solid fa-user-circle text-sm"></i>
                 </div>
                 <div className="px-4 py-3 rounded-[2px_14px_14px_14px] flex gap-1 items-center"
                   style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
