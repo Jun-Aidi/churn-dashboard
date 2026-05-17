@@ -37,7 +37,7 @@ backend/ml/models/*.h5
 backend/ml/models/*.pt
 
 # Dataset (biasanya besar)
-backend/data/*.csv
+# backend/data/*.csv  — tracked for development
 backend/data/*.xlsx
 backend/data/*.parquet
 

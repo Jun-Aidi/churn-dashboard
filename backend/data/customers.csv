@@ -1,0 +1,10 @@
+customer_id,plan_type,contract_type,tenure_months,monthly_revenue,monthly_usage_hrs,total_users,feature_adoption_pct,support_tickets_last_90d,last_login_days_ago,nps_score,payment_delay_count,churned
+C-0001,Starter,Monthly,19,112.58,20.1,4,73.6,0,34,0,4,1
+C-0002,Starter,Annual,14,89.52,25.6,1,54.8,15,67,7,1,1
+C-0003,Professional,Annual,23,797.96,136.1,9,66,1,36,1,5,0
+C-0004,Starter,Monthly,25,57.24,16.2,2,15.2,11,37,4,0,1
+C-0005,Starter,Monthly,28,58.13,12.5,1,63.6,6,11,3,3,0
+C-0006,Professional,Annual,44,745.1,24.1,10,89,15,52,7,3,0
+C-0007,Professional,Annual,22,659.15,79.3,12,40.4,9,42,9,0,1
+C-0008,Enterprise,Monthly,40,2189.46,265.2,42,27.2,3,13,0,1,1
+C-0009,Starter,Monthly,14,85.26,4.9,5,72.2,4,24,3,1,0
