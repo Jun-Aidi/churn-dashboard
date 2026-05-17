@@ -57,6 +57,8 @@
     margin: 0;
     padding: 0;
     min-height: 100vh;
+    overflow-x: hidden;
+    max-width: 100%;
   }
 
   body {
@@ -142,6 +144,22 @@
     color: var(--color-text);
   }
 
+  /* ── Recharts dark mode overrides ── */
+  .dark .recharts-surface,
+  .dark .recharts-wrapper {
+    background: transparent !important;
+  }
+  .dark .recharts-cartesian-grid-bg,
+  .dark .recharts-rectangle.recharts-cartesian-grid-bg {
+    fill: transparent !important;
+  }
+
+  /* ── Recharts: disable hover background rectangle globally ── */
+  .recharts-bar-background-rectangle,
+  .recharts-rectangle.recharts-bar-background-rectangle {
+    display: none !important;
+  }
+
   /* ── Page header ── */
   .page-header {
     display: flex;
@@ -214,8 +232,31 @@
   .grid-detail      { grid-template-columns: 1fr; }
   .grid-predict     { grid-template-columns: 1fr; }
 }
-@media (max-width: 600px) {
-  .grid-stat-cards  { grid-template-columns: 1fr; }
+@media (max-width: 640px) {
+  .grid-stat-cards  { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+  .grid-charts      { gap: 12px; margin-bottom: 16px; }
+  .grid-score-tiers { grid-template-columns: 1fr; gap: 8px; }
   .grid-customers   { grid-template-columns: 1fr; }
-  .grid-score-tiers { grid-template-columns: 1fr; }
+  .grid-detail      { grid-template-columns: 1fr; gap: 12px; }
+  .grid-predict     { grid-template-columns: 1fr; gap: 12px; }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .page-header > div:last-child {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .page-title  { font-size: 18px; }
+  .page-subtitle { font-size: 12px; }
+
+  .btn { font-size: 12.5px; padding: 7px 12px; }
+}
+@media (max-width: 420px) {
+  .grid-stat-cards  { grid-template-columns: 1fr; }
 }

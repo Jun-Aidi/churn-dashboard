@@ -15,7 +15,8 @@ export default function ModelComparison() {
           <h1 className="page-title">Perbandingan Model</h1>
           <p className="page-subtitle">Evaluasi performa model prediksi churn</p>
         </div>
-        <div className="flex items-center gap-2 bg-[#eff6ff] border border-[#bfdbfe] rounded-[10px] px-3.5 py-2 text-[12.5px] text-blue-600 font-semibold">
+        <div className="flex items-center gap-2 rounded-[10px] px-3.5 py-2 text-[12.5px] font-semibold"
+          style={{ background: 'rgba(79,142,247,0.12)', color: '#4f8ef7', border: '1px solid rgba(79,142,247,0.25)' }}>
           <i className="fa-solid fa-brain"></i> Machine Learning Models
         </div>
       </div>

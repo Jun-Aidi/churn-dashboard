@@ -3,22 +3,22 @@ import Badge from '../components/ui/Badge';
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const cardStyle = {
-  background: '#ffffff',
+  background: 'var(--color-card)',
   borderRadius: 14,
   padding: '22px 24px',
-  boxShadow: '0 1px 6px rgba(0,0,0,0.05)',
-  border: '1px solid #eef0f4',
+  boxShadow: 'var(--color-card-shadow)',
+  border: '1px solid var(--color-border)',
 };
 
 const inputStyle = {
   width: '100%',
-  background: '#f9fafb',
-  border: '1px solid #e5e7eb',
+  background: 'var(--color-input)',
+  border: '1px solid var(--color-border-input)',
   borderRadius: 9,
   padding: '10px 14px',
   fontFamily: 'Inter, sans-serif',
   fontSize: 13,
-  color: '#111827',
+  color: 'var(--color-text)',
   outline: 'none',
   boxSizing: 'border-box',
 };
@@ -26,7 +26,7 @@ const inputStyle = {
 const labelStyle = {
   fontSize: 11.5,
   fontWeight: 600,
-  color: '#8a8270',
+  color: 'var(--color-subtle)',
   display: 'block',
   marginBottom: 6,
   textTransform: 'uppercase',
@@ -212,20 +212,20 @@ export default function Predict() {
         {/* Model badge */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
-          background: '#eff6ff', border: '1px solid #bfdbfe',
+          background: 'rgba(79,142,247,0.12)', border: '1px solid rgba(79,142,247,0.25)',
           borderRadius: 10, padding: '8px 14px',
-          fontSize: 12.5, color: '#2563eb', fontWeight: 600,
+          fontSize: 12.5, color: '#4f8ef7', fontWeight: 600,
         }}>
           <i className="fa-solid fa-robot"></i> Random Forest Model &nbsp;
-          <span style={{ fontWeight: 400, color: '#60a5fa' }}>AUC ≈ 0.91</span>
+          <span style={{ fontWeight: 400, color: '#93bbfb' }}>AUC ≈ 0.91</span>
         </div>
       </div>
 
       <div className="grid-predict">
         {/* ── Input Form ──────────────────────────────────────────────────────── */}
         <div style={cardStyle}>
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Data Pelanggan</div>
-          <div style={{ fontSize: 13, color: '#9ca3af', marginBottom: 20 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4, color: 'var(--color-text)' }}>Data Pelanggan</div>
+          <div style={{ fontSize: 13, color: 'var(--color-muted)', marginBottom: 20 }}>
             Masukkan 11 fitur pelanggan untuk prediksi churn
           </div>
 
@@ -242,12 +242,12 @@ export default function Predict() {
                   style={inputStyle}
                   title={f.hint}
                   onFocus={e  => e.target.style.borderColor = '#4f8ef7'}
-                  onBlur={e   => e.target.style.borderColor = '#e5e7eb'}
+                  onBlur={e   => e.target.style.borderColor = 'var(--color-border-input)'}
                   min="0"
                   step="any"
                 />
                 {f.hint && (
-                  <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 3 }}>
+                  <div style={{ fontSize: 11, color: 'var(--color-subtle)', marginTop: 3 }}>
                     <i className="fa-regular fa-lightbulb"></i> {f.hint}
                   </div>
                 )}
@@ -257,7 +257,7 @@ export default function Predict() {
             {/* Error message */}
             {error && (
               <div style={{
-                background: '#fef2f2', border: '1px solid #fecaca',
+                background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.3)',
                 borderRadius: 9, padding: '10px 14px',
                 fontSize: 12.5, color: '#dc2626',
               }}>
@@ -295,17 +295,18 @@ export default function Predict() {
               ...cardStyle,
               display: 'flex', flexDirection: 'column',
               alignItems: 'center', justifyContent: 'center',
-              minHeight: 360, color: '#8a8270', textAlign: 'center',
+              minHeight: 360, color: 'var(--color-subtle)', textAlign: 'center',
             }}>
               <div style={{ fontSize: 56, marginBottom: 16 }}><i className="fa-solid fa-wand-magic-sparkles"></i></div>
-              <div style={{ fontSize: 14, fontWeight: 600 }}>Hasil Prediksi</div>
-              <div style={{ fontSize: 13, marginTop: 4, maxWidth: 260 }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)' }}>Hasil Prediksi</div>
+              <div style={{ fontSize: 13, marginTop: 4, maxWidth: 260, color: 'var(--color-muted)' }}>
                 Lengkapi semua field di kiri dan klik "Prediksi Sekarang" untuk melihat analisis model
               </div>
               <div style={{
                 marginTop: 20, padding: '10px 18px',
-                background: '#eff6ff', borderRadius: 9,
-                fontSize: 12, color: '#2563eb',
+                background: 'rgba(79,142,247,0.12)', borderRadius: 9,
+                fontSize: 12, color: '#4f8ef7',
+                border: '1px solid rgba(79,142,247,0.2)',
               }}>
                 <i className="fa-solid fa-robot"></i> Powered by Random Forest Classifier
               </div>
@@ -314,7 +315,7 @@ export default function Predict() {
             <>
               {/* ── Probability Score Card ─────────────────────────────────── */}
               <div style={{ ...cardStyle, marginBottom: 16 }}>
-                <div style={{ fontSize: 13.5, fontWeight: 700, marginBottom: 16 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 700, marginBottom: 16, color: 'var(--color-text)' }}>
                   🎯 Hasil Prediksi Model
                 </div>
 
@@ -325,8 +326,8 @@ export default function Predict() {
                     width: 96, height: 96, borderRadius: 16,
                     display: 'flex', flexDirection: 'column',
                     alignItems: 'center', justifyContent: 'center',
-                    background: result.risk.level === 'high' ? '#fdf0f0'
-                              : result.risk.level === 'med'  ? '#fdf9ee' : '#edfaf2',
+                    background: result.risk.level === 'high' ? 'rgba(220,38,38,0.12)'
+                              : result.risk.level === 'med'  ? 'rgba(217,119,6,0.12)' : 'rgba(22,163,74,0.12)',
                     border: `2.5px solid ${result.risk.color}`,
                     flexShrink: 0,
                   }}>
@@ -337,7 +338,7 @@ export default function Predict() {
                     }}>
                       {probPct}%
                     </span>
-                    <span style={{ fontSize: 10, color: '#8a8270', marginTop: 3 }}>
+                    <span style={{ fontSize: 10, color: 'var(--color-subtle)', marginTop: 3 }}>
                       churn prob.
                     </span>
                   </div>
@@ -345,7 +346,7 @@ export default function Predict() {
                   {/* Risk label */}
                   <div>
                     <Badge riskObj={riskObj} />
-                    <div style={{ fontSize: 12.5, color: '#8a8270', marginTop: 10, lineHeight: 1.5 }}>
+                    <div style={{ fontSize: 12.5, color: 'var(--color-muted)', marginTop: 10, lineHeight: 1.5 }}>
                       {result.risk.level === 'high'
                         ? <><i className="fa-solid fa-triangle-exclamation"></i> Pelanggan ini berisiko tinggi untuk churn. Segera ambil tindakan!</>
                         : result.risk.level === 'med'
@@ -353,7 +354,7 @@ export default function Predict() {
                         : <><i className="fa-solid fa-check"></i> Pelanggan dalam kondisi baik. Pertahankan layanan.</>
                       }
                     </div>
-                    <div style={{ fontSize: 11.5, color: '#9ca3af', marginTop: 6 }}>
+                    <div style={{ fontSize: 11.5, color: 'var(--color-subtle)', marginTop: 6 }}>
                       Prediksi: <strong style={{ color: result.churn_prediction === 1 ? '#dc2626' : '#16a34a' }}>
                         {result.churn_prediction === 1 ? 'CHURN' : 'TIDAK CHURN'}
                       </strong>
@@ -363,13 +364,13 @@ export default function Predict() {
 
                 {/* Probability bar */}
                 <div style={{ marginBottom: 4 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#9ca3af', marginBottom: 6 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--color-subtle)', marginBottom: 6 }}>
                     <span>Probabilitas Churn</span>
                     <span style={{ fontFamily: 'DM Mono, monospace', fontWeight: 700, color: result.risk.color }}>
                       {(result.churn_probability * 100).toFixed(1)}%
                     </span>
                   </div>
-                  <div style={{ height: 10, background: '#e8e4da', borderRadius: 6, overflow: 'hidden' }}>
+                  <div style={{ height: 10, background: 'var(--color-hover)', borderRadius: 6, overflow: 'hidden' }}>
                     <div style={{
                       height: '100%',
                       width: `${probPct}%`,
@@ -383,7 +384,7 @@ export default function Predict() {
 
               {/* ── Top Feature Importances ──────────────────────────────────── */}
               <div style={{ ...cardStyle, marginBottom: 16 }}>
-                <div style={{ fontSize: 13.5, fontWeight: 700, marginBottom: 14 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 700, marginBottom: 14, color: 'var(--color-text)' }}>
                   📊 Faktor Paling Berpengaruh
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -393,7 +394,7 @@ export default function Predict() {
                     return (
                       <div key={feat.name}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                          <span style={{ fontSize: 12.5, fontWeight: 600, color: '#374151' }}>
+                          <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--color-text)' }}>
                             {i + 1}. {feat.label}
                           </span>
                           <span style={{
@@ -403,7 +404,7 @@ export default function Predict() {
                             {(feat.importance * 100).toFixed(1)}%
                           </span>
                         </div>
-                        <div style={{ height: 6, background: '#f3f4f6', borderRadius: 4, overflow: 'hidden' }}>
+                        <div style={{ height: 6, background: 'var(--color-hover)', borderRadius: 4, overflow: 'hidden' }}>
                           <div style={{
                             height: '100%',
                             width: `${Math.min(100, pct * 5)}%`,
@@ -420,7 +421,7 @@ export default function Predict() {
 
               {/* ── Engineered Features ──────────────────────────────────────── */}
               <div style={cardStyle}>
-                <div style={{ fontSize: 13.5, fontWeight: 700, marginBottom: 14 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 700, marginBottom: 14, color: 'var(--color-text)' }}>
                   🔧 Fitur Turunan (Computed)
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -433,8 +434,8 @@ export default function Predict() {
                   ].map(item => (
                     <div key={item.key} style={{
                       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                      padding: '8px 12px', background: '#f9fafb',
-                      borderRadius: 8, border: '1px solid #eef0f4',
+                      padding: '8px 12px', background: 'var(--color-input)',
+                      borderRadius: 8, border: '1px solid var(--color-border)',
                     }}>
                       <span style={{ fontSize: 12.5, color: '#6b7280' }}>{item.label}</span>
                       <span style={{

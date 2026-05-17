@@ -26,7 +26,20 @@ export default function RiskDonutChart({ counts, total }) {
     <div className="flex items-center gap-5">
       {/* Donut */}
       <div style={{ width: 140, height: 140, position: 'relative', flexShrink: 0 }}>
-        <ResponsiveContainer width="100%" height="100%">
+        {/* Center text */}
+        <div
+          style={{
+            position: 'absolute', inset: 0,
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            pointerEvents: 'none',
+            zIndex: 0,
+          }}
+        >
+          <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text)', lineHeight: 1 }}>{total}</span>
+          <span style={{ fontSize: 9, color: 'var(--color-muted)', marginTop: 2 }}>pelanggan</span>
+        </div>
+        <ResponsiveContainer width="100%" height="100%" style={{ zIndex: 10, position: 'relative' }}>
           <PieChart>
             <Pie
               data={data}
@@ -40,21 +53,9 @@ export default function RiskDonutChart({ counts, total }) {
                 <Cell key={i} fill={entry.color} />
               ))}
             </Pie>
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={<CustomTooltip />} wrapperStyle={{ zIndex: 100 }} />
           </PieChart>
         </ResponsiveContainer>
-        {/* Center text */}
-        <div
-          style={{
-            position: 'absolute', inset: 0,
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center',
-            pointerEvents: 'none',
-          }}
-        >
-          <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text)', lineHeight: 1 }}>{total}</span>
-          <span style={{ fontSize: 9, color: 'var(--color-muted)', marginTop: 2 }}>pelanggan</span>
-        </div>
       </div>
 
       {/* Legend */}

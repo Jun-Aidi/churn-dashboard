@@ -19,14 +19,14 @@ export default function Layout() {
       <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div
-        className="flex flex-1 flex-col min-h-screen transition-[margin-left] duration-[250ms] ease-in-out"
-        style={{ marginLeft: 'var(--sidebar-w, 64px)' }}
+        className="layout-content flex flex-1 flex-col min-h-screen transition-[margin-left] duration-[250ms] ease-in-out"
+        style={{ marginLeft: 'var(--sidebar-w, 64px)', minWidth: 0, overflow: 'hidden' }}
       >
         <TopNavbar onMenuClick={() => setSidebarOpen(o => !o)} />
 
         <main
-          className="flex-1 mt-[60px] transition-colors duration-200"
-          style={{ padding: 'clamp(16px, 3vw, 28px) clamp(16px, 3vw, 32px)', background: 'var(--color-bg)' }}
+          className="flex-1 mt-[60px] transition-colors duration-200 w-full"
+          style={{ padding: 'clamp(12px, 3vw, 28px) clamp(12px, 3vw, 32px)', background: 'var(--color-bg)', maxWidth: '100%', overflowX: 'hidden' }}
         >
           <Outlet />
         </main>
@@ -35,6 +35,7 @@ export default function Layout() {
       <style>{`
         @media (max-width: 768px) {
           :root { --sidebar-w: 0px !important; }
+          .layout-content { margin-left: 0 !important; width: 100vw; }
         }
       `}</style>
     </div>

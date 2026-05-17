@@ -46,7 +46,7 @@ export async function processChat(message) {
     const customer = allCustomers.find(c => c.id === customerId);
     if (!customer) return `Pelanggan dengan ID **${customerId}** tidak ditemukan.`;
 
-    return `<i class="fa-solid fa-magnifying-glass" style="color: #4f8ef7;"></i> **Profil Lengkap ${customerId}**\n\n- **Paket:** ${customer.plan} (${customer.contract})\n- **Tenure:** ${customer.tenure} bulan\n- **NPS Score:** ${customer.nps}/10\n- **Tiket Support:** ${customer.tickets} tiket\n- **Keterlambatan Bayar:** ${customer.delay} hari\n- **Status Risiko:** **${customer.score}% (${customer.risk.label})**\n\n*Catatan Astra:* ${customer.nps < 6 ? 'NPS sangat rendah (Detractor), pelanggan ini kemungkinan sangat tidak puas dengan layanan kita.' : 'Pelanggan memiliki tingkat kepuasan yang lumayan, coba tawarkan insentif penggunaan fitur.'}`;
+    return `<i class="fa-solid fa-magnifying-glass" style="color: #4f8ef7;"></i> **Profil Lengkap ${customerId}**\n\n- **Paket:** ${customer.plan} (${customer.contract})\n- **Tenure:** ${customer.tenure} bulan\n- **NPS Score:** ${customer.nps}/10\n- **Tiket Support:** ${customer.tickets} tiket\n- **Keterlambatan Bayar:** ${customer.delay} hari\n- **Status Risiko:** **${customer.score}% (${customer.risk.label})**\n\n*Catatan Ghosting:* ${customer.nps < 6 ? 'NPS sangat rendah (Detractor), pelanggan ini kemungkinan sangat tidak puas dengan layanan kita.' : 'Pelanggan memiliki tingkat kepuasan yang lumayan, coba tawarkan insentif penggunaan fitur.'}`;
   }
 
   // ── Rule 5: Strategi Retensi Umum ──
@@ -65,12 +65,12 @@ export async function processChat(message) {
     if (!customer) return `Pelanggan dengan ID **${customerId}** tidak ditemukan di database.`;
 
     const riskColor = customer.score > 50 ? 'Tinggi' : 'Sedang';
-    return `Tentu, saya telah menganalisis pelanggan **${customerId}**.\n\n<i class="fa-solid fa-chart-column" style="color: #4f8ef7;"></i> **Analisis Astra:**\nPelanggan ini memiliki risiko churn **${riskColor}**. Mereka aktif ${customer.usage} jam/bulan namun belum login selama ${customer.lastLogin} hari.\n\nBerikut draf email penawaran yang dipersonalisasi:\n\n---\n\n**Subjek:** Kami Rindu Anda! Dapatkan Diskon Khusus untuk Upgrade Plan\n\n**Halo,**\n\nKami melihat Anda sudah ${customer.lastLogin} hari tidak mengunjungi dashboard kami. Kami memahami mungkin Anda sedang sibuk, tapi kami tidak ingin Anda melewatkan pembaruan fitur kami yang sangat berguna untuk efisiensi tim Anda.\n\nSebagai apresiasi karena Anda telah menggunakan layanan kami selama ${customer.tenure} bulan, kami memberikan **diskon eksklusif 20%** untuk perpanjangan langganan bulan ini.\n\nKlik tautan ini untuk mengaktifkan diskon Anda: [Tautan Promo]\n\nSalam Hangat,\nTim Customer Success\n\n---\n\nApakah draf ini ingin langsung disalin?`;
+    return `Tentu, saya telah menganalisis pelanggan **${customerId}**.\n\n<i class="fa-solid fa-chart-column" style="color: #4f8ef7;"></i> **Analisis Ghosting:**\nPelanggan ini memiliki risiko churn **${riskColor}**. Mereka aktif ${customer.usage} jam/bulan namun belum login selama ${customer.lastLogin} hari.\n\nBerikut draf email penawaran yang dipersonalisasi:\n\n---\n\n**Subjek:** Kami Rindu Anda! Dapatkan Diskon Khusus untuk Upgrade Plan\n\n**Halo,**\n\nKami melihat Anda sudah ${customer.lastLogin} hari tidak mengunjungi dashboard kami. Kami memahami mungkin Anda sedang sibuk, tapi kami tidak ingin Anda melewatkan pembaruan fitur kami yang sangat berguna untuk efisiensi tim Anda.\n\nSebagai apresiasi karena Anda telah menggunakan layanan kami selama ${customer.tenure} bulan, kami memberikan **diskon eksklusif 20%** untuk perpanjangan langganan bulan ini.\n\nKlik tautan ini untuk mengaktifkan diskon Anda: [Tautan Promo]\n\nSalam Hangat,\nTim Customer Success\n\n---\n\nApakah draf ini ingin langsung disalin?`;
   }
 
   // ── Rule 7: Sapaan / Greeting ──
   if (msg.includes('halo') || msg.includes('hai') || msg.includes('pagi') || msg.includes('siang') || msg.includes('malam') || msg.includes('hello')) {
-    return `Halo! Astra siap membantu <i class="fa-solid fa-robot" style="color: #4f8ef7;"></i>.\n\nAnda bisa mencoba bertanya:\n- *"Berapa jumlah pelanggan berisiko tinggi?"*\n- *"Siapa pelanggan VIP yang paling berisiko churn?"*\n- *"Tolong analisis profil C-0001"*`;
+    return `Halo! Ghosting siap membantu <i class="fa-solid fa-robot" style="color: #4f8ef7;"></i>.\n\nAnda bisa mencoba bertanya:\n- *"Berapa jumlah pelanggan berisiko tinggi?"*\n- *"Siapa pelanggan VIP yang paling berisiko churn?"*\n- *"Tolong analisis profil C-0001"*`;
   }
 
   // ── Fallback ──

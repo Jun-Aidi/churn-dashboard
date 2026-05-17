@@ -112,7 +112,7 @@ export default function Customers() {
                 </div>
                 <div className="mt-2.5">
                   <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full"
-                    style={{ background: c.churned ? '#fef2f2' : '#f0fdf4', color: c.churned ? '#dc2626' : '#16a34a' }}>
+                    style={{ background: c.churned ? 'rgba(220,38,38,0.15)' : 'rgba(22,163,74,0.15)', color: c.churned ? '#dc2626' : '#16a34a' }}>
                     {c.churned ? '✕ Churned' : '✓ Aktif'}
                   </span>
                 </div>

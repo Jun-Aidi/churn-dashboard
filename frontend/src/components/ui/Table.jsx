@@ -49,10 +49,8 @@ export default function Table({ customers }) {
                 <td className="px-3 py-[13px]">
                   <button
                     onClick={e => { e.stopPropagation(); navigate(`/customers/${c.id}`); }}
-                    className="text-[12.5px] font-semibold text-[#4f8ef7] bg-none border-none cursor-pointer px-2.5 py-1.5 rounded-md transition-[background] duration-150 font-[inherit]"
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(79,142,247,0.1)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                  >→ Detail</button>
+                    className="text-[12.5px] font-semibold text-[#4f8ef7] bg-transparent border-none cursor-pointer transition-opacity duration-150 font-[inherit] hover:opacity-70"
+                  >Detail <i className="fa-solid fa-angle-right ml-1"></i></button>
                 </td>
               </tr>
             );

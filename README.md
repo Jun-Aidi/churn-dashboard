@@ -77,7 +77,7 @@ churn-dashboard/
 │       │   │   ├── RiskDonutChart.jsx    # Donut chart distribusi risiko
 │       │   │   └── ModelCompareChart.jsx # Bar chart performa model
 │       │   ├── copilot/
-│       │   │   ├── CopilotWidget.jsx     # Chatbot Astra (FAB)
+│       │   │   ├── CopilotWidget.jsx     # Chatbot Ghosting (FAB)
 │       │   │   └── chatEngine.js         # Logika rule-based NLP
 │       │   └── ui/
 │       │       ├── Badge.jsx        # Badge risiko (Tinggi/Sedang/Rendah)
@@ -146,9 +146,9 @@ Buka browser dan akses: **http://localhost:5173**
 | **Prediksi Manual** | `/predict` | Input data pelanggan → hitung skor risiko secara lokal |
 | **Perbandingan Model** | `/model` | Metrik evaluasi model Random Forest (Accuracy, Precision, Recall, AUC) |
 
-### Astra — CS Copilot
+### Ghosting — CS Copilot
 
-Tombol 🚀 di pojok kanan bawah membuka chatbot **Astra**, asisten cerdas berbasis rule-based NLP yang dapat menjawab pertanyaan seputar faktor risiko, strategi retention, dan data pelanggan.
+Tombol 🚀 di pojok kanan bawah membuka chatbot **Ghosting**, asisten cerdas berbasis rule-based NLP yang dapat menjawab pertanyaan seputar faktor risiko, strategi retention, dan data pelanggan.
 
 ---
 

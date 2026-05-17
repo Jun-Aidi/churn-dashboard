@@ -7,7 +7,7 @@ export default function CopilotWidget() {
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState([{
     id: 1, sender: 'bot', time: new Date(),
-    text: 'Halo! Saya Astra <i class="fa-solid fa-rocket" style="color: #4f8ef7;"></i>. Ada yang bisa saya bantu hari ini?',
+    text: 'Halo! Saya Ghosting <i class="fa-solid fa-rocket" style="color: #4f8ef7;"></i>. Ada yang bisa saya bantu hari ini?',
   }]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -54,7 +54,7 @@ export default function CopilotWidget() {
             <i className="fa-solid fa-rocket text-[18px]"></i>
           </div>
           <div>
-            <div className="text-[15px] font-bold">Astra</div>
+            <div className="text-[15px] font-bold">Ghosting</div>
             <div className="text-[11px] opacity-90">Asisten cerdas pendukung retention</div>
           </div>
         </div>
@@ -128,7 +128,7 @@ export default function CopilotWidget() {
 
           {/* Input */}
           <form onSubmit={handleSend} className="p-4 flex gap-2.5 items-center flex-shrink-0 border-t" style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
-            <input type="text" value={input} onChange={e => setInput(e.target.value)} placeholder="Tanya Astra..."
+            <input type="text" value={input} onChange={e => setInput(e.target.value)} placeholder="Tanya Ghosting..."
               className="flex-1 px-4 py-2.5 rounded-full text-[13px] font-[inherit] outline-none border transition-[border-color] duration-150"
               style={{ background: 'var(--color-input)', borderColor: 'var(--color-border-input)', color: 'var(--color-text)' }} />
             <button type="submit" disabled={!input.trim() || isTyping}

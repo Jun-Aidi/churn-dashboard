@@ -3,16 +3,17 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import { useTrend } from '../../hooks/useTrend';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="custom-tooltip">
-      <div style={{ fontWeight: 600, marginBottom: 6, color: '#1a1710' }}>{label}</div>
+      <div style={{ fontWeight: 600, marginBottom: 6 }}>{label}</div>
       {payload.map(p => (
         <div key={p.dataKey} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: p.color, display: 'inline-block' }} />
-          <span style={{ color: '#8a8270' }}>{p.name}:</span>
+          <span style={{ color: 'var(--color-muted)' }}>{p.name}:</span>
           <span style={{ fontWeight: 600 }}>{p.value}</span>
         </div>
       ))}
@@ -22,10 +23,14 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 export default function ChurnTrendChart() {
   const { trendData, loading, error } = useTrend();
+  const { dark } = useTheme();
+
+  const gridColor = dark ? '#252f45' : '#e8e4da';
+  const tickColor = dark ? '#5d6e82' : '#8a8270';
 
   if (loading) {
     return (
-      <div style={{ height: 180, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: 13 }}>
+      <div style={{ height: 180, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-subtle)', fontSize: 13 }}>
         <i className="fa-solid fa-circle-notch fa-spin" style={{ marginRight: 8 }}></i> Memuat tren...
       </div>
     );
@@ -57,10 +62,10 @@ export default function ChurnTrendChart() {
               <stop offset="95%" stopColor="#2da44e" stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e8e4da" vertical={false} />
-          <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#8a8270', fontFamily: 'DM Sans' }} axisLine={false} tickLine={false} />
-          <YAxis tick={{ fontSize: 11, fill: '#8a8270', fontFamily: 'DM Sans' }} axisLine={false} tickLine={false} />
-          <Tooltip content={<CustomTooltip />} />
+          <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+          <XAxis dataKey="month" tick={{ fontSize: 11, fill: tickColor, fontFamily: 'DM Sans' }} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fontSize: 11, fill: tickColor, fontFamily: 'DM Sans' }} axisLine={false} tickLine={false} />
+          <Tooltip content={<CustomTooltip />} wrapperStyle={{ zIndex: 100 }} cursor={false} />
           <Area type="monotone" dataKey="high" name="Risiko Tinggi" stroke="#e03d3d" strokeWidth={2} fill="url(#gradHigh)" dot={{ r: 3, fill: '#e03d3d' }} activeDot={{ r: 5 }} />
           <Area type="monotone" dataKey="med"  name="Risiko Sedang" stroke="#d4a017" strokeWidth={2} fill="url(#gradMed)"  dot={{ r: 3, fill: '#d4a017' }} activeDot={{ r: 5 }} />
           <Area type="monotone" dataKey="low"  name="Risiko Rendah" stroke="#2da44e" strokeWidth={2} fill="url(#gradLow)"  dot={{ r: 3, fill: '#2da44e' }} activeDot={{ r: 5 }} />

@@ -7,14 +7,14 @@ const card = { background: 'var(--color-card)', borderRadius: 14, padding: '22px
 
 const sevColors = {
   critical: { border: '#dc2626', bg: 'rgba(220,38,38,0.08)', impact: { bg: 'rgba(220,38,38,0.15)', color: '#dc2626' }, bar: '#dc2626' },
-  warning:  { border: '#d97706', bg: 'rgba(217,119,6,0.08)',  impact: { bg: 'rgba(217,119,6,0.15)',  color: '#d97706' }, bar: '#d97706' },
-  caution:  { border: '#16a34a', bg: 'rgba(22,163,74,0.08)',  impact: { bg: 'rgba(22,163,74,0.15)',  color: '#16a34a' }, bar: '#16a34a' },
+  warning: { border: '#d97706', bg: 'rgba(217,119,6,0.08)', impact: { bg: 'rgba(217,119,6,0.15)', color: '#d97706' }, bar: '#d97706' },
+  caution: { border: '#16a34a', bg: 'rgba(22,163,74,0.08)', impact: { bg: 'rgba(22,163,74,0.15)', color: '#16a34a' }, bar: '#16a34a' },
 };
 const recoStyles = {
-  urgent:    { bg: 'rgba(220,38,38,0.08)',  border: 'rgba(220,38,38,0.2)',  tag: '#dc2626', label: 'URGENT' },
-  important: { bg: 'rgba(217,119,6,0.08)',  border: 'rgba(217,119,6,0.2)',  tag: '#d97706', label: 'PENTING' },
-  normal:    { bg: 'rgba(22,163,74,0.08)',  border: 'rgba(22,163,74,0.2)',  tag: '#16a34a', label: 'DISARANKAN' },
-  info:      { bg: 'rgba(79,142,247,0.08)', border: 'rgba(79,142,247,0.2)', tag: '#4f8ef7', label: 'INFO' },
+  urgent: { bg: 'rgba(220,38,38,0.08)', border: 'rgba(220,38,38,0.2)', tag: '#dc2626', label: 'URGENT' },
+  important: { bg: 'rgba(217,119,6,0.08)', border: 'rgba(217,119,6,0.2)', tag: '#d97706', label: 'PENTING' },
+  normal: { bg: 'rgba(22,163,74,0.08)', border: 'rgba(22,163,74,0.2)', tag: '#16a34a', label: 'DISARANKAN' },
+  info: { bg: 'rgba(79,142,247,0.08)', border: 'rgba(79,142,247,0.2)', tag: '#4f8ef7', label: 'INFO' },
 };
 
 export default function CustomerDetail() {
@@ -49,17 +49,17 @@ export default function CustomerDetail() {
   const factors = getFactors(customer);
   const recos = getRecos(customer);
   const rc = risk.cls === 'high' ? '#dc2626' : risk.cls === 'med' ? '#d97706' : '#16a34a';
-  const rb = risk.cls === 'high' ? '#fef2f2' : risk.cls === 'med' ? '#fffbeb' : '#f0fdf4';
+  const rb = risk.cls === 'high' ? 'rgba(220,38,38,0.15)' : risk.cls === 'med' ? 'rgba(217,119,6,0.15)' : 'rgba(22,163,74,0.15)';
 
   const infoData = [
-    { label: 'Tenure',       value: `${customer.tenure} bulan` },
-    { label: 'Revenue/Bln',  value: `Rp ${(customer.revenue * 16000 / 1000).toFixed(0)}rb` },
-    { label: 'Penggunaan',   value: `${customer.usage} jam/bln` },
+    { label: 'Tenure', value: `${customer.tenure} bulan` },
+    { label: 'Revenue/Bln', value: `Rp ${(customer.revenue * 16000 / 1000).toFixed(0)}rb` },
+    { label: 'Penggunaan', value: `${customer.usage} jam/bln` },
     { label: 'Adopsi Fitur', value: `${customer.adoption}%` },
-    { label: 'Tiket Support',value: `${customer.tickets} tiket` },
-    { label: 'Last Login',   value: `${customer.lastLogin} hari lalu` },
-    { label: 'NPS Score',    value: `${customer.nps}/10` },
-    { label: 'Status',       value: customer.churned ? 'Churned' : 'Aktif', color: customer.churned ? '#dc2626' : '#16a34a' },
+    { label: 'Tiket Support', value: `${customer.tickets} tiket` },
+    { label: 'Last Login', value: `${customer.lastLogin} hari lalu` },
+    { label: 'NPS Score', value: `${customer.nps}/10` },
+    { label: 'Status', value: customer.churned ? 'Churned' : 'Aktif', color: customer.churned ? '#dc2626' : '#16a34a' },
   ];
 
   return (
@@ -67,7 +67,7 @@ export default function CustomerDetail() {
       <div className="flex justify-between items-start mb-6">
         <div className="flex items-center gap-3.5">
           <button className="btn btn-ghost" style={{ fontSize: 13 }} onClick={() => navigate(-1)}>
-            <i className="fa-solid fa-arrow-left text-xs"></i> Kembali
+            <i className="fa-solid fa-angle-left text-xs"></i> Kembali
           </button>
           <div>
             <h1 className="page-title">Detail — {customer.name}</h1>
