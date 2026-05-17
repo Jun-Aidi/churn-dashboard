@@ -1,9 +1,9 @@
 import React from 'react';
 
 const styles = {
-  high: { background: '#fdf0f0', color: '#e03d3d' },
-  med:  { background: '#fdf9ee', color: '#d4a017' },
-  low:  { background: '#edfaf2', color: '#2da44e' },
+  high: { background: 'rgba(220,61,61,0.12)',  color: '#e03d3d' },
+  med:  { background: 'rgba(212,160,23,0.12)', color: '#d4a017' },
+  low:  { background: 'rgba(45,164,78,0.12)',  color: '#2da44e' },
 };
 
 /**

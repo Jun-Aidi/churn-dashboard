@@ -1,114 +1,96 @@
-import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, TrendingUp } from 'lucide-react';
+import React, { useState } from 'react';
+import { NavLink } from 'react-router-dom';
 
 const navItems = [
-  { to: '/',          label: 'Dashboard',  icon: LayoutDashboard, end: true },
-  { to: '/customers', label: 'Pelanggan',  icon: Users },
-  { to: '/predict',   label: 'Prediksi',   icon: TrendingUp },
+  { to: '/',          icon: 'fa-solid fa-gauge-high',          label: 'Dashboard', end: true },
+  { to: '/customers', icon: 'fa-solid fa-users',               label: 'Pelanggan' },
+  { to: '/predict',   icon: 'fa-solid fa-chart-line',          label: 'Prediksi' },
+  { to: '/model',     icon: 'fa-solid fa-brain',               label: 'Model' },
 ];
 
-export default function Sidebar() {
+const bottomItems = [
+  { icon: 'fa-solid fa-gear',               label: 'Pengaturan' },
+  { icon: 'fa-solid fa-right-from-bracket', label: 'Keluar' },
+];
+
+const Tooltip = ({ label }) => (
+  <div
+    className="absolute left-full top-1/2 -translate-y-1/2 ml-3.5 bg-[#1e2028] text-white text-xs font-medium px-[11px] py-[5px] rounded-lg whitespace-nowrap pointer-events-none z-[999] border border-white/[0.08]"
+    style={{ boxShadow: '0 4px 14px rgba(0,0,0,0.3)' }}
+  >
+    {label}
+    <span
+      className="absolute right-full top-1/2 -translate-y-1/2"
+      style={{ borderWidth: 5, borderStyle: 'solid', borderColor: 'transparent #1e2028 transparent transparent' }}
+    />
+  </div>
+);
+
+export default function Sidebar({ mobileOpen, onClose }) {
+  const [tooltip, setTooltip] = useState(null);
+
   return (
-    <nav
-      className="fixed top-0 left-0 z-50 flex flex-col"
-      style={{
-        width: 220,
-        minHeight: '100vh',
-        background: '#2a2418',
-        padding: '28px 0',
-      }}
-    >
+    <aside className="sidebar-aside fixed top-0 left-0 z-[100] w-16 min-h-screen bg-sidebar flex flex-col items-center pt-4 pb-5 border-r border-white/[0.06] transition-transform duration-[250ms] ease-in-out">
+
       {/* Logo */}
       <div
-        className="flex items-center gap-2.5 pb-7"
-        style={{
-          padding: '0 22px 28px',
-          borderBottom: '1px solid rgba(255,255,255,0.07)',
-        }}
+        className="w-9 h-9 rounded-[10px] flex items-center justify-center mb-7 flex-shrink-0 cursor-pointer"
+        style={{ background: 'linear-gradient(135deg, #4f8ef7 0%, #3b6fe0 100%)', boxShadow: '0 4px 12px rgba(79,142,247,0.4)' }}
       >
-        <div
-          className="flex items-center justify-center flex-shrink-0"
-          style={{
-            width: 34, height: 34,
-            background: '#c9a84c',
-            borderRadius: 9,
-            fontSize: 15,
-          }}
-        >
-          📈
-        </div>
-        <span
-          style={{
-            fontSize: 15, fontWeight: 700,
-            color: '#fff', letterSpacing: '-0.3px',
-          }}
-        >
-          ChurnPredict
-        </span>
+        <i className="fa-solid fa-gauge-high text-white text-base"></i>
       </div>
 
-      {/* Nav items */}
-      <div
-        className="flex-1 flex flex-col mt-5"
-        style={{ gap: 2, padding: '0 12px' }}
-      >
-        {navItems.map(({ to, label, icon: Icon, end }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={end}
-            className={({ isActive }) =>
-              `flex items-center gap-2.5 rounded-[9px] cursor-pointer select-none transition-all duration-150 ${
-                isActive
-                  ? 'font-semibold'
-                  : 'font-medium'
-              }`
-            }
-            style={({ isActive }) => ({
-              padding: '10px 12px',
-              fontSize: 13.5,
-              color: isActive ? '#1a1710' : 'rgba(255,255,255,0.55)',
-              background: isActive ? '#c9a84c' : 'transparent',
-              textDecoration: 'none',
-            })}
-            onMouseEnter={e => {
-              if (!e.currentTarget.classList.contains('active')) {
-                e.currentTarget.style.background = '#3d3526';
-                e.currentTarget.style.color = 'rgba(255,255,255,0.85)';
-              }
-            }}
-            onMouseLeave={e => {
-              const isActive = e.currentTarget.getAttribute('aria-current') === 'page';
-              if (!isActive) {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.color = 'rgba(255,255,255,0.55)';
-              }
-            }}
-          >
-            {({ isActive }) => (
-              <>
-                <Icon size={16} style={{ width: 18, flexShrink: 0 }} />
-                {label}
-              </>
-            )}
-          </NavLink>
+      {/* Nav */}
+      <nav className="flex-1 flex flex-col gap-1 w-full px-[10px]">
+        {navItems.map(({ to, icon, label, end }) => (
+          <div key={to} className="relative">
+            <NavLink
+              to={to}
+              end={end}
+              onClick={onClose}
+              onMouseEnter={() => setTooltip(label)}
+              onMouseLeave={() => setTooltip(null)}
+              className="sidebar-nav-item"
+              style={({ isActive }) => ({
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: 44, height: 44, borderRadius: 11, margin: '0 auto',
+                background: isActive ? 'linear-gradient(135deg, #4f8ef7 0%, #3b6fe0 100%)' : 'transparent',
+                color: isActive ? '#fff' : 'rgba(255,255,255,0.45)',
+                boxShadow: isActive ? '0 2px 10px rgba(79,142,247,0.4)' : 'none',
+                textDecoration: 'none', cursor: 'pointer', transition: 'all 0.15s ease',
+              })}
+            >
+              <i className={`${icon} text-[19px]`}></i>
+            </NavLink>
+            {tooltip === label && <Tooltip label={label} />}
+          </div>
+        ))}
+      </nav>
+
+      {/* Divider */}
+      <div className="w-8 h-px bg-white/[0.07] my-2" />
+
+      {/* Bottom items */}
+      <div className="flex flex-col gap-1 w-full px-[10px]">
+        {bottomItems.map(({ icon, label }) => (
+          <div key={label} className="relative">
+            <button
+              onMouseEnter={() => setTooltip(label)}
+              onMouseLeave={() => setTooltip(null)}
+              className="sidebar-nav-item flex items-center justify-center w-11 h-11 rounded-[11px] bg-transparent text-white/30 border-none cursor-pointer transition-all duration-150 mx-auto"
+            >
+              <i className={`${icon} text-[18px]`}></i>
+            </button>
+            {tooltip === label && <Tooltip label={label} />}
+          </div>
         ))}
       </div>
 
-      {/* Footer */}
-      <div
-        style={{
-          padding: '16px 22px 0',
-          borderTop: '1px solid rgba(255,255,255,0.07)',
-          fontSize: 11,
-          color: 'rgba(255,255,255,0.25)',
-          letterSpacing: '0.3px',
-          lineHeight: 1.6,
-        }}
-      >
-        Customer Churn Prediction<br />v2.1.0
-      </div>
-    </nav>
+      <style>{`
+        @media (max-width: 768px) {
+          .sidebar-aside { transform: ${mobileOpen ? 'translateX(0)' : 'translateX(-100%)'}; }
+        }
+      `}</style>
+    </aside>
   );
 }

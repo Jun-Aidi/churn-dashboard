@@ -1,6 +1,5 @@
 import React from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
-import { customers, getRiskClass } from '../../api/index';
 
 const COLORS = { high: '#e03d3d', med: '#d4a017', low: '#2da44e' };
 
@@ -15,20 +14,13 @@ const CustomTooltip = ({ active, payload }) => {
   );
 };
 
-export default function RiskDonutChart() {
-  const counts = customers.reduce((acc, c) => {
-    const { cls } = getRiskClass(c.score);
-    acc[cls] = (acc[cls] || 0) + 1;
-    return acc;
-  }, {});
-
+export default function RiskDonutChart({ counts, total }) {
+  // Use passed props from Dashboard instead of hardcoded data
   const data = [
-    { name: 'Risiko Tinggi', value: counts.high || 0, color: COLORS.high },
-    { name: 'Risiko Sedang', value: counts.med  || 0, color: COLORS.med  },
-    { name: 'Risiko Rendah', value: counts.low  || 0, color: COLORS.low  },
+    { name: 'Risiko Tinggi', value: counts?.high || 0, color: COLORS.high },
+    { name: 'Risiko Sedang', value: counts?.med  || 0, color: COLORS.med  },
+    { name: 'Risiko Rendah', value: counts?.low  || 0, color: COLORS.low  },
   ];
-
-  const total = customers.length;
 
   return (
     <div className="flex items-center gap-5">
@@ -60,8 +52,8 @@ export default function RiskDonutChart() {
             pointerEvents: 'none',
           }}
         >
-          <span style={{ fontSize: 20, fontWeight: 700, color: '#1a1710', lineHeight: 1 }}>{total}</span>
-          <span style={{ fontSize: 9, color: '#8a8270', marginTop: 2 }}>pelanggan</span>
+          <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text)', lineHeight: 1 }}>{total}</span>
+          <span style={{ fontSize: 9, color: 'var(--color-muted)', marginTop: 2 }}>pelanggan</span>
         </div>
       </div>
 
@@ -72,8 +64,8 @@ export default function RiskDonutChart() {
             <span
               style={{ width: 10, height: 10, borderRadius: '50%', background: item.color, flexShrink: 0 }}
             />
-            <span className="flex-1" style={{ color: '#8a8270' }}>{item.name}</span>
-            <span style={{ fontWeight: 600, fontFamily: 'DM Mono, monospace', fontSize: 12 }}>
+            <span className="flex-1" style={{ color: 'var(--color-muted)' }}>{item.name}</span>
+            <span style={{ fontWeight: 600, fontFamily: 'DM Mono, monospace', fontSize: 12, color: 'var(--color-text)' }}>
               {item.value}
             </span>
           </div>

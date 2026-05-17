@@ -25,7 +25,17 @@ const names = {
   'C-0009': 'Farhan Maulana',
 };
 
-const avatarEmoji = ['👤', '👩', '👨', '👩‍💼', '👨‍💼', '👩‍🔬', '👨‍🔬', '👩‍💻', '👨‍💻'];
+const avatarEmoji = [
+  'fa-solid fa-user',
+  'fa-solid fa-user',
+  'fa-solid fa-user',
+  'fa-solid fa-user-tie',
+  'fa-solid fa-user-tie',
+  'fa-solid fa-user-doctor',
+  'fa-solid fa-user-doctor',
+  'fa-solid fa-user-ninja',
+  'fa-solid fa-user-ninja'
+];
 
 // ── Calculate churn score (0–100) ──
 export function calcScore(c) {
@@ -126,27 +136,27 @@ export function getRecos(c) {
   const r = [];
 
   if (c.lastLogin > 30) {
-    r.push({ type: 'urgent',    icon: '📞', title: 'Re-engagement Call Segera', desc: `Hubungi ${c.name} via telepon/email. Tanya kebutuhan & hambatan. Jadwalkan dalam 48 jam.` });
+    r.push({ type: 'urgent',    icon: 'fa-solid fa-phone', title: 'Re-engagement Call Segera', desc: `Hubungi ${c.name} via telepon/email. Tanya kebutuhan & hambatan. Jadwalkan dalam 48 jam.` });
   }
 
   if (c.tickets >= 5) {
-    r.push({ type: 'important', icon: '🔧', title: 'Eskalasi Tiket & Personal Support', desc: 'Assign dedicated support agent. Selesaikan semua tiket yang pending dan lakukan follow-up kepuasan.' });
+    r.push({ type: 'important', icon: 'fa-solid fa-wrench', title: 'Eskalasi Tiket & Personal Support', desc: 'Assign dedicated support agent. Selesaikan semua tiket yang pending dan lakukan follow-up kepuasan.' });
   }
 
   if (c.adoption < 55 || c.usage < 20) {
-    r.push({ type: 'normal',    icon: '📚', title: 'Sesi Onboarding & Edukasi Fitur', desc: `Jadwalkan demo 1-on-1 untuk fitur-fitur yang belum dipakai. Fokus pada use case spesifik plan ${c.plan}.` });
+    r.push({ type: 'normal',    icon: 'fa-solid fa-book', title: 'Sesi Onboarding & Edukasi Fitur', desc: `Jadwalkan demo 1-on-1 untuk fitur-fitur yang belum dipakai. Fokus pada use case spesifik plan ${c.plan}.` });
   }
 
   if (c.contract === 'Monthly' && c.score >= 60) {
-    r.push({ type: 'important', icon: '🎁', title: 'Tawarkan Diskon Upgrade ke Annual', desc: 'Berikan penawaran khusus 2–3 bulan gratis jika upgrade ke kontrak Annual. Kurangi risiko cancel.' });
+    r.push({ type: 'important', icon: 'fa-solid fa-gift', title: 'Tawarkan Diskon Upgrade ke Annual', desc: 'Berikan penawaran khusus 2–3 bulan gratis jika upgrade ke kontrak Annual. Kurangi risiko cancel.' });
   }
 
   if (c.nps <= 3) {
-    r.push({ type: 'info',      icon: '📊', title: 'Survey Kepuasan & Feedback Loop', desc: 'Kirim NPS survey detail, minta alasan skor rendah, dan buat action plan berdasarkan feedback.' });
+    r.push({ type: 'info',      icon: 'fa-solid fa-chart-bar', title: 'Survey Kepuasan & Feedback Loop', desc: 'Kirim NPS survey detail, minta alasan skor rendah, dan buat action plan berdasarkan feedback.' });
   }
 
   if (r.length === 0) {
-    r.push({ type: 'normal', icon: '💚', title: 'Pertahankan Kualitas Layanan', desc: 'Pelanggan dalam kondisi baik. Tetap monitor dan berikan update produk secara berkala.' });
+    r.push({ type: 'normal', icon: 'fa-solid fa-heart', title: 'Pertahankan Kualitas Layanan', desc: 'Pelanggan dalam kondisi baik. Tetap monitor dan berikan update produk secara berkala.' });
   }
 
   return r.slice(0, 4);
@@ -166,14 +176,6 @@ export const customers = rawData.map((c, i) => {
   return customer;
 });
 
-// Mock trend data — 6 months
-export const trendData = [
-  { month: 'Jan', high: 3, med: 2, low: 4 },
-  { month: 'Feb', high: 4, med: 2, low: 3 },
-  { month: 'Mar', high: 3, med: 3, low: 3 },
-  { month: 'Apr', high: 5, med: 2, low: 2 },
-  { month: 'Mei', high: 4, med: 3, low: 2 },
-  { month: 'Jun', high: 4, med: 2, low: 3 },
-];
 
-export default { customers, trendData, getRiskClass, getFactors, getRecos };
+
+export default { customers, getRiskClass, getFactors, getRecos };

@@ -2,7 +2,7 @@ import React from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
-import { trendData } from '../../api/index';
+import { useTrend } from '../../hooks/useTrend';
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
@@ -21,6 +21,24 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export default function ChurnTrendChart() {
+  const { trendData, loading, error } = useTrend();
+
+  if (loading) {
+    return (
+      <div style={{ height: 180, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: 13 }}>
+        <i className="fa-solid fa-circle-notch fa-spin" style={{ marginRight: 8 }}></i> Memuat tren...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ height: 180, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#dc2626', fontSize: 13 }}>
+        <i className="fa-solid fa-triangle-exclamation" style={{ marginRight: 8 }}></i> Gagal memuat data
+      </div>
+    );
+  }
+
   return (
     <div style={{ height: 180 }}>
       <ResponsiveContainer width="100%" height="100%">

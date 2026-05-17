@@ -1,6 +1,6 @@
 # 🔮 ChurnPredict — Dashboard Prediksi Churn Pelanggan
 
-> Sistem prediksi churn pelanggan berbasis Machine Learning dengan dashboard interaktif untuk memonitor, menganalisis, dan mencegah kehilangan pelanggan secara proaktif.
+> Aplikasi dashboard frontend-only berbasis React untuk memonitor, menganalisis, dan mencegah kehilangan pelanggan secara proaktif menggunakan skor risiko churn berbasis rule-based scoring.
 
 ---
 
@@ -10,20 +10,19 @@
 - [Teknologi](#-teknologi)
 - [Struktur Proyek](#-struktur-proyek)
 - [Prasyarat](#-prasyarat)
-- [Instalasi](#-instalasi)
-  - [1. Clone Repository](#1-clone-repository)
-  - [2. Setup Backend (Python/Flask)](#2-setup-backend-pythonflask)
-  - [3. Setup Frontend (React/Vite)](#3-setup-frontend-reactvite)
-- [Menjalankan Aplikasi](#-menjalankan-aplikasi)
+- [Instalasi & Menjalankan](#-instalasi--menjalankan)
 - [Fitur Aplikasi](#-fitur-aplikasi)
-- [API Endpoints](#-api-endpoints)
-- [Troubleshooting](#-troubleshooting)
+- [Dark Mode](#-dark-mode)
+- [Data & Prediksi Lokal](#-data--prediksi-lokal)
+- [Pengembang](#-pengembang)
 
 ---
 
 ## 🌟 Gambaran Umum
 
-**ChurnPredict** adalah aplikasi dashboard full-stack yang membantu bisnis memprediksi pelanggan mana yang berpotensi untuk berhenti berlangganan (churn). Sistem ini menggunakan model Machine Learning untuk menghasilkan **skor risiko (0–100)** bagi setiap pelanggan dan memberikan **rekomendasi aksi** yang perlu diambil.
+**ChurnPredict** adalah dashboard interaktif yang membantu bisnis memantau pelanggan mana yang berpotensi churn (berhenti berlangganan). Aplikasi ini berjalan **sepenuhnya di sisi frontend** — tidak memerlukan backend atau API eksternal.
+
+Setiap pelanggan mendapatkan **skor risiko (0–100)** yang dihitung berdasarkan faktor-faktor seperti keaktifan login, jumlah tiket support, NPS score, dan lama berlangganan.
 
 | Skor | Kategori | Status |
 |------|----------|--------|
@@ -35,24 +34,14 @@
 
 ## 🛠 Teknologi
 
-### Frontend
 | Teknologi | Versi | Kegunaan |
 |-----------|-------|----------|
 | React | 18 | UI Framework |
 | Vite | 6 | Build tool & dev server |
-| Tailwind CSS | 3 | Styling |
+| Tailwind CSS | 3 | Utility-first styling |
+| Font Awesome | 6.5.1 | Icon library (via CDN) |
 | Recharts | 2 | Chart & visualisasi data |
-| React Router | 6 | Routing antar halaman |
-| Lucide React | — | Icon library |
-
-### Backend
-| Teknologi | Kegunaan |
-|-----------|----------|
-| Python 3.10+ | Bahasa pemrograman utama |
-| Flask | Web framework / REST API |
-| scikit-learn | Model Machine Learning |
-| pandas | Pengolahan data |
-| numpy | Komputasi numerik |
+| React Router | 6 | Client-side routing |
 
 ---
 
@@ -61,83 +50,65 @@
 ```
 churn-dashboard/
 ├── README.md
-├── frontend/                   # Aplikasi React
-│   ├── index.html
+├── frontend/
+│   ├── index.html              # Entry HTML + Font Awesome CDN
 │   ├── package.json
 │   ├── vite.config.js
-│   ├── tailwind.config.js
+│   ├── tailwind.config.js      # Konfigurasi Tailwind + CSS vars
 │   ├── postcss.config.js
 │   └── src/
-│       ├── main.jsx            # Entry point React
-│       ├── App.jsx             # Router & layout utama
-│       ├── index.css           # Global styles
+│       ├── main.jsx            # Entry point + ThemeProvider
+│       ├── App.jsx             # Router & route definitions
+│       ├── index.css           # Global styles & CSS custom properties
 │       ├── api/
-│       │   └── index.js        # Koneksi API & mock data
+│       │   └── index.js        # Data mock pelanggan & logika scoring lokal
+│       ├── contexts/
+│       │   └── ThemeContext.jsx # Dark/light mode state & toggle
+│       ├── hooks/
+│       │   ├── useCustomers.js  # Hook data pelanggan (dari mock)
+│       │   └── useTrend.js      # Hook data tren churn
 │       ├── components/
 │       │   ├── layout/
-│       │   │   ├── Layout.jsx  # Wrapper layout
-│       │   │   ├── Sidebar.jsx # Navigasi sidebar
-│       │   │   └── Navbar.jsx  # Header halaman
+│       │   │   ├── Layout.jsx   # Wrapper layout utama
+│       │   │   ├── Sidebar.jsx  # Navigasi sidebar (ikon FA)
+│       │   │   └── Navbar.jsx   # Header + tombol dark mode
 │       │   ├── charts/
-│       │   │   ├── ChurnTrendChart.jsx  # Area chart tren
-│       │   │   ├── RiskDonutChart.jsx   # Donut chart distribusi
-│       │   │   └── ModelCompareChart.jsx
+│       │   │   ├── ChurnTrendChart.jsx   # Area chart tren 6 bulan
+│       │   │   ├── RiskDonutChart.jsx    # Donut chart distribusi risiko
+│       │   │   └── ModelCompareChart.jsx # Bar chart performa model
+│       │   ├── copilot/
+│       │   │   ├── CopilotWidget.jsx     # Chatbot Astra (FAB)
+│       │   │   └── chatEngine.js         # Logika rule-based NLP
 │       │   └── ui/
-│       │       ├── StatCard.jsx
-│       │       ├── Badge.jsx
-│       │       ├── Table.jsx
-│       │       └── LoadingSpinner.jsx
+│       │       ├── Badge.jsx        # Badge risiko (Tinggi/Sedang/Rendah)
+│       │       └── Table.jsx        # Tabel pelanggan interaktif
 │       └── pages/
-│           ├── Dashboard.jsx       # Halaman utama
-│           ├── Customers.jsx       # Daftar pelanggan
-│           ├── CustomerDetail.jsx  # Detail pelanggan
-│           ├── Predict.jsx         # Form prediksi manual
-│           └── ModelComparison.jsx # Perbandingan model ML
-└── backend/                    # REST API Python/Flask
-    ├── run.py                  # Entry point server
-    ├── config.py               # Konfigurasi aplikasi
-    ├── requirements.txt        # Dependencies Python
-    ├── app/
-    │   ├── __init__.py
-    │   ├── routes/
-    │   │   ├── customers.py    # Endpoint data pelanggan
-    │   │   ├── predict.py      # Endpoint prediksi
-    │   │   └── models.py       # Endpoint model ML
-    │   └── utils/
-    ├── ml/
-    │   ├── predict.py          # Logika prediksi ML
-    │   ├── models/             # File model terlatih (.pkl)
-    │   └── train/              # Script training model
-    └── data/                   # Dataset
+│           ├── Dashboard.jsx        # Halaman utama & ringkasan
+│           ├── Customers.jsx        # Daftar pelanggan (grid kartu)
+│           ├── CustomerDetail.jsx   # Detail & faktor risiko pelanggan
+│           ├── Predict.jsx          # Form prediksi risiko manual
+│           └── ModelComparison.jsx  # Evaluasi performa model RF
+└── backend/                    # (Tidak aktif — disimpan sebagai referensi)
+    └── ...
 ```
 
 ---
 
 ## ✅ Prasyarat
 
-Pastikan software berikut sudah terinstal di komputer Anda sebelum memulai:
-
-### Wajib
 - **Node.js** v18 atau lebih baru → [Download Node.js](https://nodejs.org/)
-- **Python** 3.10 atau lebih baru → [Download Python](https://www.python.org/downloads/)
 - **Git** → [Download Git](https://git-scm.com/downloads)
 
-### Verifikasi Instalasi
-
-Buka **Terminal** / **PowerShell** dan jalankan perintah berikut:
+### Verifikasi
 
 ```bash
-node --version      # Harus menampilkan v18.x.x atau lebih baru
-npm --version       # Harus menampilkan 9.x.x atau lebih baru
-python --version    # Harus menampilkan Python 3.10.x atau lebih baru
-git --version       # Harus menampilkan git version x.x.x
+node --version    # v18.x.x atau lebih baru
+npm --version     # 9.x.x atau lebih baru
 ```
-
-> **⚠️ Catatan untuk Windows**: Jika `python` tidak dikenali, coba `python3`. Jika `git` tidak dikenali, instal Git dan restart terminal.
 
 ---
 
-## 🚀 Instalasi
+## 🚀 Instalasi & Menjalankan
 
 ### 1. Clone Repository
 
@@ -146,129 +117,22 @@ git clone https://github.com/<username>/churn-dashboard.git
 cd churn-dashboard
 ```
 
-> **Jika belum ada Git**, unduh file ZIP dari GitHub lalu ekstrak ke folder pilihan Anda.
-
----
-
-### 2. Setup Backend (Python/Flask)
-
-#### Langkah 2a — Masuk ke folder backend
+### 2. Install Dependencies
 
 ```bash
-cd backend
-```
-
-#### Langkah 2b — Buat Virtual Environment
-
-Virtual environment mengisolasi dependency Python agar tidak bentrok dengan proyek lain.
-
-```bash
-# Windows
-python -m venv venv
-
-# macOS / Linux
-python3 -m venv venv
-```
-
-#### Langkah 2c — Aktifkan Virtual Environment
-
-```bash
-# Windows (PowerShell)
-venv\Scripts\Activate.ps1
-
-# Windows (Command Prompt)
-venv\Scripts\activate.bat
-
-# macOS / Linux
-source venv/bin/activate
-```
-
-> ✅ Jika berhasil, nama environment `(venv)` akan muncul di awal baris terminal.
-
-#### Langkah 2d — Install Dependencies Python
-
-```bash
-pip install -r requirements.txt
-```
-
-Paket utama yang akan diinstal:
-- `flask` — Web framework
-- `flask-cors` — Menangani CORS untuk komunikasi dengan frontend
-- `scikit-learn` — Model Machine Learning
-- `pandas` — Pengolahan data
-- `numpy` — Komputasi numerik
-- `joblib` — Menyimpan/memuat model ML
-
-#### Langkah 2e — (Opsional) Training Model ML
-
-Jika file model belum tersedia di `backend/ml/models/`:
-
-```bash
-python ml/train/train_model.py
-```
-
----
-
-### 3. Setup Frontend (React/Vite)
-
-Buka **terminal baru** (jangan tutup terminal backend).
-
-#### Langkah 3a — Masuk ke folder frontend
-
-```bash
-# Dari root proyek
 cd frontend
-```
-
-#### Langkah 3b — Install Dependencies Node.js
-
-```bash
 npm install
 ```
 
-Proses ini akan mengunduh semua package yang tertera di `package.json` ke folder `node_modules/`.
-
-> ⏳ Proses ini mungkin memakan waktu 1–3 menit tergantung koneksi internet.
-
----
-
-## ▶️ Menjalankan Aplikasi
-
-Aplikasi ini terdiri dari **dua server** yang harus dijalankan secara bersamaan.
-
-### Terminal 1 — Jalankan Backend
+### 3. Jalankan Dev Server
 
 ```bash
-cd backend
-
-# Aktifkan virtual environment terlebih dahulu (jika belum)
-# Windows:
-venv\Scripts\Activate.ps1
-# macOS/Linux:
-source venv/bin/activate
-
-# Jalankan server Flask
-python run.py
-```
-
-Server backend akan berjalan di: **http://localhost:5000**
-
-### Terminal 2 — Jalankan Frontend
-
-```bash
-cd frontend
 npm run dev
 ```
 
-Server frontend akan berjalan di: **http://localhost:5173** (atau port lain jika sudah dipakai)
+Buka browser dan akses: **http://localhost:5173**
 
-### Akses Aplikasi
-
-Buka browser dan kunjungi:
-
-```
-http://localhost:5173
-```
+> ✅ Tidak perlu menjalankan backend. Aplikasi langsung berjalan dengan data mock bawaan.
 
 ---
 
@@ -277,94 +141,37 @@ http://localhost:5173
 | Halaman | Route | Deskripsi |
 |---------|-------|-----------|
 | **Dashboard** | `/` | Ringkasan statistik, grafik tren & distribusi risiko, tabel pelanggan |
-| **Pelanggan** | `/customers` | Daftar semua pelanggan dengan kartu risiko, filter & pencarian |
-| **Detail Pelanggan** | `/customers/:id` | Analisis mendalam faktor churn & rekomendasi aksi AI |
-| **Prediksi Manual** | `/predict` | Input data pelanggan baru → prediksi skor risiko real-time |
-| **Perbandingan Model** | `/model` | Evaluasi performa model ML (Accuracy, Precision, Recall, AUC) |
+| **Pelanggan** | `/customers` | Grid kartu semua pelanggan dengan filter risiko & pencarian |
+| **Detail Pelanggan** | `/customers/:id` | Analisis faktor churn & rekomendasi aksi retention |
+| **Prediksi Manual** | `/predict` | Input data pelanggan → hitung skor risiko secara lokal |
+| **Perbandingan Model** | `/model` | Metrik evaluasi model Random Forest (Accuracy, Precision, Recall, AUC) |
+
+### Astra — CS Copilot
+
+Tombol 🚀 di pojok kanan bawah membuka chatbot **Astra**, asisten cerdas berbasis rule-based NLP yang dapat menjawab pertanyaan seputar faktor risiko, strategi retention, dan data pelanggan.
 
 ---
 
-## 🔌 API Endpoints
+## 🌙 Dark Mode
 
-| Method | Endpoint | Deskripsi |
-|--------|----------|-----------|
-| `GET` | `/api/customers` | Ambil semua data pelanggan |
-| `GET` | `/api/customers/:id` | Ambil data 1 pelanggan |
-| `POST` | `/api/predict` | Prediksi skor churn dari input data |
-| `GET` | `/api/models` | Info performa model ML |
+Aplikasi mendukung **dark mode** penuh. Klik ikon 🌙 / ☀️ di navbar untuk beralih mode.
 
-### Contoh Request Prediksi
-
-```bash
-curl -X POST http://localhost:5000/api/predict \
-  -H "Content-Type: application/json" \
-  -d '{
-    "tenure": 12,
-    "usage": 15.5,
-    "adoption": 45.0,
-    "tickets": 3,
-    "lastLogin": 20,
-    "nps": 5,
-    "delay": 1,
-    "contract": "Monthly",
-    "plan": "Starter"
-  }'
-```
-
-### Contoh Response
-
-```json
-{
-  "score": 52,
-  "risk": "med",
-  "label": "Risiko Sedang",
-  "factors": [
-    { "name": "Adopsi Fitur Kurang Optimal", "impact": 16 },
-    { "name": "Penggunaan Produk Rendah", "impact": 15 }
-  ]
-}
-```
+- Preferensi disimpan otomatis di `localStorage`
+- Mendeteksi preferensi sistem (`prefers-color-scheme`) saat pertama kali dibuka
+- Semua komponen (kartu, tabel, chart, chatbot, badge) mendukung kedua mode
 
 ---
 
-## 🔧 Troubleshooting
+## 📊 Data & Prediksi Lokal
 
-### ❌ `npm install` gagal / error EACCES
+Seluruh data dan logika scoring berjalan di client-side:
 
-```bash
-# Hapus cache npm lalu coba lagi
-npm cache clean --force
-npm install
-```
+- **Data pelanggan** → `frontend/src/api/index.js` (array mock `customers`)
+- **Skor risiko** → fungsi `localPredict()` di `Predict.jsx` dan `computeChurnScore()` di `api/index.js`
+- **Faktor churn** → fungsi `getFactors()` di `api/index.js`
+- **Rekomendasi** → fungsi `getRecos()` di `api/index.js`
 
-### ❌ `python -m venv venv` gagal di Windows
-
-Pastikan Python ditambahkan ke PATH saat instalasi. Centang opsi **"Add Python to PATH"** saat menginstal Python.
-
-### ❌ Port 5173 atau 5000 sudah digunakan
-
-Frontend Vite otomatis mencoba port berikutnya (5174, 5175, dst.).
-Untuk backend, ubah port di `config.py`:
-
-```python
-PORT = 5001  # Ganti ke port yang tersedia
-```
-
-### ❌ CORS Error di browser
-
-Pastikan `flask-cors` sudah terinstal dan dikonfigurasi di backend:
-
-```python
-from flask_cors import CORS
-CORS(app)
-```
-
-### ❌ `venv\Scripts\Activate.ps1` ditolak di PowerShell
-
-```powershell
-# Jalankan perintah ini sekali sebagai Administrator
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
+Untuk menambah/mengubah data pelanggan, edit array `customers` di `src/api/index.js`.
 
 ---
 

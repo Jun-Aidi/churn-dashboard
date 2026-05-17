@@ -4,10 +4,7 @@ import {
 } from 'recharts';
 
 const data = [
-  { name: 'Logistic Reg.', accuracy: 78, precision: 74, recall: 82 },
   { name: 'Random Forest', accuracy: 85, precision: 83, recall: 87 },
-  { name: 'XGBoost',       accuracy: 88, precision: 87, recall: 89 },
-  { name: 'Neural Net',    accuracy: 91, precision: 90, recall: 92 },
 ];
 
 const CustomTooltip = ({ active, payload, label }) => {
