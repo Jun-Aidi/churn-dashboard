@@ -1,8 +1,9 @@
 """
 Chat Engine — Response Generator.
-Menerima pesan user, klasifikasi intent via NLP, generate response.
+Menerima pesan user, klasifikasi intent via Deep Learning NLP, generate response.
 """
 
+# intent_classifier kini menggunakan model BiLSTM (.keras) dari chatbot_models/deep_learning
 from app.nlp.intent_classifier import classify_intent
 from app.services.customer_service import CustomerService
 
@@ -215,8 +216,7 @@ def _handle_greeting() -> str:
     return (
         'Halo! Ghosting siap membantu '
         '<i class="fa-solid fa-robot" style="color: #4f8ef7;"></i>\n\n'
-        'Saya menggunakan **Deep Learning NLP** untuk memahami pertanyaan Anda. '
-        'Coba tanyakan dengan bahasa natural:\n\n'
+        'Ada yang bisa saya bantu? Contoh pertanyaan:\n\n'
         '- *"Fitur apa yang paling mempengaruhi churn?"*\n'
         '- *"Siapa pelanggan VIP yang terancam pergi?"*\n'
         '- *"Berapa total customer yang berisiko tinggi?"*\n'
