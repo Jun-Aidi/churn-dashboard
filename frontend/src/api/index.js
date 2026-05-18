@@ -1,87 +1,52 @@
 // ══════════════════════════════════════════
-// RAW DATA — Mock customer data
+// API Layer — Fetches data from Flask backend
 // ══════════════════════════════════════════
-export const rawData = [
-  { id: 'C-0001', plan: 'Starter',      contract: 'Monthly', tenure: 19, revenue: 112.58, usage: 20.1, users: 4,  adoption: 73.6, tickets: 0,  lastLogin: 34, nps: 0, delay: 4, churned: 1 },
-  { id: 'C-0002', plan: 'Starter',      contract: 'Annual',  tenure: 14, revenue: 89.52,  usage: 25.6, users: 1,  adoption: 54.8, tickets: 15, lastLogin: 67, nps: 7, delay: 1, churned: 1 },
-  { id: 'C-0003', plan: 'Professional', contract: 'Annual',  tenure: 23, revenue: 797.96, usage: 136.1,users: 9,  adoption: 66.0, tickets: 1,  lastLogin: 36, nps: 1, delay: 5, churned: 0 },
-  { id: 'C-0004', plan: 'Starter',      contract: 'Monthly', tenure: 25, revenue: 57.24,  usage: 16.2, users: 2,  adoption: 15.2, tickets: 11, lastLogin: 37, nps: 4, delay: 0, churned: 1 },
-  { id: 'C-0005', plan: 'Starter',      contract: 'Monthly', tenure: 28, revenue: 58.13,  usage: 12.5, users: 1,  adoption: 63.6, tickets: 6,  lastLogin: 11, nps: 3, delay: 3, churned: 0 },
-  { id: 'C-0006', plan: 'Professional', contract: 'Annual',  tenure: 44, revenue: 745.1,  usage: 24.1, users: 10, adoption: 89.0, tickets: 15, lastLogin: 52, nps: 7, delay: 3, churned: 0 },
-  { id: 'C-0007', plan: 'Professional', contract: 'Annual',  tenure: 22, revenue: 659.15, usage: 79.3, users: 12, adoption: 40.4, tickets: 9,  lastLogin: 42, nps: 9, delay: 0, churned: 1 },
-  { id: 'C-0008', plan: 'Enterprise',   contract: 'Monthly', tenure: 40, revenue: 2189.46,usage: 265.2,users: 42, adoption: 27.2, tickets: 3,  lastLogin: 13, nps: 0, delay: 1, churned: 1 },
-  { id: 'C-0009', plan: 'Starter',      contract: 'Monthly', tenure: 14, revenue: 85.26,  usage: 4.9,  users: 5,  adoption: 72.2, tickets: 4,  lastLogin: 24, nps: 3, delay: 1, churned: 0 },
-];
 
-const names = {
-  'C-0001': 'Ahmad Fauzi',
-  'C-0002': 'Siti Nurhaliza',
-  'C-0003': 'Budi Santoso',
-  'C-0004': 'Dewi Lestari',
-  'C-0005': 'Rudi Hartono',
-  'C-0006': 'Maya Sari',
-  'C-0007': 'Hendra Wijaya',
-  'C-0008': 'Rina Kusuma',
-  'C-0009': 'Farhan Maulana',
-};
+const API_BASE = 'http://localhost:5000/api';
 
-const avatarEmoji = [
-  'fa-solid fa-user',
-  'fa-solid fa-user',
-  'fa-solid fa-user',
-  'fa-solid fa-user-tie',
-  'fa-solid fa-user-tie',
-  'fa-solid fa-user-doctor',
-  'fa-solid fa-user-doctor',
-  'fa-solid fa-user-ninja',
-  'fa-solid fa-user-ninja'
-];
-
-// ── Calculate churn score (0–100) ──
-export function calcScore(c) {
-  let score = 0;
-  // last login: higher = worse
-  if (c.lastLogin > 60)      score += 30;
-  else if (c.lastLogin > 30) score += 18;
-  else if (c.lastLogin > 14) score += 8;
-
-  // tickets: higher = worse
-  if (c.tickets >= 10)      score += 25;
-  else if (c.tickets >= 5)  score += 15;
-  else if (c.tickets >= 2)  score += 7;
-
-  // adoption: lower = worse
-  if (c.adoption < 30)      score += 20;
-  else if (c.adoption < 50) score += 12;
-  else if (c.adoption < 65) score += 6;
-
-  // contract monthly = higher risk
-  if (c.contract === 'Monthly') score += 8;
-
-  // tenure short = higher risk
-  if (c.tenure < 15)      score += 10;
-  else if (c.tenure < 25) score += 5;
-
-  // usage low = worse
-  if (c.usage < 10)      score += 12;
-  else if (c.usage < 20) score += 6;
-
-  // payment delays
-  if (c.delay >= 3)      score += 8;
-  else if (c.delay >= 1) score += 4;
-
-  // NPS low
-  if (c.nps <= 2) score += 6;
-
-  return Math.min(100, score);
-}
-
+// ── Risk classification (shared utility) ──
 export function getRiskClass(score) {
   if (score >= 66) return { cls: 'high', label: 'Risiko Tinggi', color: '#e03d3d' };
   if (score >= 31) return { cls: 'med',  label: 'Risiko Sedang', color: '#d4a017' };
   return                 { cls: 'low',  label: 'Risiko Rendah', color: '#2da44e' };
 }
 
+// ── API Fetch helpers ──
+export async function fetchCustomers() {
+  const res = await fetch(`${API_BASE}/customers`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+export async function fetchCustomer(id) {
+  const res = await fetch(`${API_BASE}/customers/${id}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+export async function fetchStats() {
+  const res = await fetch(`${API_BASE}/customers/stats`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+export async function fetchTrend() {
+  const res = await fetch(`${API_BASE}/trend`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+export async function fetchPredict(formData) {
+  const res = await fetch(`${API_BASE}/predict`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(formData),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+// ── Factor analysis (client-side, based on customer data) ──
 export function getFactors(c) {
   const factors = [];
 
@@ -113,7 +78,7 @@ export function getFactors(c) {
     factors.push({ sev: 'warning',  name: 'Penggunaan Produk Rendah', detail: `${c.usage} jam/bulan. Di bawah rata-rata untuk plan ${c.plan}.`, impact: 15, bar: 42 });
   }
 
-  if (c.contract === 'Monthly') {
+  if (c.contract === 'monthly' || c.contract === 'Monthly') {
     factors.push({ sev: 'caution', name: 'Kontrak Bulanan (Mudah Cancel)', detail: 'Kontrak Monthly memberikan fleksibilitas tinggi untuk berhenti kapan saja.', impact: 10, bar: 28 });
   }
 
@@ -136,7 +101,7 @@ export function getRecos(c) {
   const r = [];
 
   if (c.lastLogin > 30) {
-    r.push({ type: 'urgent',    icon: 'fa-solid fa-phone', title: 'Re-engagement Call Segera', desc: `Hubungi ${c.name} via telepon/email. Tanya kebutuhan & hambatan. Jadwalkan dalam 48 jam.` });
+    r.push({ type: 'urgent',    icon: 'fa-solid fa-phone', title: 'Re-engagement Call Segera', desc: `Hubungi ${c.name || c.id} via telepon/email. Tanya kebutuhan & hambatan. Jadwalkan dalam 48 jam.` });
   }
 
   if (c.tickets >= 5) {
@@ -147,7 +112,7 @@ export function getRecos(c) {
     r.push({ type: 'normal',    icon: 'fa-solid fa-book', title: 'Sesi Onboarding & Edukasi Fitur', desc: `Jadwalkan demo 1-on-1 untuk fitur-fitur yang belum dipakai. Fokus pada use case spesifik plan ${c.plan}.` });
   }
 
-  if (c.contract === 'Monthly' && c.score >= 60) {
+  if ((c.contract === 'monthly' || c.contract === 'Monthly') && c.score >= 60) {
     r.push({ type: 'important', icon: 'fa-solid fa-gift', title: 'Tawarkan Diskon Upgrade ke Annual', desc: 'Berikan penawaran khusus 2–3 bulan gratis jika upgrade ke kontrak Annual. Kurangi risiko cancel.' });
   }
 
@@ -162,20 +127,4 @@ export function getRecos(c) {
   return r.slice(0, 4);
 }
 
-// Build enriched customers array
-export const customers = rawData.map((c, i) => {
-  const score = calcScore(c);
-  const customer = {
-    ...c,
-    name: names[c.id],
-    avatar: avatarEmoji[i],
-    score,
-  };
-  // Attach recos (needs name)
-  customer.recos = getRecos(customer);
-  return customer;
-});
-
-
-
-export default { customers, getRiskClass, getFactors, getRecos };
+export default { getRiskClass, getFactors, getRecos, fetchCustomers, fetchCustomer, fetchStats, fetchTrend, fetchPredict };

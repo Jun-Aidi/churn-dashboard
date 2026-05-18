@@ -6,8 +6,10 @@ def create_app():
     app = Flask(__name__)
     CORS(app)
 
-    from app.routes import chat_bp, customers_bp
+    from app.routes import chat_bp, customers_bp, predict_bp, trend_bp
     app.register_blueprint(chat_bp, url_prefix='/api')
     app.register_blueprint(customers_bp, url_prefix='/api')
+    app.register_blueprint(predict_bp, url_prefix='/api')
+    app.register_blueprint(trend_bp, url_prefix='/api')
 
     return app

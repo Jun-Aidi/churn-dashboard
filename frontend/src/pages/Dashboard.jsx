@@ -33,7 +33,9 @@ export default function Dashboard() {
 
   const filtered = customers.filter(c => {
     const q = search.toLowerCase();
-    const matchQ = c.name.toLowerCase().includes(q) || c.id.toLowerCase().includes(q);
+    const name = (c.name || c.id || '').toLowerCase();
+    const id = (c.id || '').toLowerCase();
+    const matchQ = name.includes(q) || id.includes(q);
     if (filter === 'all') return matchQ;
     const { cls } = getRiskClass(c.score);
     return matchQ && cls === filter;

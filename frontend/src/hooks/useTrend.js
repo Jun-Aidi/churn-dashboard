@@ -1,19 +1,30 @@
-import { useState } from 'react';
-
-// Static mock trend data — no backend required
-const MOCK_TREND = [
-  { month: 'Des', high: 3, med: 4, low: 5 },
-  { month: 'Jan', high: 4, med: 3, low: 5 },
-  { month: 'Feb', high: 3, med: 5, low: 4 },
-  { month: 'Mar', high: 5, med: 3, low: 4 },
-  { month: 'Apr', high: 4, med: 4, low: 4 },
-  { month: 'Mei', high: 4, med: 2, low: 3 },
-];
+import { useState, useEffect } from 'react';
+import { fetchTrend } from '../api/index';
 
 export function useTrend() {
-  const [trendData] = useState(MOCK_TREND);
-  const [loading]   = useState(false);
-  const [error]     = useState(null);
+  const [trendData, setTrendData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await fetchTrend();
+        if (!cancelled) setTrendData(data);
+      } catch (err) {
+        if (!cancelled) setError(err.message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => { cancelled = true; };
+  }, []);
 
   return { trendData, loading, error };
 }

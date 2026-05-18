@@ -1,9 +1,12 @@
 from flask import Blueprint, request, jsonify
 from app.nlp.chat_engine import process_chat
 from app.services.customer_service import CustomerService
+from app.services.predict_service import predict_single
 
 chat_bp = Blueprint('chat', __name__)
 customers_bp = Blueprint('customers', __name__)
+predict_bp = Blueprint('predict', __name__)
+trend_bp = Blueprint('trend', __name__)
 
 
 @chat_bp.route('/chat', methods=['POST'])
@@ -42,3 +45,22 @@ def get_stats():
     service = CustomerService()
     stats = service.get_stats()
     return jsonify(stats)
+
+
+@predict_bp.route('/predict', methods=['POST'])
+def predict():
+    """Prediksi churn untuk input manual."""
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'Data diperlukan'}), 400
+
+    result = predict_single(data)
+    return jsonify(result)
+
+
+@trend_bp.route('/trend', methods=['GET'])
+def get_trend():
+    """Trend data churn — distribusi risiko per bulan (simulasi dari data)."""
+    service = CustomerService()
+    trend = service.get_trend_data()
+    return jsonify(trend)

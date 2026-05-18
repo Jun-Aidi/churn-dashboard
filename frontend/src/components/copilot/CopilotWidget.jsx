@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { processChat } from './chatEngine';
-import { customers as mockCustomers } from '../../api/index';
+import { fetchCustomers } from '../../api/index';
 
 export default function CopilotWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,9 +11,15 @@ export default function CopilotWidget() {
   }]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [customers] = useState(mockCustomers);
+  const [customers, setCustomers] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState('');
   const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    fetchCustomers()
+      .then(data => setCustomers(data.slice(0, 50))) // Limit dropdown to 50 for performance
+      .catch(() => setCustomers([]));
+  }, []);
 
   useEffect(() => {
     if (isOpen && !isMinimized) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -122,7 +128,7 @@ export default function CopilotWidget() {
               className="flex-1 px-2.5 py-1.5 rounded-md text-xs font-[inherit] outline-none border"
               style={{ background: 'var(--color-input)', borderColor: 'var(--color-border-input)', color: 'var(--color-text)' }}>
               <option value="">-- Pilih Customer --</option>
-              {customers.map((c, i) => <option key={c.id} value={c.id}>Customer {i + 1}</option>)}
+              {customers.map((c, i) => <option key={c.customer_id || c.id} value={c.customer_id || c.id}>{c.customer_id || c.id}</option>)}
             </select>
           </div>
 

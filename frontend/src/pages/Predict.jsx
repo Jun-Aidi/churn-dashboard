@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Badge from '../components/ui/Badge';
+import { fetchPredict } from '../api/index';
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const cardStyle = {
@@ -48,106 +49,6 @@ const fields = [
   { key: 'total_delayed_payments', label: 'Jumlah Keterlambatan Bayar',   placeholder: '1',       hint: 'Berapa kali terjadi keterlambatan' },
 ];
 
-// ── Feature importance labels ──────────────────────────────────────────────────
-const featureLabels = {
-  days_since_last_login:  'Hari Sejak Login Terakhir',
-  engagement_score:       'Skor Engagement',
-  monthly_usage_hrs:      'Penggunaan Bulanan (jam)',
-  feature_adoption_pct:   'Adopsi Fitur (%)',
-  total_tickets:          'Total Tiket Support',
-  avg_nps_score:          'NPS Score',
-  avg_payment_delay:      'Keterlambatan Pembayaran',
-  total_delayed_payments: 'Jumlah Keterlambatan',
-  high_priority_tickets:  'Tiket Prioritas Tinggi',
-  revenue_per_user:       'Revenue per User',
-};
-
-// ── Local predict logic (mirrors backend scoring) ─────────────────────────────
-function localPredict(form) {
-  const lastLogin  = form.days_since_last_login;
-  const tickets    = form.total_tickets;
-  const adoption   = form.feature_adoption_pct;
-  const usage      = form.monthly_usage_hrs;
-  const delay      = form.avg_payment_delay;
-  const nps        = form.avg_nps_score;
-  const tenure     = form.tenure_months;
-  const users      = form.total_users;
-  const payVal     = form.total_payment_value;
-  const hiTickets  = form.high_priority_tickets;
-  const delayCount = form.total_delayed_payments;
-
-  let score = 0;
-
-  // last login
-  if (lastLogin > 60)      score += 30;
-  else if (lastLogin > 30) score += 18;
-  else if (lastLogin > 14) score += 8;
-
-  // tickets
-  if (tickets >= 10)      score += 25;
-  else if (tickets >= 5)  score += 15;
-  else if (tickets >= 2)  score += 7;
-
-  // adoption
-  if (adoption < 30)      score += 20;
-  else if (adoption < 50) score += 12;
-  else if (adoption < 65) score += 6;
-
-  // usage
-  if (usage < 10)      score += 12;
-  else if (usage < 20) score += 6;
-
-  // tenure
-  if (tenure < 15)      score += 10;
-  else if (tenure < 25) score += 5;
-
-  // payment delay
-  if (delay >= 3)      score += 8;
-  else if (delay >= 1) score += 4;
-
-  // nps
-  if (nps <= 2) score += 6;
-
-  score = Math.min(100, score);
-
-  const churn_probability = score / 100;
-  const churn_prediction  = score >= 50 ? 1 : 0;
-
-  const level = score >= 66 ? 'high' : score >= 31 ? 'med' : 'low';
-  const label = score >= 66 ? 'Risiko Tinggi' : score >= 31 ? 'Risiko Sedang' : 'Risiko Rendah';
-  const color = score >= 66 ? '#e03d3d' : score >= 31 ? '#d4a017' : '#2da44e';
-
-  // Engineered features
-  const high_priority_ratio = tickets > 0 ? hiTickets / tickets : 0;
-  const engagement_score    = (adoption / 100) * Math.log1p(usage) / 10;
-  const payment_risk_score  = delay * delayCount;
-  const revenue_per_user    = users > 0 ? payVal / users : 0;
-  const inactivity_ratio    = lastLogin / Math.max(tenure * 30, 1);
-
-  // Top features (static importances from the trained model)
-  const top_features = [
-    { name: 'days_since_last_login', importance: 0.1145, label: featureLabels.days_since_last_login },
-    { name: 'engagement_score',      importance: 0.1007, label: featureLabels.engagement_score },
-    { name: 'monthly_usage_hrs',     importance: 0.0998, label: featureLabels.monthly_usage_hrs },
-    { name: 'feature_adoption_pct',  importance: 0.0876, label: featureLabels.feature_adoption_pct },
-    { name: 'total_tickets',         importance: 0.0754, label: featureLabels.total_tickets },
-  ];
-
-  return {
-    churn_probability,
-    churn_prediction,
-    risk: { level, label, color },
-    top_features,
-    engineered: {
-      high_priority_ratio,
-      engagement_score,
-      payment_risk_score,
-      revenue_per_user,
-      inactivity_ratio,
-    },
-  };
-}
-
 function getRiskFromLevel(level) {
   if (level === 'high') return { cls: 'high', label: 'Risiko Tinggi',  color: '#e03d3d' };
   if (level === 'med')  return { cls: 'med',  label: 'Risiko Sedang',  color: '#d4a017' };
@@ -164,7 +65,7 @@ export default function Predict() {
 
   const handleChange = (key, val) => setForm(f => ({ ...f, [key]: val }));
 
-  const handlePredict = () => {
+  const handlePredict = async () => {
     setLoading(true);
     setError(null);
     setResult(null);
@@ -182,12 +83,14 @@ export default function Predict() {
       body[f.key] = num;
     }
 
-    // Simulate brief processing delay for UX
-    setTimeout(() => {
-      const data = localPredict(body);
+    try {
+      const data = await fetchPredict(body);
       setResult(data);
+    } catch (err) {
+      setError(`Gagal menghubungi server: ${err.message}`);
+    } finally {
       setLoading(false);
-    }, 600);
+    }
   };
 
   const handleReset = () => {
@@ -217,7 +120,7 @@ export default function Predict() {
           fontSize: 12.5, color: '#4f8ef7', fontWeight: 600,
         }}>
           <i className="fa-solid fa-robot"></i> Random Forest Model &nbsp;
-          <span style={{ fontWeight: 400, color: '#93bbfb' }}>AUC ≈ 0.91</span>
+          <span style={{ fontWeight: 400, color: '#93bbfb' }}>AUC ≈ 0.92</span>
         </div>
       </div>
 
@@ -437,10 +340,10 @@ export default function Predict() {
                       padding: '8px 12px', background: 'var(--color-input)',
                       borderRadius: 8, border: '1px solid var(--color-border)',
                     }}>
-                      <span style={{ fontSize: 12.5, color: '#6b7280' }}>{item.label}</span>
+                      <span style={{ fontSize: 12.5, color: 'var(--color-muted)' }}>{item.label}</span>
                       <span style={{
                         fontSize: 12.5, fontFamily: 'DM Mono, monospace',
-                        fontWeight: 700, color: '#374151',
+                        fontWeight: 700, color: 'var(--color-text)',
                       }}>
                         {item.fmt(result.engineered[item.key])}
                       </span>

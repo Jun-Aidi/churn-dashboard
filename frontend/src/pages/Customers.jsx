@@ -12,7 +12,9 @@ export default function Customers() {
 
   const filtered = customers.filter(c => {
     const q = search.toLowerCase();
-    const matchQ = c.name.toLowerCase().includes(q) || c.id.toLowerCase().includes(q);
+    const name = (c.name || c.id || '').toLowerCase();
+    const id = (c.id || '').toLowerCase();
+    const matchQ = name.includes(q) || id.includes(q);
     const { cls } = getRiskClass(c.score);
     if (activeFilter === 'all')  return matchQ;
     if (activeFilter === 'high') return matchQ && cls === 'high';
