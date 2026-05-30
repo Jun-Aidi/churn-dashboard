@@ -1,6 +1,7 @@
 """
 Customer Service — Data access layer.
-Membaca data pelanggan dari CSV, prediksi churn menggunakan model .pkl.
+Reads from MySQL if available, falls back to CSV.
+Uses churn_model_bundle.pkl for predictions.
 """
 
 import os
@@ -8,16 +9,22 @@ import numpy as np
 import pandas as pd
 import joblib
 from typing import Optional, List, Dict
+import sys
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-DATA_PATH = os.path.join(BASE_DIR, 'data', 'customers.csv')
-MODEL_PATH = os.path.join(BASE_DIR, 'models', 'churn_model.pkl')
-ENCODER_PATH = os.path.join(BASE_DIR, 'models', 'label_encoders.pkl')
-FEATURES_PATH = os.path.join(BASE_DIR, 'models', 'feature_names.pkl')
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+import config
+from app.database import get_session, close_session, Customer
+
+# ── Load Model Bundle ──
+_bundle = joblib.load(config.MODEL_PATH)
+_model = _bundle['model']
+_label_encoders = _bundle['label_encoders']
+_threshold = _bundle['threshold']
+_feature_columns = _bundle['feature_columns']
 
 
 def get_risk_class(score: float) -> dict:
-    """Klasifikasi risiko berdasarkan probabilitas churn (0-100)."""
+    """Classify risk based on churn probability (0-100)."""
     if score >= 66:
         return {'cls': 'high', 'label': 'Risiko Tinggi', 'color': '#e03d3d'}
     if score >= 31:
@@ -25,158 +32,201 @@ def get_risk_class(score: float) -> dict:
     return {'cls': 'low', 'label': 'Risiko Rendah', 'color': '#2da44e'}
 
 
-class CustomerService:
-    """Service layer untuk akses data pelanggan dan prediksi churn."""
+def _feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
+    """Apply feature engineering (same as training)."""
+    df = df.copy()
 
-    def __init__(self):
-        self.df = pd.read_csv(DATA_PATH)
-        self.model = joblib.load(MODEL_PATH)
-        self.label_encoders = joblib.load(ENCODER_PATH)
-        self.feature_names = joblib.load(FEATURES_PATH)
-        self._prepare_data()
+    df['engagement_score'] = (
+        df['monthly_usage_hrs'] * df['feature_adoption_pct'] /
+        (df['days_since_login'] + 1)
+    ).clip(upper=1e6)
 
-    def _prepare_data(self):
-        """Feature engineering + prediksi risiko untuk semua pelanggan."""
-        df = self.df.copy()
+    df['usage_per_tenure'] = (
+        df['monthly_usage_hrs'] / (df['tenure_days'] / 30 + 1)
+    )
 
-        # ── Drop kolom leakage & non-feature (sama seperti training) ──
-        drop_cols = [
-            'customer_id', 'unsubscribed_date', 'subscription_date',
-            'effective_start', 'first_billing_date', 'last_billing_date',
-            'last_payment_date', 'last_survey_date', 'last_ticket_date',
-        ]
-        df_model = df.drop(columns=[c for c in drop_cols if c in df.columns])
+    df['payment_health'] = (
+        df['avg_payment_value'] /
+        (df['dunning_count'] + 1) /
+        (df['avg_days_late'].fillna(0) + 1)
+    ).clip(upper=1e6)
 
-        # ── Feature Engineering (harus SAMA dengan train_model.py) ──
-        df_model['engagement_score'] = (
-            df_model['monthly_usage_hrs'] *
-            df_model['feature_adoption_pct'] /
-            (df_model['days_since_login'] + 1)
-        ).clip(upper=1e6)
+    df['ever_dunning'] = (df['dunning_count'] > 0).astype(int)
 
-        df_model['usage_per_tenure'] = (
-            df_model['monthly_usage_hrs'] /
-            (df_model['tenure_days'] / 30 + 1)
-        )
+    df['late_payment_rate'] = (
+        df['late_payment_count'] / (df['payment_count'] + 1)
+    )
 
-        df_model['payment_health'] = (
-            df_model['avg_payment_value'] /
-            (df_model['dunning_count'] + 1) /
-            (df_model['avg_days_late'].fillna(0) + 1)
-        ).clip(upper=1e6)
+    df['support_intensity'] = (
+        df['ticket_count'] / (df['tenure_days'] / 30 + 1)
+    )
 
-        df_model['ever_dunning'] = (df_model['dunning_count'] > 0).astype(int)
+    df['has_open_critical'] = (
+        (df['critical_tickets'] > 0) & (df['open_ticket_ratio'] > 0)
+    ).astype(int)
 
-        df_model['late_payment_rate'] = (
-            df_model['late_payment_count'] /
-            (df_model['payment_count'] + 1)
-        )
+    df['unresolved_rate'] = (
+        df['open_tickets'] / (df['ticket_count'] + 1)
+    )
 
-        df_model['support_intensity'] = (
-            df_model['ticket_count'] /
-            (df_model['tenure_days'] / 30 + 1)
-        )
+    df['nps_usage_interaction'] = df['nps_latest'] * df['monthly_usage_hrs']
+    df['nps_tenure_interaction'] = df['nps_latest'] * df['tenure_days']
 
-        df_model['has_open_critical'] = (
-            (df_model['critical_tickets'] > 0) &
-            (df_model['open_ticket_ratio'] > 0)
-        ).astype(int)
+    df['login_recency_ratio'] = (
+        df['days_since_login'] / (df['tenure_days'] + 1)
+    )
 
-        df_model['unresolved_rate'] = (
-            df_model['open_tickets'] /
-            (df_model['ticket_count'] + 1)
-        )
+    df['revenue_per_day'] = (
+        df['total_billed'] / (df['tenure_days'] + 1)
+    )
 
-        df_model['nps_usage_interaction'] = (
-            df_model['nps_latest'] * df_model['monthly_usage_hrs']
-        )
+    # Fix inf/nan
+    for col in df.select_dtypes(include=[np.number]).columns:
+        df[col] = df[col].replace([np.inf, -np.inf], np.nan)
+        if df[col].isna().sum() > 0:
+            df[col] = df[col].fillna(df[col].median() if len(df) > 1 else 0)
 
-        df_model['nps_tenure_interaction'] = (
-            df_model['nps_latest'] * df_model['tenure_days']
-        )
+    return df
 
-        df_model['login_recency_ratio'] = (
-            df_model['days_since_login'] /
-            (df_model['tenure_days'] + 1)
-        )
 
-        df_model['revenue_per_day'] = (
-            df_model['total_billed'] /
-            (df_model['tenure_days'] + 1)
-        )
+def _predict_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    """Run prediction on a DataFrame, return with risk_score and risk_class."""
+    df_model = df.copy()
 
-        # Fix inf/nan
-        for col in df_model.select_dtypes(include=[np.number]).columns:
-            df_model[col] = df_model[col].replace([np.inf, -np.inf], np.nan)
-            if df_model[col].isna().sum() > 0:
-                df_model[col] = df_model[col].fillna(df_model[col].median())
+    # Drop non-feature columns
+    drop_cols = [
+        'customer_id', 'unsubscribed_date', 'subscription_date',
+        'effective_start', 'first_billing_date', 'last_billing_date',
+        'last_payment_date', 'last_survey_date', 'last_ticket_date',
+        'risk_score', 'risk_class', 'risk_label', 'uploaded_at', 'id',
+    ]
+    df_model = df_model.drop(columns=[c for c in drop_cols if c in df_model.columns], errors='ignore')
 
-        # ── Encoding (gunakan encoder dari training) ──
-        for col, le in self.label_encoders.items():
-            if col in df_model.columns:
-                # Handle unseen labels gracefully
-                df_model[col] = df_model[col].astype(str).apply(
-                    lambda x: le.transform([x])[0] if x in le.classes_ else -1
-                )
+    # Feature engineering
+    df_model = _feature_engineering(df_model)
 
-        # ── Drop target jika ada ──
-        if 'churn' in df_model.columns:
-            df_model = df_model.drop(columns=['churn'])
+    # Encode categorical
+    for col, le in _label_encoders.items():
+        if col in df_model.columns:
+            df_model[col] = df_model[col].astype(str).apply(
+                lambda x: le.transform([x])[0] if x in le.classes_ else -1
+            )
 
-        # ── Pastikan kolom sesuai urutan training ──
-        missing_cols = set(self.feature_names) - set(df_model.columns)
-        for col in missing_cols:
+    # Drop target if present
+    if 'churn' in df_model.columns:
+        df_model = df_model.drop(columns=['churn'])
+
+    # Ensure all feature columns exist
+    for col in _feature_columns:
+        if col not in df_model.columns:
             df_model[col] = 0
 
-        df_model = df_model[self.feature_names]
+    df_model = df_model[_feature_columns]
 
-        # ── Prediksi ──
-        probabilities = self.model.predict_proba(df_model)[:, 1]
-        self.df['risk_score'] = (probabilities * 100).round(1)
-        self.df['risk_class'] = self.df['risk_score'].apply(
-            lambda s: get_risk_class(s)['cls']
-        )
-        self.df['risk_label'] = self.df['risk_score'].apply(
-            lambda s: get_risk_class(s)['label']
-        )
+    # Predict
+    probabilities = _model.predict_proba(df_model)[:, 1]
+    df['risk_score'] = (probabilities * 100).round(1)
+    df['risk_class'] = df['risk_score'].apply(lambda s: get_risk_class(s)['cls'])
+
+    return df
+
+
+class CustomerService:
+    """Service layer for customer data access and churn prediction."""
+
+    def __init__(self):
+        self._use_db = False
+        self.df = None
+        self._load_data()
+
+    def _load_data(self):
+        """Load data from MySQL or fall back to CSV."""
+        session = get_session()
+        if session:
+            try:
+                customers = session.query(Customer).all()
+                if customers:
+                    self._use_db = True
+                    rows = []
+                    for c in customers:
+                        rows.append({col.name: getattr(c, col.name) for col in Customer.__table__.columns})
+                    self.df = pd.DataFrame(rows)
+                    # If risk_score not computed yet, predict and update DB
+                    if self.df['risk_score'].isna().all() or self.df['risk_score'].isna().any():
+                        self.df = _predict_dataframe(self.df)
+                        # Update risk scores in DB
+                        self._update_risk_in_db(session)
+                    return
+            except Exception as e:
+                print(f"[CustomerService] DB read failed: {e}")
+            finally:
+                close_session(session)
+
+        # Fallback to CSV
+        if os.path.exists(config.DATA_PATH):
+            self.df = pd.read_csv(config.DATA_PATH)
+            self.df = _predict_dataframe(self.df)
+        else:
+            self.df = pd.DataFrame()
+
+    def _update_risk_in_db(self, session):
+        """Update risk_score and risk_class in database."""
+        try:
+            for _, row in self.df.iterrows():
+                session.query(Customer).filter_by(
+                    customer_id=row['customer_id']
+                ).update({
+                    'risk_score': float(row['risk_score']),
+                    'risk_class': row['risk_class']
+                })
+            session.commit()
+        except Exception as e:
+            print(f"[CustomerService] Failed to update risk in DB: {e}")
+            session.rollback()
 
     def _customer_to_dict(self, row: pd.Series) -> dict:
-        """Konversi satu baris DataFrame ke dict untuk API response."""
+        """Convert a DataFrame row to API response dict."""
+        tenure_months = round(row.get('tenure_days', 0) / 30, 1)
+        monthly_rev = row.get('total_billed', 0) / max(row.get('tenure_days', 1) / 30, 1)
+
         return {
-            'customer_id': row['customer_id'],
-            'plan_type': row['plan_type'],
-            'contract_type': row['contract_type'],
-            'tenure_days': int(row['tenure_days']),
-            'tenure_months': round(row['tenure_days'] / 30, 1),
-            'monthly_usage_hrs': float(row['monthly_usage_hrs']),
-            'feature_adoption_pct': float(row['feature_adoption_pct']),
-            'days_since_login': int(row['days_since_login']),
-            'last_login_days_ago': int(row['days_since_login']),
-            'total_users': int(row['total_users']),
-            'nps_score': float(row['nps_latest']),
-            'nps_latest': float(row['nps_latest']),
-            'ticket_count': int(row['ticket_count']),
-            'support_tickets_last_90d': int(row['ticket_count']),
-            'total_billed': float(row['total_billed']),
-            'monthly_revenue': round(row['total_billed'] / max(row['tenure_days'] / 30, 1), 2),
-            'avg_payment_value': float(row['avg_payment_value']),
-            'dunning_count': int(row['dunning_count']),
-            'late_payment_count': int(row['late_payment_count']),
-            'payment_delay_count': int(row['late_payment_count']),
+            'customer_id': row.get('customer_id', ''),
+            'plan_type': row.get('plan_type', ''),
+            'contract_type': row.get('contract_type', ''),
+            'tenure_days': int(row.get('tenure_days', 0)),
+            'tenure_months': tenure_months,
+            'monthly_usage_hrs': float(row.get('monthly_usage_hrs', 0)),
+            'feature_adoption_pct': float(row.get('feature_adoption_pct', 0)),
+            'days_since_login': int(row.get('days_since_login', 0)),
+            'last_login_days_ago': int(row.get('days_since_login', 0)),
+            'total_users': int(row.get('total_users', 0)),
+            'nps_score': float(row.get('nps_latest', 0)),
+            'nps_latest': float(row.get('nps_latest', 0)),
+            'ticket_count': int(row.get('ticket_count', 0)),
+            'support_tickets_last_90d': int(row.get('ticket_count', 0)),
             'critical_tickets': int(row.get('critical_tickets', 0)),
             'open_tickets': int(row.get('open_tickets', 0)),
-            'risk_score': float(row['risk_score']),
-            'risk_class': row['risk_class'],
-            'risk_label': row['risk_label'],
+            'total_billed': float(row.get('total_billed', 0)),
+            'monthly_revenue': round(monthly_rev, 2),
+            'avg_payment_value': float(row.get('avg_payment_value', 0)),
+            'dunning_count': int(row.get('dunning_count', 0)),
+            'late_payment_count': int(row.get('late_payment_count', 0)),
+            'payment_delay_count': int(row.get('late_payment_count', 0)),
+            'risk_score': float(row.get('risk_score', 0)),
+            'risk_class': row.get('risk_class', 'low'),
+            'risk_label': get_risk_class(row.get('risk_score', 0))['label'],
         }
 
     def get_all_customers(self) -> List[dict]:
-        """Ambil semua pelanggan dengan skor risiko."""
+        """Get all customers with risk scores."""
+        if self.df is None or self.df.empty:
+            return []
         return [self._customer_to_dict(row) for _, row in self.df.iterrows()]
 
     def get_customer(self, customer_id: str) -> Optional[dict]:
-        """Ambil detail satu pelanggan berdasarkan ID."""
-        # Case-insensitive match
+        """Get a single customer by ID."""
+        if self.df is None or self.df.empty:
+            return None
         mask = self.df['customer_id'].str.upper() == customer_id.upper()
         matches = self.df[mask]
         if matches.empty:
@@ -184,27 +234,27 @@ class CustomerService:
         return self._customer_to_dict(matches.iloc[0])
 
     def get_high_risk_customers(self) -> List[dict]:
-        """Ambil pelanggan risiko tinggi, diurutkan dari skor tertinggi."""
-        high = self.df[self.df['risk_class'] == 'high'].sort_values(
-            'risk_score', ascending=False
-        )
+        """Get high-risk customers sorted by score."""
+        if self.df is None or self.df.empty:
+            return []
+        high = self.df[self.df['risk_class'] == 'high'].sort_values('risk_score', ascending=False)
         return [self._customer_to_dict(row) for _, row in high.iterrows()]
 
     def get_stats(self) -> dict:
-        """Statistik ringkasan seluruh pelanggan."""
+        """Summary statistics."""
+        if self.df is None or self.df.empty:
+            return {'total': 0, 'high_risk': 0, 'med_risk': 0, 'low_risk': 0}
+
         total = len(self.df)
         high_risk = int((self.df['risk_class'] == 'high').sum())
         med_risk = int((self.df['risk_class'] == 'med').sum())
         low_risk = int((self.df['risk_class'] == 'low').sum())
 
-        # Revenue calculation
+        # Revenue
         self.df['_monthly_rev'] = self.df['total_billed'] / (self.df['tenure_days'] / 30).clip(lower=1)
         total_revenue = float(self.df['_monthly_rev'].sum())
-        revenue_at_risk = float(
-            self.df[self.df['risk_class'] == 'high']['_monthly_rev'].sum()
-        )
+        revenue_at_risk = float(self.df[self.df['risk_class'] == 'high']['_monthly_rev'].sum())
 
-        # Additional stats
         inactive_30d = int((self.df['days_since_login'] > 30).sum())
         high_tickets = int((self.df['ticket_count'] >= 10).sum())
         high_adoption = int((self.df['feature_adoption_pct'] > 70).sum())
@@ -227,35 +277,32 @@ class CustomerService:
         }
 
     def get_trend_data(self) -> list:
-        """
-        Generate trend data — distribusi risiko per bulan.
-        Karena dataset tidak punya kolom tanggal churn per bulan,
-        kita simulasi berdasarkan tenure_days (bagi ke bucket bulan).
-        """
+        """Generate trend data (simulated from current distribution)."""
         import random
         random.seed(42)
 
-        # Simulate 6 months of trend based on current risk distribution
-        total = len(self.df)
+        if self.df is None or self.df.empty:
+            return []
+
         high_base = int((self.df['risk_class'] == 'high').sum())
         med_base = int((self.df['risk_class'] == 'med').sum())
         low_base = int((self.df['risk_class'] == 'low').sum())
 
         months = ['Des', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei']
         trend = []
-
         for i, month in enumerate(months):
-            # Add some variance to simulate monthly changes
-            factor = 1 + (i - 3) * 0.03  # slight upward trend
+            factor = 1 + (i - 3) * 0.03
             h = int(high_base * (factor + random.uniform(-0.05, 0.05)))
             m = int(med_base * (1 + random.uniform(-0.08, 0.08)))
             l = int(low_base * (1 / factor + random.uniform(-0.05, 0.05)))
             trend.append({'month': month, 'high': h, 'med': m, 'low': l})
-
         return trend
 
     def get_segment_stats(self) -> dict:
-        """Statistik churn per segmen (plan_type & contract_type)."""
+        """Churn stats per segment."""
+        if self.df is None or self.df.empty:
+            return {'plans': {}, 'contracts': {}}
+
         plans = {}
         for plan in ['starter', 'professional', 'enterprise']:
             subset = self.df[self.df['plan_type'].str.lower() == plan]
@@ -264,8 +311,7 @@ class CustomerService:
             else:
                 hr = int((subset['risk_class'] == 'high').sum())
                 plans[plan.capitalize()] = {
-                    'total': len(subset),
-                    'high_risk': hr,
+                    'total': len(subset), 'high_risk': hr,
                     'rate': hr / len(subset) * 100,
                 }
 
@@ -277,8 +323,7 @@ class CustomerService:
             else:
                 hr = int((subset['risk_class'] == 'high').sum())
                 contracts[ct.capitalize()] = {
-                    'total': len(subset),
-                    'high_risk': hr,
+                    'total': len(subset), 'high_risk': hr,
                     'rate': hr / len(subset) * 100,
                 }
 

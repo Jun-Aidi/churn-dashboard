@@ -1,20 +1,22 @@
 // ══════════════════════════════════════════════════════════════════════════════
 // Chat Engine — Frontend API Client
-// NLP processing dilakukan sepenuhnya di backend (Python/Flask).
-// Frontend hanya mengirim pesan dan menerima response.
+// Sends messages to backend LLM + RAG powered chatbot.
 // ══════════════════════════════════════════════════════════════════════════════
 
 const API_BASE = 'http://localhost:5000/api';
 
+// Generate a session ID per browser tab
+const SESSION_ID = 'session_' + Math.random().toString(36).substring(2, 10);
+
 /**
- * Kirim pesan user ke backend NLP engine dan terima response.
+ * Send user message to backend chatbot and receive response.
  */
 export async function processChat(message) {
   try {
     const res = await fetch(`${API_BASE}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ message, session_id: SESSION_ID }),
     });
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);

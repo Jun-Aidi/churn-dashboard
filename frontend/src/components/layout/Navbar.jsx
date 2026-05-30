@@ -34,8 +34,8 @@ export default function TopNavbar({ onMenuClick }) {
       </button>
 
       {/* Brand */}
-      <div className="font-bold text-[15px] tracking-[-0.3px] mr-7 flex-shrink-0" style={{ color: 'var(--color-text)' }}>
-        Maul en de geng
+      <div className="flex items-center gap-2 mr-7 flex-shrink-0">
+        <img src="/logo_ghosting.png" alt="Ghosting" className="h-8 w-auto" />
       </div>
 
       {/* Nav links */}

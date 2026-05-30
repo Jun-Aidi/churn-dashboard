@@ -1,288 +1,179 @@
-# 🔮 ChurnPredict — Dashboard Prediksi Churn Pelanggan
+# Churn Dashboard
 
-> Aplikasi dashboard berbasis React + Flask untuk memonitor, menganalisis, dan mencegah kehilangan pelanggan secara proaktif menggunakan model Machine Learning dan NLP chatbot.
+Dashboard prediksi customer churn dengan chatbot AI (RAG + LLM).
 
----
+## Tech Stack
 
-## 📋 Daftar Isi
+| Layer | Teknologi |
+|-------|-----------|
+| Frontend | React 18 + Vite + TailwindCSS |
+| Backend | Python Flask |
+| Database | MySQL + ChromaDB (vector store) |
+| ML Model | Random Forest (scikit-learn) |
+| Chatbot | DeepSeek LLM + RAG (9 paper akademik) |
+| Embedding | all-MiniLM-L6-v2 (sentence-transformers) |
 
-- [Gambaran Umum](#-gambaran-umum)
-- [Arsitektur](#-arsitektur)
-- [Teknologi](#-teknologi)
-- [Struktur Proyek](#-struktur-proyek)
-- [Prasyarat](#-prasyarat)
-- [Instalasi & Menjalankan](#-instalasi--menjalankan)
-- [Fitur Aplikasi](#-fitur-aplikasi)
-- [Dark Mode](#-dark-mode)
-- [NLP Chatbot Engine](#-nlp-chatbot-engine)
-- [Pengembang](#-pengembang)
+## Prerequisites
 
----
+- **Python 3.10** (wajib versi 3.10 untuk kompatibilitas library seperti torch, chromadb, sentence-transformers)
+- **Node.js** >= 18
+- **MySQL** >= 8.0 (harus sudah running)
+- **Git**
 
-## 🌟 Gambaran Umum
-
-**ChurnPredict** adalah dashboard interaktif yang membantu bisnis memantau pelanggan mana yang berpotensi churn (berhenti berlangganan).
-
-Setiap pelanggan mendapatkan **skor risiko (0–100)** yang dihitung berdasarkan faktor-faktor seperti keaktifan login, jumlah tiket support, NPS score, dan lama berlangganan.
-
-| Skor | Kategori | Status |
-|------|----------|--------|
-| 66–100 | 🔴 Risiko Tinggi | Urgent — Segera tangani |
-| 31–65  | 🟡 Risiko Sedang | Monitor — Pantau secara berkala |
-| 0–30   | 🟢 Risiko Rendah | Stabil — Pertahankan layanan |
-
----
-
-## 🏗 Arsitektur
-
-```
-┌─────────────────┐         ┌─────────────────────────────────┐
-│   Frontend      │  HTTP   │          Backend (Flask)         │
-│   (React)       │ ──────► │                                 │
-│                 │         │  ┌───────────────────────────┐  │
-│  CopilotWidget  │ POST    │  │   NLP Engine              │  │
-│  → /api/chat    │ ──────► │  │  - Stemming (Sastrawi)    │  │
-│                 │         │  │  - Word Embeddings        │  │
-│  Dashboard      │ GET     │  │  - Intent Classifier      │  │
-│  → /api/customers──────► │  └───────────────────────────┘  │
-│                 │         │  ┌───────────────────────────┐  │
-│                 │ ◄────── │  │   ML Model (.pkl)         │  │
-│                 │  JSON   │  │  - Random Forest          │  │
-└─────────────────┘         │  │  - Scikit-learn           │  │
-                            │  └───────────────────────────┘  │
-                            │  ┌───────────────────────────┐  │
-                            │  │   Data Layer (Pandas)     │  │
-                            │  │  - customers.csv          │  │
-                            │  └───────────────────────────┘  │
-                            └─────────────────────────────────┘
-```
-
-**Kenapa Flask?**
-- Micro-framework ringan — cocok untuk API yang fokus serve model ML
-- Standar industri untuk deployment model scikit-learn/pkl
-- Kompatibel langsung dengan Sastrawi, pandas, numpy, scikit-learn
-- Cepat di-setup (2-3 endpoint cukup untuk project ini)
-- Frontend-agnostic — serve JSON, bisa dipanggil dari React/Vue/Mobile
-
----
-
-## 🛠 Teknologi
-
-### Frontend
-| Teknologi | Versi | Kegunaan |
-|-----------|-------|----------|
-| React | 18 | UI Framework |
-| Vite | 6 | Build tool & dev server |
-| Tailwind CSS | 3 | Utility-first styling |
-| Recharts | 2 | Chart & visualisasi data |
-| React Router | 6 | Client-side routing |
-
-### Backend
-| Teknologi | Kegunaan |
-|-----------|----------|
-| Flask | Web framework (REST API) |
-| Flask-CORS | Cross-origin resource sharing |
-| Pandas | Data processing & analysis |
-| Scikit-learn | Machine learning model |
-| Sastrawi | Indonesian NLP stemmer (Nazief-Adriani) |
-| NumPy | Numerical computing |
-| Joblib | Model serialization (.pkl) |
-
----
-
-## 📁 Struktur Proyek
-
-```
-churn-dashboard/
-├── README.md
-├── frontend/
-│   ├── package.json
-│   ├── vite.config.js
-│   ├── tailwind.config.js
-│   └── src/
-│       ├── main.jsx
-│       ├── App.jsx
-│       ├── api/index.js             # Mock data (fallback jika backend mati)
-│       ├── components/
-│       │   ├── copilot/
-│       │   │   ├── CopilotWidget.jsx  # UI chatbot
-│       │   │   ├── chatEngine.js      # API client → backend
-│       │   │   └── nlpEngine.js       # Local NLP fallback
-│       │   ├── charts/
-│       │   ├── layout/
-│       │   └── ui/
-│       └── pages/
-│
-└── backend/
-    ├── venv/                    # Virtual environment (JANGAN commit)
-    ├── run.py                   # Entry point Flask
-    ├── config.py                # Konfigurasi path
-    ├── requirements.txt         # Python dependencies
-    ├── data/
-    │   └── customers.csv        # Dataset pelanggan
-    ├── models/
-    │   └── churn_model.pkl      # Model ML (taruh file .pkl di sini)
-    └── app/
-        ├── __init__.py          # Flask app factory
-        ├── routes.py            # API endpoints
-        ├── nlp/
-        │   ├── stemmer.py       # Indonesian stemmer (Sastrawi)
-        │   ├── preprocessor.py  # Tokenize, stopwords, synonyms, n-grams
-        │   ├── intent_classifier.py  # Word embeddings + neural classifier
-        │   └── chat_engine.py   # Response generator
-        └── services/
-            └── customer_service.py  # Data access layer (pandas)
-```
-
----
-
-## ✅ Prasyarat
-
-- **Node.js** v18+ → [Download](https://nodejs.org/)
-- **Python** 3.10+ → [Download](https://www.python.org/downloads/)
-- **Git** → [Download](https://git-scm.com/downloads)
-
-### Verifikasi
-
-```bash
-node --version     # v18.x.x atau lebih baru
-npm --version      # 9.x.x atau lebih baru
-python --version   # 3.10.x atau lebih baru
-```
-
----
-
-## 🚀 Instalasi & Menjalankan
+## Setup & Menjalankan
 
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/<username>/churn-dashboard.git
+git clone <repo-url>
 cd churn-dashboard
 ```
 
-### 2. Setup Backend (Python + Flask)
+### 2. Setup Backend
 
 ```bash
 cd backend
 
-# Buat virtual environment
-python -m venv venv
+# Buat virtual environment dengan Python 3.10
+py -3.10 -m venv venv
 
-# Aktivasi virtual environment
-# Windows (CMD):
-venv\Scripts\activate
-# Windows (PowerShell):
+# Aktivasi venv
+# Windows CMD:
+venv\Scripts\activate.bat
+# Windows PowerShell:
 .\venv\Scripts\Activate.ps1
 # Linux/Mac:
 source venv/bin/activate
 
 # Install dependencies
+pip install --upgrade pip
 pip install -r requirements.txt
+```
 
-# Jalankan backend server
+### 3. Konfigurasi Environment
+
+```bash
+# Copy .env.example menjadi .env
+copy .env.example .env
+
+# Edit .env — isi minimal:
+#   MYSQL_PASSWORD (password MySQL kamu)
+#   DEEPSEEK_API_KEY (API key dari Tencent TokenHub atau provider lain)
+```
+
+### 4. Setup MySQL
+
+Pastikan MySQL sudah running. Database akan otomatis dibuat saat pertama kali server dijalankan, termasuk seed data dari `data/merged_dataset.csv`.
+
+Jika ingin membuat database manual:
+```sql
+CREATE DATABASE IF NOT EXISTS churn_dashboard CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+### 5. Build Vector Store (sekali saja)
+
+```bash
+# Masih di folder backend dengan venv aktif
+python build_vectorstore.py
+```
+
+Proses ini membaca 9 PDF paper dari `data/papers/`, memecah menjadi chunks, embed dengan sentence-transformers, dan menyimpan ke ChromaDB. Hanya perlu dijalankan sekali (atau jika paper ditambah/diubah).
+
+### 6. Jalankan Backend
+
+```bash
 python run.py
 ```
 
-Backend akan berjalan di: **http://localhost:5000**
+Output yang diharapkan:
+```
+[DB] Database 'churn_dashboard' ensured.
+[DB] Connected to MySQL: churn_dashboard@localhost
+[DB] Customers table already has 2955 rows. Skipping seed.
+[RAG] Loaded vector store: 1123 chunks
+[LLM] DeepSeek client initialized (model: deepseek-v4-flash)
+ * Running on http://127.0.0.1:5000
+```
 
-> ⚠️ **Penting:** Selalu gunakan virtual environment, jangan install ke global Python.
-
-### 3. Setup Frontend (React + Vite)
-
-Buka terminal baru:
+### 7. Setup & Jalankan Frontend
 
 ```bash
+# Buka terminal baru
 cd frontend
 
 # Install dependencies
 npm install
 
-# Jalankan dev server
+# Jalankan development server
 npm run dev
 ```
 
-Frontend akan berjalan di: **http://localhost:5173**
+Frontend akan berjalan di `http://localhost:5173` dan terhubung ke backend di `http://localhost:5000`.
 
----
+## Struktur Project
 
-### Menjalankan Keduanya (Ringkasan)
-
-Terminal 1 — Backend:
-```bash
-cd backend
-.\venv\Scripts\Activate.ps1    # atau: source venv/bin/activate
-python run.py
+```
+churn-dashboard/
+├── backend/
+│   ├── app/
+│   │   ├── __init__.py          # Flask app factory
+│   │   ├── database.py          # MySQL models + auto-create DB
+│   │   ├── routes.py            # API endpoints
+│   │   ├── nlp/
+│   │   │   ├── chat_engine.py   # Chatbot pipeline + guardrails
+│   │   │   ├── llm_client.py    # DeepSeek LLM + function calling
+│   │   │   └── rag_engine.py    # ChromaDB retrieval
+│   │   └── services/
+│   │       ├── customer_service.py  # Data access (MySQL/CSV)
+│   │       └── predict_service.py   # ML prediction
+│   ├── data/
+│   │   ├── merged_dataset.csv   # Dataset utama (2955 customers)
+│   │   ├── papers/              # 9 PDF paper churn (untuk RAG)
+│   │   └── raw/                 # Dataset mentah (belum merge)
+│   ├── models/
+│   │   └── churn_model_bundle.pkl  # Model Random Forest
+│   ├── chroma_db/               # Vector store (git-ignored)
+│   ├── build_vectorstore.py     # Script offline: embed papers
+│   ├── config.py                # Konfigurasi
+│   ├── run.py                   # Entry point server
+│   ├── .env                     # Environment variables (git-ignored)
+│   └── .env.example             # Template environment
+├── frontend/
+│   ├── src/
+│   │   ├── App.jsx
+│   │   ├── pages/               # Dashboard, Customers, Predict, Upload
+│   │   ├── components/
+│   │   │   └── copilot/         # Chatbot widget (Ghosting)
+│   │   └── api/                 # API client
+│   └── package.json
+└── PLANNING.md                  # Dokumentasi arsitektur
 ```
 
-Terminal 2 — Frontend:
-```bash
-cd frontend
-npm run dev
-```
-
-> 💡 Jika backend tidak berjalan, chatbot akan otomatis fallback ke mode offline (NLP lokal di browser).
-
----
-
-## 🗂 Fitur Aplikasi
-
-| Halaman | Route | Deskripsi |
-|---------|-------|-----------|
-| **Dashboard** | `/` | Ringkasan statistik, grafik tren & distribusi risiko |
-| **Pelanggan** | `/customers` | Grid kartu semua pelanggan dengan filter & pencarian |
-| **Detail Pelanggan** | `/customers/:id` | Analisis faktor churn & rekomendasi aksi |
-| **Prediksi Manual** | `/predict` | Input data → hitung skor risiko |
-| **Perbandingan Model** | `/model` | Metrik evaluasi model ML |
-
-### API Endpoints
+## API Endpoints
 
 | Method | Endpoint | Deskripsi |
 |--------|----------|-----------|
-| POST | `/api/chat` | Kirim pesan ke chatbot NLP |
-| GET | `/api/customers` | Ambil semua data pelanggan |
-| GET | `/api/customers/<id>` | Detail satu pelanggan |
+| GET | `/api/customers` | Semua pelanggan + risk score |
+| GET | `/api/customers/:id` | Detail satu pelanggan |
 | GET | `/api/customers/stats` | Statistik ringkasan |
+| GET | `/api/trend` | Data tren churn bulanan |
+| POST | `/api/predict` | Prediksi churn (input manual) |
+| POST | `/api/chat` | Chatbot AI (LLM + RAG) |
+| POST | `/api/upload` | Upload CSV pelanggan |
 
----
+## Chatbot (Ghosting)
 
-## 🤖 NLP Chatbot Engine
+Chatbot menggunakan arsitektur **RAG + LLM**:
+- **LLM**: DeepSeek v4 Flash (via Tencent TokenHub, OpenAI-compatible)
+- **RAG**: 9 paper akademik tentang customer churn
+- **Function Calling**: LLM otomatis query database untuk data real-time
+- **Guardrails**: 3 layer (regex filter, system prompt, output validation)
 
-Chatbot **Ghosting** menggunakan pipeline NLP berbasis Deep Learning:
+Ganti provider LLM dengan mengubah `DEEPSEEK_BASE_URL` dan `DEEPSEEK_MODEL` di `.env`.
 
-1. **Tokenization & Normalization** — Lowercase, punctuation removal
-2. **Indonesian Stemming** — Sastrawi (algoritma Nazief-Adriani)
-3. **Stopword Removal** — 60+ stopwords Indonesia & Inggris
-4. **Synonym Expansion** — 20+ grup sinonim, 200+ kata
-5. **Word Embeddings** — 16-dimensi dense vectors (semantic category-based)
-6. **TF-IDF Vectorization** — Term frequency-inverse document frequency
-7. **Cosine Similarity** — Mengukur kemiripan semantik
-8. **Fuzzy Matching** — Levenshtein distance (toleransi typo)
-9. **N-gram Matching** — Bigram & trigram overlap
-10. **Multi-signal Neural Classifier** — 5 sinyal scoring (embedding 30%, keyword 25%, phrase similarity 25%, context 15%, n-gram 5%)
+## Catatan
 
-**Contoh pertanyaan yang dipahami:**
-- "Apa faktor utama churn?" / "Fitur yang paling mempengaruhi churn" / "Kenapa pelanggan cabut"
-- "Siapa VIP yang berisiko?" / "Customer premium yang mau pergi"
-- "Berapa pelanggan risiko tinggi?" / "Total customer kritis"
-- "Analisis C-0001" / "Cek profil customer"
-- "Buat email untuk C-0003" / "Draft penawaran"
-- "Strategi retensi" / "Gimana biar churn turun"
-
----
-
-## 🌙 Dark Mode
-
-Klik ikon 🌙/☀️ di navbar. Preferensi disimpan di `localStorage` dan mendeteksi preferensi sistem.
-
----
-
-## 👨‍💻 Pengembang
-
-Dikembangkan sebagai proyek **PBL (Project-Based Learning)** Semester 6.
-
----
-
-## 📄 Lisensi
-
-Proyek ini dibuat untuk keperluan akademik.
+- Python **harus versi 3.10** — versi lebih baru (3.11+) mungkin tidak kompatibel dengan beberapa library (torch, chromadb, onnxruntime)
+- MySQL harus sudah running sebelum start backend
+- Jika MySQL tidak tersedia, backend otomatis fallback ke mode CSV (tanpa persistensi)
+- Vector store (`chroma_db/`) di-gitignore — perlu build ulang setelah clone

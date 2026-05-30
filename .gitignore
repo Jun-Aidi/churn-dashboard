@@ -71,6 +71,12 @@ frontend/.vite/
 .DS_Store
 Thumbs.db
 
+# ── ChromaDB Vector Store ─────────────────
+backend/chroma_db/
+
+# ── Backend .env ──────────────────────────
+backend/.env
+
 # ── Logs ──────────────────────────────────
 *.log
 logs/

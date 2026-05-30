@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getRiskClass, getFactors, getRecos } from '../api/index';
+import { getRiskClass, getFactors } from '../api/index';
 import { useCustomer } from '../hooks/useCustomers';
 
 const card = { background: 'var(--color-card)', borderRadius: 14, padding: '22px 24px', boxShadow: 'var(--color-card-shadow)', border: '1px solid var(--color-border)' };
@@ -9,12 +9,6 @@ const sevColors = {
   critical: { border: '#dc2626', bg: 'rgba(220,38,38,0.08)', impact: { bg: 'rgba(220,38,38,0.15)', color: '#dc2626' }, bar: '#dc2626' },
   warning: { border: '#d97706', bg: 'rgba(217,119,6,0.08)', impact: { bg: 'rgba(217,119,6,0.15)', color: '#d97706' }, bar: '#d97706' },
   caution: { border: '#16a34a', bg: 'rgba(22,163,74,0.08)', impact: { bg: 'rgba(22,163,74,0.15)', color: '#16a34a' }, bar: '#16a34a' },
-};
-const recoStyles = {
-  urgent: { bg: 'rgba(220,38,38,0.08)', border: 'rgba(220,38,38,0.2)', tag: '#dc2626', label: 'URGENT' },
-  important: { bg: 'rgba(217,119,6,0.08)', border: 'rgba(217,119,6,0.2)', tag: '#d97706', label: 'PENTING' },
-  normal: { bg: 'rgba(22,163,74,0.08)', border: 'rgba(22,163,74,0.2)', tag: '#16a34a', label: 'DISARANKAN' },
-  info: { bg: 'rgba(79,142,247,0.08)', border: 'rgba(79,142,247,0.2)', tag: '#4f8ef7', label: 'INFO' },
 };
 
 export default function CustomerDetail() {
@@ -47,7 +41,6 @@ export default function CustomerDetail() {
 
   const risk = getRiskClass(customer.score);
   const factors = getFactors(customer);
-  const recos = getRecos(customer);
   const rc = risk.cls === 'high' ? '#dc2626' : risk.cls === 'med' ? '#d97706' : '#16a34a';
   const rb = risk.cls === 'high' ? 'rgba(220,38,38,0.15)' : risk.cls === 'med' ? 'rgba(217,119,6,0.15)' : 'rgba(22,163,74,0.15)';
 
@@ -123,7 +116,7 @@ export default function CustomerDetail() {
 
         {/* Right */}
         <div>
-          <div style={{ ...card, marginBottom: 16 }}>
+          <div style={card}>
             <div className="text-[13.5px] font-bold mb-3.5" style={{ color: 'var(--color-text)' }}>
               <i className="fa-solid fa-magnifying-glass text-[#4f8ef7] mr-1"></i> Faktor Penyebab Churn
             </div>
@@ -140,32 +133,6 @@ export default function CustomerDetail() {
                     <div className="text-xs leading-relaxed" style={{ color: 'var(--color-muted)' }}>{f.detail}</div>
                     <div className="h-1 rounded mt-2.5 overflow-hidden" style={{ background: 'var(--color-hover)' }}>
                       <div className="h-full rounded" style={{ width: `${f.bar}%`, background: s.bar }} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div style={card}>
-            <div className="text-[13.5px] font-bold mb-4" style={{ color: 'var(--color-text)' }}>
-              <i className="fa-solid fa-lightbulb text-yellow-400 mr-1.5"></i> Rekomendasi Aksi Retention
-            </div>
-            <div className="flex flex-col gap-2.5">
-              {recos.map((r, i) => {
-                const rs = recoStyles[r.type];
-                return (
-                  <div key={i} className="rounded-[10px] p-[14px_16px] flex gap-3 items-start"
-                    style={{ background: rs.bg, border: `1px solid ${rs.border}` }}>
-                    <div className="text-[18px] flex-shrink-0 mt-0.5 w-6 text-center">
-                      <i className={r.icon} style={{ color: rs.tag }}></i>
-                    </div>
-                    <div>
-                      <div className="text-[13px] font-semibold mb-1" style={{ color: 'var(--color-text)' }}>
-                        {r.title}
-                        <span className="text-[10px] font-bold px-[7px] py-0.5 rounded-full ml-2 align-middle" style={{ background: rs.tag, color: '#fff' }}>{rs.label}</span>
-                      </div>
-                      <div className="text-xs leading-relaxed" style={{ color: 'var(--color-muted)' }}>{r.desc}</div>
                     </div>
                   </div>
                 );

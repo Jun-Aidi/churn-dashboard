@@ -2,6 +2,40 @@ import React, { useState, useEffect, useRef } from 'react';
 import { processChat } from './chatEngine';
 import { fetchCustomers } from '../../api/index';
 
+function formatBotMessage(text) {
+  if (!text) return '';
+  let html = text;
+  // Headers (### → h4, ## → h3)
+  html = html.replace(/^### (.+)$/gm, '<h4 style="font-size:13px;font-weight:700;margin:8px 0 4px;">$1</h4>');
+  html = html.replace(/^## (.+)$/gm, '<h3 style="font-size:14px;font-weight:700;margin:10px 0 4px;">$1</h3>');
+  // Bold
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  // Italic
+  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  // Inline code
+  html = html.replace(/`([^`]+)`/g, '<code style="background:var(--color-hover);padding:1px 4px;border-radius:3px;font-size:12px;">$1</code>');
+  // Unordered list items
+  html = html.replace(/^- (.+)$/gm, '<li style="margin-left:16px;list-style:disc;">$1</li>');
+  // Ordered list items
+  html = html.replace(/^\d+\.\s(.+)$/gm, '<li style="margin-left:16px;list-style:decimal;">$1</li>');
+  // Tables (simple: | col | col |)
+  html = html.replace(/\|(.+)\|/g, (match) => {
+    const cells = match.split('|').filter(c => c.trim());
+    if (cells.every(c => /^[-:]+$/.test(c.trim()))) return ''; // separator row
+    const tds = cells.map(c => `<td style="padding:2px 6px;border:1px solid var(--color-border);">${c.trim()}</td>`).join('');
+    return `<tr>${tds}</tr>`;
+  });
+  // Wrap consecutive <tr> in table
+  html = html.replace(/((<tr>.*?<\/tr>\s*)+)/g, '<table style="border-collapse:collapse;font-size:12px;margin:6px 0;">$1</table>');
+  // Line breaks
+  html = html.replace(/\n/g, '<br/>');
+  // Clean up double <br/> after block elements
+  html = html.replace(/(<\/h[34]>)<br\/>/g, '$1');
+  html = html.replace(/(<\/li>)<br\/>/g, '$1');
+  html = html.replace(/(<\/table>)<br\/>/g, '$1');
+  return html;
+}
+
 export default function CopilotWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -95,7 +129,7 @@ export default function CopilotWidget() {
                     border: msg.sender === 'user' ? 'none' : '1px solid var(--color-border)',
                   }}>
                   {msg.sender === 'bot'
-                    ? <div dangerouslySetInnerHTML={{ __html: msg.text.replace(/\n/g, '<br/>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
+                    ? <div className="bot-msg-content" dangerouslySetInnerHTML={{ __html: formatBotMessage(msg.text) }} />
                     : msg.text}
                   <div className="text-[10px] mt-1.5"
                     style={{ color: msg.sender === 'user' ? 'rgba(255,255,255,0.7)' : 'var(--color-subtle)', textAlign: msg.sender === 'user' ? 'right' : 'left' }}>

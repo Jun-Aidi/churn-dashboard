@@ -6,6 +6,7 @@ import Customers from './pages/Customers';
 import CustomerDetail from './pages/CustomerDetail';
 import ModelComparison from './pages/ModelComparison';
 import Predict from './pages/Predict';
+import Upload from './pages/Upload';
 import CopilotWidget from './components/copilot/CopilotWidget';
 
 export default function App() {
@@ -18,6 +19,7 @@ export default function App() {
           <Route path="customers/:id" element={<CustomerDetail />} />
           <Route path="model"     element={<ModelComparison />} />
           <Route path="predict"   element={<Predict />} />
+          <Route path="upload"    element={<Upload />} />
           <Route path="*"         element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
