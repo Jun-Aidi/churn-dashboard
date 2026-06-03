@@ -4,9 +4,7 @@ import { NavLink } from 'react-router-dom';
 const navItems = [
   { to: '/',          icon: 'fa-solid fa-gauge-high',          label: 'Dashboard', end: true },
   { to: '/customers', icon: 'fa-solid fa-users',               label: 'Pelanggan' },
-  { to: '/predict',   icon: 'fa-solid fa-chart-line',          label: 'Prediksi' },
   { to: '/upload',    icon: 'fa-solid fa-upload',              label: 'Upload Data' },
-  { to: '/model',     icon: 'fa-solid fa-brain',               label: 'Model' },
 ];
 
 const bottomItems = [
