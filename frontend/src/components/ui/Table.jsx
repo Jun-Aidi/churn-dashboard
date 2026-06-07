@@ -49,7 +49,7 @@ export default function Table({ customers }) {
                 <td className="px-3 py-[13px]">
                   <button
                     onClick={e => { e.stopPropagation(); navigate(`/customers/${c.id}`); }}
-                    className="text-[12.5px] font-semibold text-[#4f8ef7] bg-transparent border-none cursor-pointer transition-opacity duration-150 font-[inherit] hover:opacity-70"
+                    className="text-[12.5px] font-semibold text-[var(--gdu-teal)] bg-transparent border-none cursor-pointer transition-opacity duration-150 font-[inherit] hover:opacity-70"
                   >Detail <i className="fa-solid fa-angle-right ml-1"></i></button>
                 </td>
               </tr>

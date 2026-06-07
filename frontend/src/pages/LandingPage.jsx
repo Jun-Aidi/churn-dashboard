@@ -36,7 +36,7 @@ const stats = [
 const insightCards = [
   { label: 'High risk', value: '128', tone: 'bg-red-500' },
   { label: 'Need follow-up', value: '42%', tone: 'bg-amber-400' },
-  { label: 'Saved revenue', value: 'Rp 76M', tone: 'bg-teal-500' },
+  { label: 'Saved revenue', value: '$76K', tone: 'bg-teal-500' },
 ];
 
 export default function LandingPage() {

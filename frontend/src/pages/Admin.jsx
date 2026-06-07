@@ -41,9 +41,9 @@ function StatCard({ title, value, icon, color }) {
     <div
       className="rounded-xl p-5 border"
       style={{
-        background: 'var(--color-card)',
-        borderColor: 'var(--color-border)',
-        boxShadow: 'var(--color-card-shadow)',
+        background: 'var(--gdu-card)',
+        borderColor: 'var(--gdu-border)',
+        boxShadow: 'var(--gdu-shadow)',
       }}
     >
       <div className="flex items-center gap-3">
@@ -54,10 +54,10 @@ function StatCard({ title, value, icon, color }) {
           <i className={icon}></i>
         </div>
         <div>
-          <p className="text-xs font-medium" style={{ color: 'var(--color-subtle)' }}>
+          <p className="text-xs font-medium" style={{ color: 'var(--gdu-subtle)' }}>
             {title}
           </p>
-          <p className="text-xl font-bold mt-0.5" style={{ color: 'var(--color-text)' }}>
+          <p className="text-xl font-bold mt-0.5" style={{ color: 'var(--gdu-text)' }}>
             {value !== null && value !== undefined ? value : '—'}
           </p>
         </div>
@@ -120,14 +120,14 @@ function UserFormModal({ isOpen, onClose, onSubmit, initialData, isEdit }) {
       <div
         className="w-full max-w-md rounded-xl p-6 border"
         style={{
-          background: 'var(--color-card)',
-          borderColor: 'var(--color-border)',
+          background: 'var(--gdu-card)',
+          borderColor: 'var(--gdu-border)',
           boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
           maxHeight: 'calc(100vh - 32px)',
           overflowY: 'auto',
         }}
       >
-        <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--color-text)' }}>
+        <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--gdu-text)' }}>
           {isEdit ? 'Edit Pengguna' : 'Tambah Pengguna Baru'}
         </h3>
 
@@ -141,7 +141,7 @@ function UserFormModal({ isOpen, onClose, onSubmit, initialData, isEdit }) {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Name */}
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-muted)' }}>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--gdu-muted)' }}>
               Nama Lengkap
             </label>
             <input
@@ -151,8 +151,8 @@ function UserFormModal({ isOpen, onClose, onSubmit, initialData, isEdit }) {
               className="w-full rounded-lg py-2.5 px-3 text-sm border outline-none"
               style={{
                 background: 'var(--color-bg)',
-                borderColor: errors.name ? '#dc2626' : 'var(--color-border-input)',
-                color: 'var(--color-text)',
+                borderColor: errors.name ? 'var(--gdu-red)' : 'var(--gdu-border)',
+                color: 'var(--gdu-text)',
               }}
               placeholder="Masukkan nama lengkap"
             />
@@ -161,7 +161,7 @@ function UserFormModal({ isOpen, onClose, onSubmit, initialData, isEdit }) {
 
           {/* Email */}
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-muted)' }}>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--gdu-muted)' }}>
               Email
             </label>
             <input
@@ -171,8 +171,8 @@ function UserFormModal({ isOpen, onClose, onSubmit, initialData, isEdit }) {
               className="w-full rounded-lg py-2.5 px-3 text-sm border outline-none"
               style={{
                 background: 'var(--color-bg)',
-                borderColor: errors.email ? '#dc2626' : 'var(--color-border-input)',
-                color: 'var(--color-text)',
+                borderColor: errors.email ? 'var(--gdu-red)' : 'var(--gdu-border)',
+                color: 'var(--gdu-text)',
               }}
               placeholder="contoh@email.com"
             />
@@ -181,7 +181,7 @@ function UserFormModal({ isOpen, onClose, onSubmit, initialData, isEdit }) {
 
           {/* Password */}
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-muted)' }}>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--gdu-muted)' }}>
               Password {isEdit && <span className="font-normal">(kosongkan jika tidak ingin mengubah)</span>}
             </label>
             <input
@@ -191,8 +191,8 @@ function UserFormModal({ isOpen, onClose, onSubmit, initialData, isEdit }) {
               className="w-full rounded-lg py-2.5 px-3 text-sm border outline-none"
               style={{
                 background: 'var(--color-bg)',
-                borderColor: errors.password ? '#dc2626' : 'var(--color-border-input)',
-                color: 'var(--color-text)',
+                borderColor: errors.password ? 'var(--gdu-red)' : 'var(--gdu-border)',
+                color: 'var(--gdu-text)',
               }}
               placeholder={isEdit ? 'Kosongkan jika tidak diubah' : 'Minimal 8 karakter'}
             />
@@ -201,7 +201,7 @@ function UserFormModal({ isOpen, onClose, onSubmit, initialData, isEdit }) {
 
           {/* Role */}
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-muted)' }}>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--gdu-muted)' }}>
               Role
             </label>
             <select
@@ -210,8 +210,8 @@ function UserFormModal({ isOpen, onClose, onSubmit, initialData, isEdit }) {
               className="w-full rounded-lg py-2.5 px-3 text-sm border outline-none cursor-pointer"
               style={{
                 background: 'var(--color-bg)',
-                borderColor: errors.role ? '#dc2626' : 'var(--color-border-input)',
-                color: 'var(--color-text)',
+                borderColor: errors.role ? 'var(--gdu-red)' : 'var(--gdu-border)',
+                color: 'var(--gdu-text)',
               }}
             >
               <option value="user">User</option>
@@ -228,8 +228,8 @@ function UserFormModal({ isOpen, onClose, onSubmit, initialData, isEdit }) {
               className="px-4 py-2 rounded-lg text-sm font-medium border cursor-pointer"
               style={{
                 background: 'var(--color-bg)',
-                borderColor: 'var(--color-border-input)',
-                color: 'var(--color-muted)',
+                borderColor: 'var(--gdu-border)',
+                color: 'var(--gdu-muted)',
               }}
             >
               Batal
@@ -238,7 +238,7 @@ function UserFormModal({ isOpen, onClose, onSubmit, initialData, isEdit }) {
               type="submit"
               disabled={submitting}
               className="px-4 py-2 rounded-lg text-sm font-medium text-white cursor-pointer disabled:opacity-50"
-              style={{ background: '#4f8ef7' }}
+              style={{ background: 'var(--gdu-teal)' }}
             >
               {submitting ? (
                 <><i className="fa-solid fa-circle-notch fa-spin mr-2"></i>Menyimpan...</>
@@ -362,13 +362,14 @@ export default function Admin() {
   };
 
   return (
-    <div className="fade-in">
+    <div className="gdu-page">
+      <div className="gdu-content fade-in">
       {/* Toast Notification */}
       {toast && (
         <div
           className="fixed top-4 right-4 z-50 px-4 py-3 rounded-lg text-sm font-medium shadow-lg flex items-center gap-2 animate-fade-in"
           style={{
-            background: toast.type === 'success' ? '#16a34a' : '#dc2626',
+            background: toast.type === 'success' ? 'var(--gdu-teal)' : 'var(--gdu-red)',
             color: '#fff',
           }}
         >
@@ -378,22 +379,21 @@ export default function Admin() {
       )}
 
       {/* Page Header */}
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Admin Panel</h1>
-          <p className="page-subtitle">Kelola pengguna dan pantau statistik sistem</p>
-        </div>
+      <div className="mb-6 rounded-[2rem] p-6 gdu-hero">
+        <p className="text-xs font-black uppercase tracking-[0.2em] text-[#8ee7df]">Control room</p>
+        <h1 className="mt-2 text-4xl font-black tracking-[-0.05em]">Admin Panel</h1>
+        <p className="mt-2 text-sm font-medium text-[#fffaf0]/70">Kelola pengguna dan pantau statistik sistem</p>
       </div>
 
       {/* ═══ System Statistics Section ═══ */}
       <section className="mb-8">
-        <h2 className="text-base font-semibold mb-4" style={{ color: 'var(--color-text)' }}>
-          <i className="fa-solid fa-chart-pie mr-2 text-sm" style={{ color: 'var(--color-subtle)' }}></i>
+        <h2 className="text-base font-semibold mb-4" style={{ color: 'var(--gdu-text)' }}>
+          <i className="fa-solid fa-chart-pie mr-2 text-sm" style={{ color: 'var(--gdu-subtle)' }}></i>
           Statistik Sistem
         </h2>
 
         {loadingStats ? (
-          <div className="text-center py-8 text-sm" style={{ color: 'var(--color-subtle)' }}>
+          <div className="text-center py-8 text-sm" style={{ color: 'var(--gdu-subtle)' }}>
             <i className="fa-solid fa-circle-notch fa-spin mr-2"></i> Memuat statistik...
           </div>
         ) : errorStats ? (
@@ -406,31 +406,31 @@ export default function Admin() {
               title="Pengguna Aktif"
               value={stats?.active_users}
               icon="fa-solid fa-user-check"
-              color="#16a34a"
+              color="var(--gdu-teal)"
             />
             <StatCard
               title="Pengguna Nonaktif"
               value={stats?.inactive_users}
               icon="fa-solid fa-user-xmark"
-              color="#dc2626"
+              color="var(--gdu-red)"
             />
             <StatCard
               title="Total Pelanggan"
               value={stats?.total_customers}
               icon="fa-solid fa-users"
-              color="#4f8ef7"
+              color="var(--gdu-teal)"
             />
             <StatCard
               title="Total Prediksi"
               value={stats?.total_predictions}
               icon="fa-solid fa-brain"
-              color="#9333ea"
+              color="var(--gdu-amber)"
             />
             <StatCard
               title="Total Sesi Chat"
               value={stats?.total_chat_sessions}
               icon="fa-solid fa-comments"
-              color="#d97706"
+              color="var(--gdu-amber)"
             />
           </div>
         )}
@@ -439,21 +439,21 @@ export default function Admin() {
       {/* ═══ User Management Section ═══ */}
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold" style={{ color: 'var(--color-text)' }}>
-            <i className="fa-solid fa-users-gear mr-2 text-sm" style={{ color: 'var(--color-subtle)' }}></i>
+          <h2 className="text-base font-semibold" style={{ color: 'var(--gdu-text)' }}>
+            <i className="fa-solid fa-users-gear mr-2 text-sm" style={{ color: 'var(--gdu-subtle)' }}></i>
             Manajemen Pengguna
           </h2>
           <button
             onClick={() => { setEditingUser(null); setShowModal(true); }}
             className="px-4 py-2 rounded-lg text-sm font-medium text-white cursor-pointer flex items-center gap-2"
-            style={{ background: '#4f8ef7' }}
+            style={{ background: 'var(--gdu-teal)' }}
           >
             <i className="fa-solid fa-plus text-xs"></i> Tambah Pengguna
           </button>
         </div>
 
         {loadingUsers ? (
-          <div className="text-center py-8 text-sm" style={{ color: 'var(--color-subtle)' }}>
+          <div className="text-center py-8 text-sm" style={{ color: 'var(--gdu-subtle)' }}>
             <i className="fa-solid fa-circle-notch fa-spin mr-2"></i> Memuat daftar pengguna...
           </div>
         ) : errorUsers ? (
@@ -464,9 +464,9 @@ export default function Admin() {
           <div
             className="rounded-xl border overflow-hidden"
             style={{
-              background: 'var(--color-card)',
-              borderColor: 'var(--color-border)',
-              boxShadow: 'var(--color-card-shadow)',
+              background: 'var(--gdu-card)',
+              borderColor: 'var(--gdu-border)',
+              boxShadow: 'var(--gdu-shadow)',
             }}
           >
             <div className="overflow-x-auto">
@@ -474,14 +474,14 @@ export default function Admin() {
                 <thead>
                   <tr
                     className="border-b"
-                    style={{ borderColor: 'var(--color-border)', background: 'var(--color-hover)' }}
+                    style={{ borderColor: 'var(--gdu-border)', background: 'var(--gdu-hover)' }}
                   >
-                    <th className="text-left px-4 py-3 font-medium" style={{ color: 'var(--color-muted)' }}>Nama</th>
-                    <th className="text-left px-4 py-3 font-medium" style={{ color: 'var(--color-muted)' }}>Email</th>
-                    <th className="text-left px-4 py-3 font-medium" style={{ color: 'var(--color-muted)' }}>Role</th>
-                    <th className="text-left px-4 py-3 font-medium" style={{ color: 'var(--color-muted)' }}>Status</th>
-                    <th className="text-left px-4 py-3 font-medium" style={{ color: 'var(--color-muted)' }}>Tanggal Registrasi</th>
-                    <th className="text-center px-4 py-3 font-medium" style={{ color: 'var(--color-muted)' }}>Aksi</th>
+                    <th className="text-left px-4 py-3 font-medium" style={{ color: 'var(--gdu-muted)' }}>Nama</th>
+                    <th className="text-left px-4 py-3 font-medium" style={{ color: 'var(--gdu-muted)' }}>Email</th>
+                    <th className="text-left px-4 py-3 font-medium" style={{ color: 'var(--gdu-muted)' }}>Role</th>
+                    <th className="text-left px-4 py-3 font-medium" style={{ color: 'var(--gdu-muted)' }}>Status</th>
+                    <th className="text-left px-4 py-3 font-medium" style={{ color: 'var(--gdu-muted)' }}>Tanggal Registrasi</th>
+                    <th className="text-center px-4 py-3 font-medium" style={{ color: 'var(--gdu-muted)' }}>Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -489,12 +489,12 @@ export default function Admin() {
                     <tr
                       key={u.id}
                       className="border-b last:border-b-0 transition-colors"
-                      style={{ borderColor: 'var(--color-border)' }}
+                      style={{ borderColor: 'var(--gdu-border)' }}
                     >
-                      <td className="px-4 py-3 font-medium" style={{ color: 'var(--color-text)' }}>
+                      <td className="px-4 py-3 font-medium" style={{ color: 'var(--gdu-text)' }}>
                         {u.name}
                       </td>
-                      <td className="px-4 py-3" style={{ color: 'var(--color-muted)' }}>
+                      <td className="px-4 py-3" style={{ color: 'var(--gdu-muted)' }}>
                         {u.email}
                       </td>
                       <td className="px-4 py-3">
@@ -502,7 +502,7 @@ export default function Admin() {
                           className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
                           style={{
                             background: u.role === 'admin' ? 'rgba(79,142,247,0.15)' : 'rgba(107,114,128,0.15)',
-                            color: u.role === 'admin' ? '#4f8ef7' : '#6b7280',
+                            color: u.role === 'admin' ? 'var(--gdu-teal)' : '#6b7280',
                           }}
                         >
                           {u.role === 'admin' ? 'Admin' : 'User'}
@@ -513,17 +513,17 @@ export default function Admin() {
                           className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium"
                           style={{
                             background: u.is_active ? 'rgba(22,163,74,0.15)' : 'rgba(220,38,38,0.15)',
-                            color: u.is_active ? '#16a34a' : '#dc2626',
+                            color: u.is_active ? 'var(--gdu-teal)' : 'var(--gdu-red)',
                           }}
                         >
                           <span
                             className="w-1.5 h-1.5 rounded-full"
-                            style={{ background: u.is_active ? '#16a34a' : '#dc2626' }}
+                            style={{ background: u.is_active ? 'var(--gdu-teal)' : 'var(--gdu-red)' }}
                           ></span>
                           {u.is_active ? 'Aktif' : 'Nonaktif'}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-xs" style={{ color: 'var(--color-subtle)' }}>
+                      <td className="px-4 py-3 text-xs" style={{ color: 'var(--gdu-subtle)' }}>
                         {formatDate(u.created_at)}
                       </td>
                       <td className="px-4 py-3">
@@ -532,7 +532,7 @@ export default function Admin() {
                           <button
                             onClick={() => { setEditingUser(u); setShowModal(true); }}
                             className="p-1.5 rounded-md text-xs cursor-pointer border-none transition-colors"
-                            style={{ background: 'var(--color-hover)', color: 'var(--color-muted)' }}
+                            style={{ background: 'var(--gdu-hover)', color: 'var(--gdu-muted)' }}
                             title="Edit pengguna"
                           >
                             <i className="fa-solid fa-pen-to-square"></i>
@@ -542,7 +542,7 @@ export default function Admin() {
                             <button
                               onClick={() => handleDeactivate(u)}
                               className="p-1.5 rounded-md text-xs cursor-pointer border-none transition-colors"
-                              style={{ background: 'rgba(220,38,38,0.1)', color: '#dc2626' }}
+                              style={{ background: 'rgba(220,38,38,0.1)', color: 'var(--gdu-red)' }}
                               title="Nonaktifkan pengguna"
                             >
                               <i className="fa-solid fa-user-slash"></i>
@@ -551,7 +551,7 @@ export default function Admin() {
                             <button
                               onClick={() => handleActivate(u)}
                               className="p-1.5 rounded-md text-xs cursor-pointer border-none transition-colors"
-                              style={{ background: 'rgba(22,163,74,0.1)', color: '#16a34a' }}
+                              style={{ background: 'rgba(22,163,74,0.1)', color: 'var(--gdu-teal)' }}
                               title="Aktifkan pengguna"
                             >
                               <i className="fa-solid fa-user-check"></i>
@@ -563,7 +563,7 @@ export default function Admin() {
                   ))}
                   {users.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="text-center py-8 text-sm" style={{ color: 'var(--color-subtle)' }}>
+                      <td colSpan={6} className="text-center py-8 text-sm" style={{ color: 'var(--gdu-subtle)' }}>
                         Belum ada pengguna terdaftar.
                       </td>
                     </tr>
@@ -583,6 +583,7 @@ export default function Admin() {
         initialData={editingUser}
         isEdit={Boolean(editingUser)}
       />
+      </div>
     </div>
   );
 }

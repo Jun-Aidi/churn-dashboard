@@ -39,41 +39,41 @@ export default function Upload() {
   };
 
   return (
-    <div className="fade-in">
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Upload Data</h1>
-          <p className="page-subtitle">Upload file CSV pelanggan untuk prediksi churn</p>
+    <div className="gdu-page">
+      <div className="gdu-content fade-in">
+        <div className="mb-6 rounded-[2rem] p-6 gdu-hero">
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-[#8ee7df]">Data ingestion</p>
+          <h1 className="mt-2 text-4xl font-black tracking-[-0.05em]">Upload Data</h1>
+          <p className="mt-2 text-sm font-medium text-[#fffaf0]/70">Upload file CSV pelanggan untuk prediksi churn</p>
         </div>
-      </div>
 
-      <div className="rounded-[14px] p-6" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', boxShadow: 'var(--color-card-shadow)' }}>
+      <div className="gdu-card p-6">
         <form onSubmit={handleUpload} className="flex flex-col gap-5">
           {/* Info */}
           <div className="rounded-xl p-4" style={{ background: 'rgba(79,142,247,0.08)', border: '1px solid rgba(79,142,247,0.2)' }}>
-            <div className="text-sm font-semibold mb-2" style={{ color: '#4f8ef7' }}>
+            <div className="text-sm font-semibold mb-2" style={{ color: 'var(--gdu-teal)' }}>
               <i className="fa-solid fa-info-circle mr-2"></i>Format CSV yang Didukung
             </div>
-            <div className="text-xs leading-relaxed" style={{ color: 'var(--color-muted)' }}>
+            <div className="text-xs leading-relaxed" style={{ color: 'var(--gdu-muted)' }}>
               <p className="mb-1"><strong>CSV Merged</strong> — File yang sudah berisi semua fitur (customer_id, plan_type, tenure_days, ticket_count, nps_latest, total_billed, dll)</p>
-              <p>File harus mengandung kolom <code className="px-1 py-0.5 rounded text-[11px]" style={{ background: 'var(--color-hover)' }}>customer_id</code> sebagai identifier unik.</p>
+              <p>File harus mengandung kolom <code className="px-1 py-0.5 rounded text-[11px]" style={{ background: 'var(--gdu-hover)' }}>customer_id</code> sebagai identifier unik.</p>
             </div>
           </div>
 
           {/* File Input */}
           <div>
-            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text)' }}>Pilih File CSV</label>
+            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--gdu-text)' }}>Pilih File CSV</label>
             <div className="relative">
               <input
                 type="file"
                 accept=".csv"
                 onChange={e => { setFile(e.target.files[0]); setResult(null); setError(null); }}
                 className="w-full rounded-[9px] py-3 px-4 text-sm font-[inherit] outline-none border cursor-pointer"
-                style={{ background: 'var(--color-input)', borderColor: 'var(--color-border-input)', color: 'var(--color-text)' }}
+                style={{ background: 'var(--gdu-input)', borderColor: 'var(--gdu-border)', color: 'var(--gdu-text)' }}
               />
             </div>
             {file && (
-              <p className="text-xs mt-2" style={{ color: 'var(--color-muted)' }}>
+              <p className="text-xs mt-2" style={{ color: 'var(--gdu-muted)' }}>
                 <i className="fa-solid fa-file-csv mr-1"></i> {file.name} ({(file.size / 1024).toFixed(1)} KB)
               </p>
             )}
@@ -97,12 +97,12 @@ export default function Upload() {
         {/* Result */}
         {result && (
           <div className="mt-5 rounded-xl p-4" style={{ background: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.2)' }}>
-            <div className="text-sm font-semibold mb-1" style={{ color: '#16a34a' }}>
+            <div className="text-sm font-semibold mb-1" style={{ color: 'var(--gdu-teal)' }}>
               <i className="fa-solid fa-check-circle mr-2"></i>Upload Berhasil
             </div>
-            <p className="text-xs" style={{ color: 'var(--color-muted)' }}>{result.message}</p>
+            <p className="text-xs" style={{ color: 'var(--gdu-muted)' }}>{result.message}</p>
             {result.inserted !== undefined && (
-              <div className="flex gap-4 mt-2 text-xs" style={{ color: 'var(--color-text)' }}>
+              <div className="flex gap-4 mt-2 text-xs" style={{ color: 'var(--gdu-text)' }}>
                 <span><strong>{result.total_rows}</strong> total baris</span>
                 <span><strong>{result.inserted}</strong> baru</span>
                 <span><strong>{result.updated}</strong> diperbarui</span>
@@ -114,11 +114,12 @@ export default function Upload() {
         {/* Error */}
         {error && (
           <div className="mt-5 rounded-xl p-4" style={{ background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.2)' }}>
-            <div className="text-sm font-semibold" style={{ color: '#dc2626' }}>
+            <div className="text-sm font-semibold" style={{ color: 'var(--gdu-red)' }}>
               <i className="fa-solid fa-triangle-exclamation mr-2"></i>{error}
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

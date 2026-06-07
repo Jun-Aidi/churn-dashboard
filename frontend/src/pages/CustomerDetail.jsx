@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getRiskClass, getFactors } from '../api/index';
 import { useCustomer } from '../hooks/useCustomers';
+import { exportCustomerReport } from '../utils/export';
 
 const card = { background: 'var(--color-card)', borderRadius: 14, padding: '22px 24px', boxShadow: 'var(--color-card-shadow)', border: '1px solid var(--color-border)' };
 
@@ -46,7 +47,7 @@ export default function CustomerDetail() {
 
   const infoData = [
     { label: 'Tenure', value: `${customer.tenure} bulan` },
-    { label: 'Revenue/Bln', value: `Rp ${(customer.revenue * 16000 / 1000).toFixed(0)}rb` },
+    { label: 'Revenue/Bln', value: `$${(customer.revenue || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })}` },
     { label: 'Penggunaan', value: `${customer.usage} jam/bln` },
     { label: 'Adopsi Fitur', value: `${customer.adoption}%` },
     { label: 'Tiket Support', value: `${customer.tickets} tiket` },
@@ -67,7 +68,7 @@ export default function CustomerDetail() {
             <p className="page-subtitle">Analisis mendalam faktor risiko churn dan rekomendasi aksi</p>
           </div>
         </div>
-        <button className="btn btn-accent"><i className="fa-solid fa-download text-xs"></i> Export Laporan</button>
+        <button className="btn btn-accent" onClick={() => exportCustomerReport(customer)}><i className="fa-solid fa-download text-xs"></i> Export Laporan</button>
       </div>
 
       <div className="grid-detail">

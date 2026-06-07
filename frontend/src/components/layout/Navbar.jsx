@@ -40,10 +40,10 @@ export default function TopNavbar() {
           textDecoration: 'none',
           fontSize: 13.5,
           fontWeight: isActive ? 600 : 500,
-          color: isActive ? '#4f8ef7' : 'var(--color-muted)',
-          padding: '6px 14px',
-          borderRadius: 8,
-          background: isActive ? (dark ? 'rgba(79,142,247,0.15)' : '#eff6ff') : 'transparent',
+          color: isActive ? 'var(--gdu-teal)' : 'var(--gdu-muted)',
+          padding: '7px 14px',
+          borderRadius: 999,
+          background: isActive ? 'color-mix(in srgb, var(--gdu-teal) 14%, transparent)' : 'transparent',
           transition: 'all 0.15s ease',
           whiteSpace: 'nowrap',
         })}
@@ -58,23 +58,24 @@ export default function TopNavbar() {
       className="top-navbar fixed top-0 left-0 right-0 z-[90] h-[60px] flex items-center transition-colors duration-200"
       style={{
         padding: '0 20px 0 24px',
-        background: 'var(--color-card)',
-        borderBottom: '1px solid var(--color-border)',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+        background: 'var(--gdu-card)',
+        borderBottom: '1px solid var(--gdu-border)',
+        boxShadow: 'var(--gdu-shadow)',
+        backdropFilter: 'blur(18px)',
       }}
     >
       {/* Mobile hamburger */}
       <button
         onClick={() => setMobileOpen(o => !o)}
         className="mobile-menu-btn hidden items-center justify-center w-9 h-9 rounded-[9px] cursor-pointer mr-3 flex-shrink-0 border transition-colors"
-        style={{ background: 'var(--color-input)', borderColor: 'var(--color-border-input)', color: 'var(--color-text)' }}
+        style={{ background: 'var(--gdu-input)', borderColor: 'var(--gdu-border)', color: 'var(--gdu-text)' }}
       >
         <i className="fa-solid fa-bars text-sm"></i>
       </button>
 
       {/* Brand */}
       <div className="flex items-center gap-2 mr-7 flex-shrink-0">
-        <img src="/logo_ghosting.png" alt="Ghosting" className="h-8 w-auto" />
+        <img src="/logo_ghosting.png" alt="Ghosting" className="h-10 w-auto" />
       </div>
 
       {/* Nav links (desktop) */}
@@ -87,16 +88,16 @@ export default function TopNavbar() {
         {/* Search */}
         <div
           className="top-search flex items-center gap-2 rounded-[10px] px-[13px] py-[7px] w-[190px] border transition-colors duration-200"
-          style={{ background: 'var(--color-input)', borderColor: 'var(--color-border-input)' }}
+          style={{ background: 'var(--gdu-input)', borderColor: 'var(--gdu-border)' }}
         >
-          <i className="fa-solid fa-magnifying-glass text-[13px]" style={{ color: 'var(--color-subtle)' }}></i>
+          <i className="fa-solid fa-magnifying-glass text-[13px]" style={{ color: 'var(--gdu-subtle)' }}></i>
           <input
             type="text"
             placeholder="Cari..."
             value={searchVal}
             onChange={e => setSearchVal(e.target.value)}
             className="bg-transparent border-none outline-none text-[13px] w-full font-[inherit]"
-            style={{ color: 'var(--color-text)' }}
+            style={{ color: 'var(--gdu-text)' }}
           />
         </div>
 
@@ -104,7 +105,7 @@ export default function TopNavbar() {
         <button
           onClick={toggle}
           className="relative w-9 h-9 rounded-[9px] flex items-center justify-center cursor-pointer transition-all duration-200 border flex-shrink-0"
-          style={{ background: 'var(--color-input)', borderColor: 'var(--color-border-input)', color: 'var(--color-text)' }}
+          style={{ background: 'var(--gdu-input)', borderColor: 'var(--gdu-border)', color: 'var(--gdu-text)' }}
           title={dark ? 'Mode Terang' : 'Mode Gelap'}
         >
           <i className={`fa-solid ${dark ? 'fa-sun text-yellow-400' : 'fa-moon text-[#6b7280]'} text-sm`}></i>
@@ -113,7 +114,7 @@ export default function TopNavbar() {
         {/* Bell */}
         <button
           className="relative w-9 h-9 rounded-[9px] flex items-center justify-center cursor-pointer transition-colors duration-200 border flex-shrink-0"
-          style={{ background: 'var(--color-input)', borderColor: 'var(--color-border-input)', color: 'var(--color-text)' }}
+          style={{ background: 'var(--gdu-input)', borderColor: 'var(--gdu-border)', color: 'var(--gdu-text)' }}
         >
           <i className="fa-solid fa-bell text-sm"></i>
           <span className="absolute top-[7px] right-[7px] w-[7px] h-[7px] bg-red-500 rounded-full border-2 border-white dark:border-[#161b27]"></span>
@@ -122,19 +123,19 @@ export default function TopNavbar() {
         {/* User profile */}
         <div
           className="flex items-center gap-2 py-1 pl-1 pr-[10px] rounded-[10px] flex-shrink-0 border"
-          style={{ background: 'var(--color-input)', borderColor: 'var(--color-border-input)' }}
+          style={{ background: 'var(--gdu-input)', borderColor: 'var(--gdu-border)' }}
         >
           <div
             className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0 tracking-[-0.5px]"
-            style={{ background: 'linear-gradient(135deg, #4f8ef7 0%, #8b5cf6 100%)' }}
+            style={{ background: 'linear-gradient(135deg, var(--gdu-teal) 0%, var(--gdu-amber) 100%)' }}
           >
             {getInitials(user?.name)}
           </div>
           <div className="user-name-block leading-[1.2]">
-            <div className="text-[12.5px] font-semibold" style={{ color: 'var(--color-text)' }}>
+            <div className="text-[12.5px] font-semibold" style={{ color: 'var(--gdu-text)' }}>
               {user?.name || 'Pengguna'}
             </div>
-            <div className="text-[10.5px]" style={{ color: 'var(--color-muted)' }}>
+            <div className="text-[10.5px]" style={{ color: 'var(--gdu-muted)' }}>
               {isAdmin ? 'Admin' : 'User'}
             </div>
           </div>
@@ -144,7 +145,7 @@ export default function TopNavbar() {
         <button
           onClick={logout}
           className="w-9 h-9 rounded-[9px] flex items-center justify-center cursor-pointer transition-colors duration-200 border flex-shrink-0 hover:text-red-500"
-          style={{ background: 'var(--color-input)', borderColor: 'var(--color-border-input)', color: 'var(--color-text)' }}
+          style={{ background: 'var(--gdu-input)', borderColor: 'var(--gdu-border)', color: 'var(--gdu-text)' }}
           title="Keluar"
           aria-label="Logout"
         >
@@ -156,7 +157,7 @@ export default function TopNavbar() {
       {mobileOpen && (
         <div
           className="mobile-nav-menu absolute top-[60px] left-0 right-0 flex-col p-3 gap-1 border-b"
-          style={{ display: 'none', background: 'var(--color-card)', borderColor: 'var(--color-border)', boxShadow: '0 6px 16px rgba(0,0,0,0.12)' }}
+          style={{ display: 'none', background: 'var(--gdu-card)', borderColor: 'var(--gdu-border)', boxShadow: '0 6px 16px rgba(0,0,0,0.12)' }}
         >
           {renderLinks(() => setMobileOpen(false))}
         </div>

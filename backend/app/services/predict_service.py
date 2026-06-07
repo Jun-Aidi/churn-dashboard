@@ -32,7 +32,7 @@ def predict_single(data: dict) -> dict:
     ticket_count = data.get('total_tickets', 0)
     critical_tickets = data.get('high_priority_tickets', 0)
     nps_latest = data.get('avg_nps_score', 7)
-    total_billed = data.get('total_payment_value', 1000000)
+    total_billed = data.get('total_payment_value', 5000)
     avg_days_late = data.get('avg_payment_delay', 0)
     late_payment_count = data.get('total_delayed_payments', 0)
 

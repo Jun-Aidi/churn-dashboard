@@ -29,6 +29,23 @@
   --color-row-hover:  #f9fafb;
   --color-score-area: #f9fafb;
   --color-tag-bg:     #f3f4f6;
+
+  /* Ghosting Detection Unit theme */
+  --gdu-bg: #f5efe4;
+  --gdu-panel: #15201d;
+  --gdu-card: rgba(255,250,240,0.86);
+  --gdu-card-solid: #fffaf0;
+  --gdu-text: #15201d;
+  --gdu-muted: #60716c;
+  --gdu-subtle: #8a9995;
+  --gdu-border: rgba(21,32,29,0.12);
+  --gdu-input: rgba(255,255,255,0.78);
+  --gdu-hover: rgba(21,32,29,0.06);
+  --gdu-teal: #00a6a6;
+  --gdu-teal-dark: #008f8f;
+  --gdu-amber: #f59e0b;
+  --gdu-red: #ef4444;
+  --gdu-shadow: 0 24px 80px rgba(21,32,29,0.10);
 }
 
 .dark {
@@ -48,6 +65,22 @@
   --color-row-hover:  #1a2236;
   --color-score-area: #1e2535;
   --color-tag-bg:     #1e2535;
+
+  --gdu-bg: #0d1117;
+  --gdu-panel: #101820;
+  --gdu-card: rgba(22,27,39,0.88);
+  --gdu-card-solid: #161b27;
+  --gdu-text: #e2e8f0;
+  --gdu-muted: #aab7c8;
+  --gdu-subtle: #7c8aa0;
+  --gdu-border: rgba(226,232,240,0.12);
+  --gdu-input: rgba(30,37,53,0.92);
+  --gdu-hover: rgba(255,255,255,0.07);
+  --gdu-teal: #2dd4bf;
+  --gdu-teal-dark: #14b8a6;
+  --gdu-amber: #fbbf24;
+  --gdu-red: #f87171;
+  --gdu-shadow: 0 24px 80px rgba(0,0,0,0.32);
 }
 
 @layer base {
@@ -100,6 +133,73 @@
     border-radius: 14px;
     border: 1px solid var(--color-border);
     box-shadow: var(--color-card-shadow);
+  }
+
+  .gdu-page {
+    position: relative;
+    overflow: hidden;
+    border-radius: 28px;
+    background: var(--gdu-bg);
+    color: var(--gdu-text);
+    margin: -12px;
+    min-height: calc(100vh - 60px);
+    padding: clamp(16px, 3vw, 28px);
+  }
+  .gdu-page::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.85;
+    background:
+      radial-gradient(circle at 8% 8%, color-mix(in srgb, var(--gdu-teal) 24%, transparent), transparent 28%),
+      radial-gradient(circle at 90% 4%, color-mix(in srgb, var(--gdu-amber) 22%, transparent), transparent 25%),
+      radial-gradient(circle at 52% 100%, color-mix(in srgb, var(--gdu-red) 14%, transparent), transparent 32%);
+  }
+  .gdu-page::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.52;
+    background:
+      linear-gradient(var(--gdu-border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--gdu-border) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+  .gdu-content { position: relative; z-index: 1; }
+  .gdu-card {
+    background: var(--gdu-card);
+    border: 1px solid var(--gdu-border);
+    border-radius: 28px;
+    box-shadow: var(--gdu-shadow);
+    backdrop-filter: blur(18px);
+  }
+  .gdu-hero {
+    background: var(--gdu-panel);
+    color: #fffaf0;
+    border: 1px solid var(--gdu-border);
+    box-shadow: var(--gdu-shadow);
+  }
+  .gdu-title { color: var(--gdu-text); }
+  .gdu-muted { color: var(--gdu-muted); }
+  .gdu-subtle { color: var(--gdu-subtle); }
+  .gdu-input {
+    background: var(--gdu-input);
+    border: 1px solid var(--gdu-border);
+    color: var(--gdu-text);
+  }
+  .gdu-primary {
+    background: var(--gdu-teal);
+    color: #ffffff;
+  }
+  .gdu-primary:hover { background: var(--gdu-teal-dark); }
+  .gdu-secondary {
+    background: var(--gdu-amber);
+    color: #15201d;
+  }
+  @media (max-width: 640px) {
+    .gdu-page { margin: -8px; border-radius: 22px; }
   }
 
   /* ── Risk badge ── */

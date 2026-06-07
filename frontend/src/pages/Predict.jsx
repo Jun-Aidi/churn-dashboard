@@ -44,7 +44,7 @@ const fields = [
   { key: 'total_tickets',          label: 'Total Tiket Support',          placeholder: '3',       hint: 'Jumlah tiket support dalam 90 hari' },
   { key: 'high_priority_tickets',  label: 'Tiket Prioritas Tinggi',       placeholder: '1',       hint: 'Tiket dengan severity tinggi/critical' },
   { key: 'avg_nps_score',          label: 'NPS Score (0–10)',             placeholder: '7',       hint: 'Rata-rata NPS customer' },
-  { key: 'total_payment_value',    label: 'Total Nilai Pembayaran (Rp)',  placeholder: '5000000', hint: 'Jumlah total pembayaran kumulatif' },
+  { key: 'total_payment_value',    label: 'Total Nilai Pembayaran ($)',   placeholder: '5000',    hint: 'Jumlah total pembayaran kumulatif (USD)' },
   { key: 'avg_payment_delay',      label: 'Rata-rata Keterlambatan Bayar',placeholder: '2',       hint: 'Rata-rata hari keterlambatan bayar' },
   { key: 'total_delayed_payments', label: 'Jumlah Keterlambatan Bayar',   placeholder: '1',       hint: 'Berapa kali terjadi keterlambatan' },
 ];
@@ -332,7 +332,7 @@ export default function Predict() {
                     { key: 'high_priority_ratio', label: 'Rasio Tiket Prioritas',  fmt: v => (v * 100).toFixed(1) + '%' },
                     { key: 'engagement_score',    label: 'Skor Engagement',        fmt: v => v.toFixed(3) },
                     { key: 'payment_risk_score',  label: 'Skor Risiko Pembayaran', fmt: v => v.toFixed(2) },
-                    { key: 'revenue_per_user',    label: 'Revenue per User',       fmt: v => 'Rp ' + v.toLocaleString('id-ID', { maximumFractionDigits: 0 }) },
+                    { key: 'revenue_per_user',    label: 'Revenue per User',       fmt: v => '$' + v.toLocaleString('en-US', { maximumFractionDigits: 2 }) },
                     { key: 'inactivity_ratio',    label: 'Rasio Tidak Aktif',      fmt: v => v.toFixed(3) },
                   ].map(item => (
                     <div key={item.key} style={{
