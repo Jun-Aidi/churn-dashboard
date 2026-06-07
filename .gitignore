@@ -65,6 +65,7 @@ frontend/.vite/
 # ── Editor & IDE ──────────────────────────
 .vscode/
 .idea/
+.kiro/
 *.swp
 *.swo
 *~
