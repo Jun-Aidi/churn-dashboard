@@ -26,4 +26,8 @@ def create_app():
     app.register_blueprint(trend_bp, url_prefix='/api')
     app.register_blueprint(upload_bp, url_prefix='/api')
 
+    # Register auth blueprint
+    from app.routes.auth_routes import auth_bp
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
+
     return app

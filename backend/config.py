@@ -37,6 +37,9 @@ MODEL_PATH = os.path.join(BASE_DIR, 'models', 'churn_model_bundle.pkl')
 PAPERS_DIR = os.path.join(BASE_DIR, 'data', 'papers')
 RAW_DATA_DIR = os.path.join(BASE_DIR, 'data', 'raw')
 
+# ── JWT ──
+JWT_SECRET = os.getenv('JWT_SECRET', 'change-me-in-production')
+
 # ── Flask ──
 DEBUG = os.getenv('FLASK_DEBUG', 'true').lower() == 'true'
 HOST = '0.0.0.0'

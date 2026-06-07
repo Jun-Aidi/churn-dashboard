@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { getRiskClass } from '../api/index';
 import { useCustomers } from '../hooks/useCustomers';
 import Table from '../components/ui/Table';
 import ChurnTrendChart from '../components/charts/ChurnTrendChart';
-import RiskDonutChart from '../components/charts/RiskDonutChart';
+import FeatureImportanceChart from '../components/charts/FeatureImportanceChart';
 
 const card = {
   background: 'var(--color-card)',
@@ -63,7 +64,38 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Empty data state */}
+      {!loading && total === 0 && (
+        <div
+          className="text-center py-16 rounded-xl border"
+          style={{
+            background: 'var(--color-card)',
+            borderColor: 'var(--color-border)',
+            boxShadow: 'var(--color-card-shadow)',
+          }}
+        >
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ background: 'rgba(79,142,247,0.1)' }}>
+            <i className="fa-solid fa-cloud-arrow-up text-2xl" style={{ color: '#4f8ef7' }}></i>
+          </div>
+          <h2 className="text-lg font-semibold mb-2" style={{ color: 'var(--color-text)' }}>
+            Belum ada data pelanggan
+          </h2>
+          <p className="text-sm mb-6 max-w-md mx-auto" style={{ color: 'var(--color-muted)' }}>
+            Upload file CSV data pelanggan Anda untuk mulai menganalisis dan memprediksi risiko churn.
+          </p>
+          <Link
+            to="/upload"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-white"
+            style={{ background: 'linear-gradient(135deg, #4f8ef7 0%, #3b6fe0 100%)', textDecoration: 'none' }}
+          >
+            <i className="fa-solid fa-upload text-xs"></i>
+            Upload Data
+          </Link>
+        </div>
+      )}
+
       {/* Stat Cards */}
+      {!loading && total > 0 && (<>
       <div className="grid-stat-cards">
         {cards.map((c, i) => (
           <div key={i} className={`fade-in stagger-${i + 1} flex flex-col gap-3`} style={card}>
@@ -94,9 +126,9 @@ export default function Dashboard() {
           <ChurnTrendChart />
         </div>
         <div className="fade-in stagger-2" style={card}>
-          <div className="text-sm font-semibold mb-0.5" style={{ color: 'var(--color-text)' }}>Distribusi Risiko</div>
-          <div className="text-xs mb-4" style={{ color: 'var(--color-muted)' }}>Berdasarkan kategori risiko saat ini</div>
-          <RiskDonutChart counts={counts} total={total} />
+          <div className="text-sm font-semibold mb-0.5" style={{ color: 'var(--color-text)' }}>Feature Importance</div>
+          <div className="text-xs mb-4" style={{ color: 'var(--color-muted)' }}>Faktor paling berpengaruh pada model prediksi churn</div>
+          <FeatureImportanceChart />
         </div>
       </div>
 
@@ -156,6 +188,7 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      </>)}
     </div>
   );
 }

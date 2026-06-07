@@ -81,10 +81,13 @@ def _validate_output(response: str) -> str:
 # MAIN ENTRY POINT
 # ══════════════════════════════════════════════════════════════════════════════
 
-def process_chat(message: str, session_id: Optional[str] = None) -> dict:
+def process_chat(message: str, session_id: Optional[str] = None, user_id: Optional[int] = None) -> dict:
     """
     Process user message through the full pipeline.
     Returns dict with 'response', 'source', 'tokens_used'.
+
+    `user_id` scopes all data lookups (customer profile, statistics, high-risk
+    list, segments) to the logged-in user's own dashboard data.
     """
     if not session_id:
         session_id = str(uuid.uuid4())[:8]
@@ -107,7 +110,7 @@ def process_chat(message: str, session_id: Optional[str] = None) -> dict:
 
     # ── LLM Pipeline ──
     if llm_available():
-        result = chat_with_llm(text, session_id)
+        result = chat_with_llm(text, session_id, user_id=user_id)
 
         # Layer 3: Output Validation
         result['response'] = _validate_output(result['response'])

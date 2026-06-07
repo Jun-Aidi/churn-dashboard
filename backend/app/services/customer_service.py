@@ -61,6 +61,10 @@ def _feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
         df['ticket_count'] / (df['tenure_days'] / 30 + 1)
     )
 
+    # Calculate open_ticket_ratio if not present
+    if 'open_ticket_ratio' not in df.columns:
+        df['open_ticket_ratio'] = df['open_tickets'] / (df['ticket_count'] + 1)
+
     df['has_open_critical'] = (
         (df['critical_tickets'] > 0) & (df['open_ticket_ratio'] > 0)
     ).astype(int)
@@ -134,17 +138,21 @@ def _predict_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 class CustomerService:
     """Service layer for customer data access and churn prediction."""
 
-    def __init__(self):
+    def __init__(self, user_id=None):
         self._use_db = False
         self.df = None
+        self._user_id = user_id
         self._load_data()
 
     def _load_data(self):
-        """Load data from MySQL or fall back to CSV."""
+        """Load data from MySQL only. No automatic CSV fallback."""
         session = get_session()
         if session:
             try:
-                customers = session.query(Customer).all()
+                query = session.query(Customer)
+                if self._user_id is not None:
+                    query = query.filter_by(user_id=self._user_id)
+                customers = query.all()
                 if customers:
                     self._use_db = True
                     rows = []
@@ -152,7 +160,8 @@ class CustomerService:
                         rows.append({col.name: getattr(c, col.name) for col in Customer.__table__.columns})
                     self.df = pd.DataFrame(rows)
                     # If risk_score not computed yet, predict and update DB
-                    if self.df['risk_score'].isna().all() or self.df['risk_score'].isna().any():
+                    risk_score_series = self.df['risk_score'].isna()
+                    if bool(risk_score_series.all()) or bool(risk_score_series.any()):
                         self.df = _predict_dataframe(self.df)
                         # Update risk scores in DB
                         self._update_risk_in_db(session)
@@ -162,15 +171,14 @@ class CustomerService:
             finally:
                 close_session(session)
 
-        # Fallback to CSV
-        if os.path.exists(config.DATA_PATH):
-            self.df = pd.read_csv(config.DATA_PATH)
-            self.df = _predict_dataframe(self.df)
-        else:
-            self.df = pd.DataFrame()
+        # No CSV fallback - database must be populated via /api/upload endpoint
+        self.df = pd.DataFrame()
+        print("[CustomerService] No data in database. Upload CSV via /api/upload to populate data.")
 
     def _update_risk_in_db(self, session):
         """Update risk_score and risk_class in database."""
+        if self.df is None:
+            return
         try:
             for _, row in self.df.iterrows():
                 session.query(Customer).filter_by(
@@ -186,35 +194,38 @@ class CustomerService:
 
     def _customer_to_dict(self, row: pd.Series) -> dict:
         """Convert a DataFrame row to API response dict."""
-        tenure_months = round(row.get('tenure_days', 0) / 30, 1)
-        monthly_rev = row.get('total_billed', 0) / max(row.get('tenure_days', 1) / 30, 1)
+        tenure_days = row.get('tenure_days', 0) or 0
+        total_billed = row.get('total_billed', 0) or 0
+        
+        tenure_months = round(tenure_days / 30, 1)
+        monthly_rev = total_billed / max(tenure_days / 30, 1)
 
         return {
-            'customer_id': row.get('customer_id', ''),
-            'plan_type': row.get('plan_type', ''),
-            'contract_type': row.get('contract_type', ''),
-            'tenure_days': int(row.get('tenure_days', 0)),
+            'customer_id': row.get('customer_id', '') or '',
+            'plan_type': row.get('plan_type', '') or '',
+            'contract_type': row.get('contract_type', '') or '',
+            'tenure_days': int(tenure_days),
             'tenure_months': tenure_months,
-            'monthly_usage_hrs': float(row.get('monthly_usage_hrs', 0)),
-            'feature_adoption_pct': float(row.get('feature_adoption_pct', 0)),
-            'days_since_login': int(row.get('days_since_login', 0)),
-            'last_login_days_ago': int(row.get('days_since_login', 0)),
-            'total_users': int(row.get('total_users', 0)),
-            'nps_score': float(row.get('nps_latest', 0)),
-            'nps_latest': float(row.get('nps_latest', 0)),
-            'ticket_count': int(row.get('ticket_count', 0)),
-            'support_tickets_last_90d': int(row.get('ticket_count', 0)),
-            'critical_tickets': int(row.get('critical_tickets', 0)),
-            'open_tickets': int(row.get('open_tickets', 0)),
-            'total_billed': float(row.get('total_billed', 0)),
+            'monthly_usage_hrs': float(row.get('monthly_usage_hrs', 0) or 0),
+            'feature_adoption_pct': float(row.get('feature_adoption_pct', 0) or 0),
+            'days_since_login': int(row.get('days_since_login', 0) or 0),
+            'last_login_days_ago': int(row.get('days_since_login', 0) or 0),
+            'total_users': int(row.get('total_users', 0) or 0),
+            'nps_score': float(row.get('nps_latest', 0) or 0),
+            'nps_latest': float(row.get('nps_latest', 0) or 0),
+            'ticket_count': int(row.get('ticket_count', 0) or 0),
+            'support_tickets_last_90d': int(row.get('ticket_count', 0) or 0),
+            'critical_tickets': int(row.get('critical_tickets', 0) or 0),
+            'open_tickets': int(row.get('open_tickets', 0) or 0),
+            'total_billed': float(total_billed),
             'monthly_revenue': round(monthly_rev, 2),
-            'avg_payment_value': float(row.get('avg_payment_value', 0)),
-            'dunning_count': int(row.get('dunning_count', 0)),
-            'late_payment_count': int(row.get('late_payment_count', 0)),
-            'payment_delay_count': int(row.get('late_payment_count', 0)),
-            'risk_score': float(row.get('risk_score', 0)),
-            'risk_class': row.get('risk_class', 'low'),
-            'risk_label': get_risk_class(row.get('risk_score', 0))['label'],
+            'avg_payment_value': float(row.get('avg_payment_value', 0) or 0),
+            'dunning_count': int(row.get('dunning_count', 0) or 0),
+            'late_payment_count': int(row.get('late_payment_count', 0) or 0),
+            'payment_delay_count': int(row.get('late_payment_count', 0) or 0),
+            'risk_score': float(row.get('risk_score', 0) or 0),
+            'risk_class': row.get('risk_class', 'low') or 'low',
+            'risk_label': get_risk_class(float(row.get('risk_score', 0) or 0))['label'],
         }
 
     def get_all_customers(self) -> List[dict]:
@@ -237,7 +248,8 @@ class CustomerService:
         """Get high-risk customers sorted by score."""
         if self.df is None or self.df.empty:
             return []
-        high = self.df[self.df['risk_class'] == 'high'].sort_values('risk_score', ascending=False)
+        high_risk_df = self.df[self.df['risk_class'] == 'high']
+        high = high_risk_df.sort_values(by='risk_score', ascending=False)  # type: ignore[call-overload]
         return [self._customer_to_dict(row) for _, row in high.iterrows()]
 
     def get_stats(self) -> dict:
@@ -328,3 +340,87 @@ class CustomerService:
                 }
 
         return {'plans': plans, 'contracts': contracts}
+
+    def add_customer(self, data: dict) -> dict:
+        """
+        Add a single customer (manual entry) for the current user.
+
+        `data` is a dict of raw feature values (same columns as the merged
+        dataset). Runs prediction to compute risk_score/risk_class and inserts
+        a Customer row scoped to self._user_id.
+
+        Returns the saved customer as an API dict.
+        Raises ValueError on validation/duplicate errors.
+        """
+        if self._user_id is None:
+            raise ValueError("user_id diperlukan untuk menambah pelanggan")
+
+        customer_id = str(data.get('customer_id', '')).strip().upper()
+        if not customer_id:
+            raise ValueError("customer_id wajib diisi")
+
+        session = get_session()
+        if session is None:
+            raise ValueError("Database tidak tersedia")
+
+        try:
+            # Reject duplicate (same customer_id for this user)
+            existing = session.query(Customer).filter_by(
+                user_id=self._user_id, customer_id=customer_id
+            ).first()
+            if existing is not None:
+                raise ValueError(f"Pelanggan {customer_id} sudah ada di data Anda")
+
+            # Build a 1-row DataFrame and run prediction
+            row = dict(data)
+            row['customer_id'] = customer_id
+
+            # Ensure all base columns referenced by feature engineering exist,
+            # so manual entry with a partial set of fields doesn't break prediction.
+            base_defaults = {
+                'plan_type': 'starter', 'contract_type': 'monthly',
+                'tenure_days': 0, 'monthly_usage_hrs': 0, 'feature_adoption_pct': 0,
+                'days_since_login': 0, 'total_users': 1, 'nps_latest': 0,
+                'ticket_count': 0, 'critical_tickets': 0, 'open_tickets': 0,
+                'total_billed': 0, 'avg_payment_value': 0, 'late_payment_count': 0,
+                'dunning_count': 0, 'avg_days_late': 0, 'payment_count': 0,
+            }
+            for col, default in base_defaults.items():
+                if col not in row or row[col] is None or row[col] == '':
+                    row[col] = default
+
+            df = pd.DataFrame([row])
+            df = _predict_dataframe(df)
+            predicted = df.iloc[0]
+
+            # Map only the columns that exist on the Customer table
+            valid_cols = {c.name for c in Customer.__table__.columns}
+            customer_data = {'customer_id': customer_id, 'user_id': self._user_id}
+            for col in valid_cols:
+                if col in ('id', 'customer_id', 'user_id', 'uploaded_at'):
+                    continue
+                if col in predicted.index:
+                    val = predicted.get(col)
+                    if val is not None and hasattr(val, 'item'):
+                        val = val.item()
+                    try:
+                        if val is not None and not (isinstance(val, float) and np.isnan(val)):
+                            customer_data[col] = val
+                    except (TypeError, ValueError):
+                        if val is not None:
+                            customer_data[col] = val
+
+            customer = Customer(**customer_data)
+            session.add(customer)
+            session.commit()
+
+            saved = {col.name: getattr(customer, col.name) for col in Customer.__table__.columns}
+            return self._customer_to_dict(pd.Series(saved))
+        except ValueError:
+            session.rollback()
+            raise
+        except Exception as e:
+            session.rollback()
+            raise ValueError(f"Gagal menyimpan pelanggan: {str(e)}")
+        finally:
+            close_session(session)

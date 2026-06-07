@@ -2,10 +2,11 @@
 Flask Routes — API endpoints.
 """
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 from app.nlp.chat_engine import process_chat
 from app.services.customer_service import CustomerService
-from app.services.predict_service import predict_single
+from app.services.predict_service import predict_single, get_feature_importance
+from app.middleware.auth import auth_required
 
 chat_bp = Blueprint('chat', __name__)
 customers_bp = Blueprint('customers', __name__)
@@ -19,6 +20,7 @@ upload_bp = Blueprint('upload', __name__)
 # ══════════════════════════════════════════════════════════════════════════════
 
 @chat_bp.route('/chat', methods=['POST'])
+@auth_required
 def chat():
     """Main chatbot endpoint — LLM + RAG powered."""
     data = request.get_json()
@@ -28,7 +30,8 @@ def chat():
     message = data['message']
     session_id = data.get('session_id', None)
 
-    result = process_chat(message, session_id)
+    # Scope chatbot answers to the logged-in user's own dashboard data
+    result = process_chat(message, session_id, user_id=g.current_user.id)
 
     return jsonify({
         'response': result['response'],
@@ -42,17 +45,19 @@ def chat():
 # ══════════════════════════════════════════════════════════════════════════════
 
 @customers_bp.route('/customers', methods=['GET'])
+@auth_required
 def get_customers():
-    """Get all customers with risk scores."""
-    service = CustomerService()
+    """Get all customers with risk scores (filtered by current user)."""
+    service = CustomerService(user_id=g.current_user.id)
     customers = service.get_all_customers()
     return jsonify(customers)
 
 
 @customers_bp.route('/customers/<customer_id>', methods=['GET'])
+@auth_required
 def get_customer(customer_id):
-    """Get single customer detail."""
-    service = CustomerService()
+    """Get single customer detail (filtered by current user)."""
+    service = CustomerService(user_id=g.current_user.id)
     customer = service.get_customer(customer_id.upper())
     if not customer:
         return jsonify({'error': 'Pelanggan tidak ditemukan'}), 404
@@ -60,11 +65,29 @@ def get_customer(customer_id):
 
 
 @customers_bp.route('/customers/stats', methods=['GET'])
+@auth_required
 def get_stats():
-    """Customer summary statistics."""
-    service = CustomerService()
+    """Customer summary statistics (filtered by current user)."""
+    service = CustomerService(user_id=g.current_user.id)
     stats = service.get_stats()
     return jsonify(stats)
+
+
+@customers_bp.route('/customers', methods=['POST'])
+@auth_required
+def add_customer():
+    """Manually add a single customer (all feature values) for the current user."""
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'Data diperlukan'}), 400
+
+    service = CustomerService(user_id=g.current_user.id)
+    try:
+        saved = service.add_customer(data)
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+
+    return jsonify({'success': True, 'customer': saved}), 201
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -72,6 +95,7 @@ def get_stats():
 # ══════════════════════════════════════════════════════════════════════════════
 
 @predict_bp.route('/predict', methods=['POST'])
+@auth_required
 def predict():
     """Predict churn for manual input."""
     data = request.get_json()
@@ -81,14 +105,22 @@ def predict():
     return jsonify(result)
 
 
+@predict_bp.route('/feature-importance', methods=['GET'])
+@auth_required
+def feature_importance():
+    """Return the model's top global feature importances."""
+    return jsonify(get_feature_importance(top_n=8))
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # TREND
 # ══════════════════════════════════════════════════════════════════════════════
 
 @trend_bp.route('/trend', methods=['GET'])
+@auth_required
 def get_trend():
-    """Trend data — risk distribution per month."""
-    service = CustomerService()
+    """Trend data — risk distribution per month (filtered by current user)."""
+    service = CustomerService(user_id=g.current_user.id)
     trend = service.get_trend_data()
     return jsonify(trend)
 
@@ -98,25 +130,29 @@ def get_trend():
 # ══════════════════════════════════════════════════════════════════════════════
 
 @upload_bp.route('/upload', methods=['POST'])
+@auth_required
 def upload_csv():
     """
     Upload CSV data.
     Supports merged CSV (single file with all features) or raw CSVs (multiple files to merge).
+    Replaces only the current user's data on re-upload.
     """
     import pandas as pd
     import numpy as np
     from app.database import get_session, close_session, Customer
     from app.services.customer_service import _predict_dataframe
 
+    current_user_id = g.current_user.id
+
     if 'file' not in request.files:
         return jsonify({'error': 'No file uploaded'}), 400
 
     file = request.files['file']
-    if not file.filename.endswith('.csv'):
+    if not file or not file.filename or not file.filename.endswith('.csv'):
         return jsonify({'error': 'Only CSV files are supported'}), 400
 
     try:
-        df = pd.read_csv(file)
+        df = pd.read_csv(file.stream)
 
         # Detect if merged or raw
         merged_indicators = ['ticket_count', 'nps_latest', 'total_billed', 'tenure_days']
@@ -138,14 +174,12 @@ def upload_csv():
         session = get_session()
         if session:
             try:
-                inserted = 0
-                updated = 0
-                for _, row in df.iterrows():
-                    existing = session.query(Customer).filter_by(
-                        customer_id=row['customer_id']
-                    ).first()
+                # Delete existing records for current user before inserting new ones
+                session.query(Customer).filter_by(user_id=current_user_id).delete()
 
-                    col_mapping = {
+                inserted = 0
+                for _, row in df.iterrows():
+                    col_mapping = (
                         'plan_type', 'contract_type', 'tenure_days',
                         'monthly_usage_hrs', 'feature_adoption_pct',
                         'days_since_login', 'total_users', 'nps_latest',
@@ -153,30 +187,38 @@ def upload_csv():
                         'total_billed', 'avg_payment_value', 'late_payment_count',
                         'dunning_count', 'avg_days_late', 'payment_count',
                         'risk_score', 'risk_class',
-                    }
+                    )
 
-                    if existing:
-                        for col in col_mapping:
-                            if col in row.index and pd.notna(row[col]):
-                                setattr(existing, col, row[col])
-                        updated += 1
-                    else:
-                        customer = Customer(
-                            customer_id=row['customer_id'],
-                            **{col: row.get(col) for col in col_mapping if col in row.index and pd.notna(row.get(col, None))}
-                        )
-                        session.add(customer)
-                        inserted += 1
+                    customer_data = {
+                        'customer_id': row['customer_id'],
+                        'user_id': current_user_id,
+                    }
+                    for col in col_mapping:
+                        if col in row.index:
+                            val = row.get(col)
+                            # Convert to Python scalar to avoid pandas type issues
+                            if val is not None and hasattr(val, 'item'):
+                                val = val.item()
+                            # Check if value is not NaN/None
+                            try:
+                                if val is not None and not (isinstance(val, float) and np.isnan(val)):
+                                    customer_data[col] = val
+                            except (TypeError, ValueError):
+                                if val is not None:
+                                    customer_data[col] = val
+                    customer = Customer(**customer_data)
+                    session.add(customer)
+                    inserted += 1
 
                 session.commit()
                 close_session(session)
 
                 return jsonify({
                     'success': True,
-                    'message': f'Upload berhasil: {inserted} baru, {updated} diperbarui',
+                    'message': f'Upload berhasil: {inserted} baru',
                     'total_rows': len(df),
                     'inserted': inserted,
-                    'updated': updated,
+                    'updated': 0,
                 })
             except Exception as e:
                 session.rollback()

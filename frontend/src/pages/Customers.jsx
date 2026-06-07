@@ -1,14 +1,160 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { getRiskClass } from '../api/index';
+import { getRiskClass, createCustomer } from '../api/index';
 import { useCustomers } from '../hooks/useCustomers';
 import Badge from '../components/ui/Badge';
+
+// Feature fields for manual customer entry (matches backend Customer columns)
+const ADD_FIELDS = [
+  { key: 'customer_id',          label: 'Customer ID',                  type: 'text',   placeholder: 'C-0001' },
+  { key: 'plan_type',            label: 'Plan Type',                    type: 'select', options: ['starter', 'professional', 'enterprise'] },
+  { key: 'contract_type',        label: 'Contract Type',                type: 'select', options: ['monthly', 'annual'] },
+  { key: 'tenure_days',          label: 'Tenure (hari)',                type: 'number', placeholder: '365' },
+  { key: 'monthly_usage_hrs',    label: 'Penggunaan (jam/bulan)',       type: 'number', placeholder: '30' },
+  { key: 'feature_adoption_pct', label: 'Adopsi Fitur (%)',             type: 'number', placeholder: '60' },
+  { key: 'days_since_login',     label: 'Hari Sejak Login Terakhir',    type: 'number', placeholder: '15' },
+  { key: 'total_users',          label: 'Jumlah Pengguna',              type: 'number', placeholder: '5' },
+  { key: 'nps_latest',           label: 'NPS Score (0-10)',             type: 'number', placeholder: '7' },
+  { key: 'ticket_count',         label: 'Total Tiket Support',          type: 'number', placeholder: '3' },
+  { key: 'critical_tickets',     label: 'Tiket Kritikal',               type: 'number', placeholder: '1' },
+  { key: 'open_tickets',         label: 'Tiket Terbuka',                type: 'number', placeholder: '1' },
+  { key: 'total_billed',         label: 'Total Tagihan (Rp)',           type: 'number', placeholder: '5000000' },
+  { key: 'avg_payment_value',    label: 'Rata-rata Nilai Bayar (Rp)',   type: 'number', placeholder: '400000' },
+  { key: 'late_payment_count',   label: 'Jumlah Telat Bayar',           type: 'number', placeholder: '1' },
+  { key: 'dunning_count',        label: 'Jumlah Dunning',               type: 'number', placeholder: '0' },
+  { key: 'avg_days_late',        label: 'Rata-rata Hari Telat',         type: 'number', placeholder: '2' },
+  { key: 'payment_count',        label: 'Jumlah Pembayaran',            type: 'number', placeholder: '12' },
+];
+
+function AddCustomerModal({ onClose, onSaved }) {
+  const initial = ADD_FIELDS.reduce((acc, f) => {
+    acc[f.key] = f.type === 'select' ? f.options[0] : '';
+    return acc;
+  }, {});
+  const [form, setForm] = useState(initial);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleChange = (key, val) => setForm(f => ({ ...f, [key]: val }));
+
+  const handleSave = async () => {
+    setError(null);
+    if (!String(form.customer_id || '').trim()) {
+      setError('Customer ID wajib diisi.');
+      return;
+    }
+    // Build payload: numbers parsed, text/select kept as-is
+    const payload = {};
+    for (const f of ADD_FIELDS) {
+      const raw = form[f.key];
+      if (f.type === 'number') {
+        payload[f.key] = raw === '' || raw === null ? 0 : parseFloat(raw);
+      } else {
+        payload[f.key] = raw;
+      }
+    }
+
+    try {
+      setSaving(true);
+      await createCustomer(payload);
+      onSaved();
+      onClose();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return createPortal(
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 1000,
+        background: 'rgba(0,0,0,0.45)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '24px 16px',
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: 'var(--color-card)', borderRadius: 14,
+          border: '1px solid var(--color-border)',
+          boxShadow: '0 12px 40px rgba(0,0,0,0.25)',
+          width: '100%', maxWidth: 640,
+          maxHeight: 'calc(100vh - 48px)',
+          display: 'flex', flexDirection: 'column',
+        }}
+      >
+        <div style={{ padding: '24px 26px 14px' }}>
+          <div className="flex justify-between items-center mb-1">
+            <h2 className="text-lg font-semibold" style={{ color: 'var(--color-text)' }}>Tambah Pelanggan</h2>
+            <button onClick={onClose} className="btn btn-ghost" style={{ padding: '6px 10px' }}>
+              <i className="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <p className="text-[13px]" style={{ color: 'var(--color-muted)' }}>
+            Masukkan nilai semua fitur. Skor risiko churn dihitung otomatis. Data ini hanya muncul di dashboard akun Anda.
+          </p>
+        </div>
+
+        <div style={{ padding: '0 26px', overflowY: 'auto', flex: 1 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            {ADD_FIELDS.map(f => (
+              <div key={f.key}>
+                <label style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--color-subtle)', display: 'block', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+                  {f.label}
+                </label>
+                {f.type === 'select' ? (
+                  <select
+                    value={form[f.key]}
+                    onChange={e => handleChange(f.key, e.target.value)}
+                    style={{ width: '100%', background: 'var(--color-input)', border: '1px solid var(--color-border-input)', borderRadius: 9, padding: '9px 12px', fontSize: 13, color: 'var(--color-text)', outline: 'none', boxSizing: 'border-box' }}
+                  >
+                    {f.options.map(o => <option key={o} value={o}>{o.charAt(0).toUpperCase() + o.slice(1)}</option>)}
+                  </select>
+                ) : (
+                  <input
+                    type={f.type}
+                    placeholder={f.placeholder}
+                    value={form[f.key]}
+                    onChange={e => handleChange(f.key, e.target.value)}
+                    min={f.type === 'number' ? '0' : undefined}
+                    step={f.type === 'number' ? 'any' : undefined}
+                    style={{ width: '100%', background: 'var(--color-input)', border: '1px solid var(--color-border-input)', borderRadius: 9, padding: '9px 12px', fontSize: 13, color: 'var(--color-text)', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+
+          {error && (
+            <div style={{ marginTop: 14, background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.3)', borderRadius: 9, padding: '10px 14px', fontSize: 12.5, color: '#dc2626' }}>
+              <i className="fa-solid fa-triangle-exclamation"></i> {error}
+            </div>
+          )}
+        </div>
+
+        <div className="flex gap-2.5 justify-end" style={{ padding: '14px 26px 22px', borderTop: '1px solid var(--color-border)', marginTop: 6 }}>
+          <button className="btn btn-ghost" onClick={onClose} disabled={saving}>Batal</button>
+          <button className="btn btn-accent" onClick={handleSave} disabled={saving}>
+            {saving ? <><i className="fa-solid fa-circle-notch fa-spin"></i> Menyimpan...</> : <><i className="fa-solid fa-plus text-xs"></i> Simpan Pelanggan</>}
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
 
 export default function Customers() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
-  const { customers, counts, total, loading, error } = useCustomers();
+  const [showAdd, setShowAdd] = useState(false);
+  const { customers, counts, total, loading, error, refresh } = useCustomers();
 
   const filtered = customers.filter(c => {
     const q = search.toLowerCase();
@@ -39,9 +185,16 @@ export default function Customers() {
         </div>
         <div className="flex gap-2.5">
           <button className="btn btn-ghost"><i className="fa-solid fa-download text-xs"></i> Export CSV</button>
-          <button className="btn btn-accent"><i className="fa-solid fa-plus text-xs"></i> Tambah Pelanggan</button>
+          <button className="btn btn-accent" onClick={() => setShowAdd(true)}><i className="fa-solid fa-plus text-xs"></i> Tambah Pelanggan</button>
         </div>
       </div>
+
+      {showAdd && (
+        <AddCustomerModal
+          onClose={() => setShowAdd(false)}
+          onSaved={refresh}
+        />
+      )}
 
       {/* Filters */}
       <div className="flex gap-2.5 mb-6 flex-wrap">

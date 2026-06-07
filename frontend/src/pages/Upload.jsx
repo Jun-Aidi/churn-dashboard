@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { fetchWithAuth } from '../api/index';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000') + '/api';
 
 export default function Upload() {
   const [file, setFile] = useState(null);
@@ -20,7 +21,7 @@ export default function Upload() {
     formData.append('file', file);
 
     try {
-      const res = await fetch(`${API_BASE}/upload`, {
+      const res = await fetchWithAuth(`${API_BASE}/upload`, {
         method: 'POST',
         body: formData,
       });

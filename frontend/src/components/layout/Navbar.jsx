@@ -1,23 +1,62 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useAuth } from '../../contexts/AuthContext';
 
-const navLinks = [
-  { to: '/',          label: 'Overview',  end: true },
-  { to: '/customers', label: 'Pelanggan' },
-  { to: '/predict',   label: 'Prediksi' },
-  { to: '/model',     label: 'Model' },
+const baseNavLinks = [
+  { to: '/dashboard', label: 'Dashboard', icon: 'fa-solid fa-gauge-high', end: true },
+  { to: '/customers', label: 'Pelanggan', icon: 'fa-solid fa-users' },
+  { to: '/upload',    label: 'Upload Data', icon: 'fa-solid fa-upload' },
 ];
 
-export default function TopNavbar({ onMenuClick }) {
+const adminNavLink = { to: '/admin', label: 'Admin', icon: 'fa-solid fa-shield-halved' };
+
+function getInitials(name) {
+  if (!name) return 'U';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+export default function TopNavbar() {
   const [searchVal, setSearchVal] = useState('');
+  const [mobileOpen, setMobileOpen] = useState(false);
   const { dark, toggle } = useTheme();
+  const { user, isAdmin, logout } = useAuth();
+
+  const navLinks = isAdmin ? [...baseNavLinks, adminNavLink] : baseNavLinks;
+
+  const renderLinks = (onClick) =>
+    navLinks.map(({ to, label, icon, end }) => (
+      <NavLink
+        key={to}
+        to={to}
+        end={end}
+        onClick={onClick}
+        style={({ isActive }) => ({
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          textDecoration: 'none',
+          fontSize: 13.5,
+          fontWeight: isActive ? 600 : 500,
+          color: isActive ? '#4f8ef7' : 'var(--color-muted)',
+          padding: '6px 14px',
+          borderRadius: 8,
+          background: isActive ? (dark ? 'rgba(79,142,247,0.15)' : '#eff6ff') : 'transparent',
+          transition: 'all 0.15s ease',
+          whiteSpace: 'nowrap',
+        })}
+      >
+        <i className={`${icon} text-[13px]`}></i>
+        {label}
+      </NavLink>
+    ));
 
   return (
     <header
-      className="top-navbar fixed top-0 right-0 z-[90] h-[60px] flex items-center transition-colors duration-200"
+      className="top-navbar fixed top-0 left-0 right-0 z-[90] h-[60px] flex items-center transition-colors duration-200"
       style={{
-        left: 64,
         padding: '0 20px 0 24px',
         background: 'var(--color-card)',
         borderBottom: '1px solid var(--color-border)',
@@ -26,7 +65,7 @@ export default function TopNavbar({ onMenuClick }) {
     >
       {/* Mobile hamburger */}
       <button
-        onClick={onMenuClick}
+        onClick={() => setMobileOpen(o => !o)}
         className="mobile-menu-btn hidden items-center justify-center w-9 h-9 rounded-[9px] cursor-pointer mr-3 flex-shrink-0 border transition-colors"
         style={{ background: 'var(--color-input)', borderColor: 'var(--color-border-input)', color: 'var(--color-text)' }}
       >
@@ -38,28 +77,9 @@ export default function TopNavbar({ onMenuClick }) {
         <img src="/logo_ghosting.png" alt="Ghosting" className="h-8 w-auto" />
       </div>
 
-      {/* Nav links */}
+      {/* Nav links (desktop) */}
       <nav className="top-nav-links flex items-center gap-0.5 flex-1">
-        {navLinks.map(({ to, label, end }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={end}
-            style={({ isActive }) => ({
-              textDecoration: 'none',
-              fontSize: 13.5,
-              fontWeight: isActive ? 600 : 500,
-              color: isActive ? '#4f8ef7' : 'var(--color-muted)',
-              padding: '6px 14px',
-              borderRadius: 8,
-              background: isActive ? (dark ? 'rgba(79,142,247,0.15)' : '#eff6ff') : 'transparent',
-              transition: 'all 0.15s ease',
-              whiteSpace: 'nowrap',
-            })}
-          >
-            {label}
-          </NavLink>
-        ))}
+        {renderLinks()}
       </nav>
 
       {/* Right side */}
@@ -101,30 +121,55 @@ export default function TopNavbar({ onMenuClick }) {
 
         {/* User profile */}
         <div
-          className="flex items-center gap-2 py-1 pl-1 pr-[10px] rounded-[10px] cursor-pointer transition-colors duration-200 border flex-shrink-0"
+          className="flex items-center gap-2 py-1 pl-1 pr-[10px] rounded-[10px] flex-shrink-0 border"
           style={{ background: 'var(--color-input)', borderColor: 'var(--color-border-input)' }}
         >
           <div
             className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0 tracking-[-0.5px]"
             style={{ background: 'linear-gradient(135deg, #4f8ef7 0%, #8b5cf6 100%)' }}
           >
-            CS
+            {getInitials(user?.name)}
           </div>
           <div className="user-name-block leading-[1.2]">
-            <div className="text-[12.5px] font-semibold" style={{ color: 'var(--color-text)' }}>CS Team</div>
-            <div className="text-[10.5px]" style={{ color: 'var(--color-muted)' }}>Admin</div>
+            <div className="text-[12.5px] font-semibold" style={{ color: 'var(--color-text)' }}>
+              {user?.name || 'Pengguna'}
+            </div>
+            <div className="text-[10.5px]" style={{ color: 'var(--color-muted)' }}>
+              {isAdmin ? 'Admin' : 'User'}
+            </div>
           </div>
-          <i className="fa-solid fa-chevron-down text-[10px] user-name-block" style={{ color: 'var(--color-subtle)' }}></i>
         </div>
+
+        {/* Logout */}
+        <button
+          onClick={logout}
+          className="w-9 h-9 rounded-[9px] flex items-center justify-center cursor-pointer transition-colors duration-200 border flex-shrink-0 hover:text-red-500"
+          style={{ background: 'var(--color-input)', borderColor: 'var(--color-border-input)', color: 'var(--color-text)' }}
+          title="Keluar"
+          aria-label="Logout"
+        >
+          <i className="fa-solid fa-right-from-bracket text-sm"></i>
+        </button>
       </div>
+
+      {/* Mobile dropdown menu */}
+      {mobileOpen && (
+        <div
+          className="mobile-nav-menu absolute top-[60px] left-0 right-0 flex-col p-3 gap-1 border-b"
+          style={{ display: 'none', background: 'var(--color-card)', borderColor: 'var(--color-border)', boxShadow: '0 6px 16px rgba(0,0,0,0.12)' }}
+        >
+          {renderLinks(() => setMobileOpen(false))}
+        </div>
+      )}
 
       <style>{`
         @media (max-width: 768px) {
-          .top-navbar { left: 0 !important; padding: 0 14px !important; }
+          .top-navbar { padding: 0 14px !important; }
           .mobile-menu-btn { display: flex !important; }
           .top-nav-links { display: none !important; }
           .top-search { width: 130px !important; }
           .user-name-block { display: none !important; }
+          .mobile-nav-menu { display: flex !important; }
         }
         @media (max-width: 480px) {
           .top-search { display: none !important; }

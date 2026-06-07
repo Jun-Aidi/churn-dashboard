@@ -168,3 +168,48 @@ def predict_single(data: dict) -> dict:
         'risk': {'level': level, 'label': label, 'color': color},
         'top_features': top_features,
     }
+
+
+# ── Feature label mapping (shared) ──
+_FEATURE_LABELS = {
+    'days_since_login': 'Hari Sejak Login Terakhir',
+    'engagement_score': 'Skor Engagement',
+    'monthly_usage_hrs': 'Penggunaan Bulanan (jam)',
+    'feature_adoption_pct': 'Adopsi Fitur (%)',
+    'ticket_count': 'Total Tiket Support',
+    'nps_latest': 'NPS Score',
+    'late_payment_count': 'Jumlah Keterlambatan',
+    'total_billed': 'Total Billed',
+    'tenure_days': 'Tenure (hari)',
+    'payment_health': 'Kesehatan Pembayaran',
+    'usage_per_tenure': 'Penggunaan per Tenure',
+    'support_intensity': 'Intensitas Support',
+    'login_recency_ratio': 'Rasio Login Terkini',
+    'revenue_per_day': 'Revenue per Hari',
+    'avg_payment_value': 'Rata-rata Nilai Bayar',
+    'critical_tickets': 'Tiket Kritikal',
+    'open_tickets': 'Tiket Terbuka',
+    'nps_usage_interaction': 'Interaksi NPS x Penggunaan',
+    'nps_tenure_interaction': 'Interaksi NPS x Tenure',
+    'unresolved_rate': 'Rasio Tiket Belum Selesai',
+    'late_payment_rate': 'Rasio Keterlambatan Bayar',
+    'dunning_count': 'Jumlah Dunning',
+}
+
+
+def get_feature_importance(top_n: int = 8) -> list:
+    """
+    Return the model's top-N global feature importances.
+    Each item: {name, label, importance} where importance is normalized 0-1.
+    """
+    importances = _model.feature_importances_
+    pairs = sorted(zip(_feature_columns, importances), key=lambda x: x[1], reverse=True)[:top_n]
+
+    return [
+        {
+            'name': name,
+            'label': _FEATURE_LABELS.get(name, name.replace('_', ' ').title()),
+            'importance': float(imp),
+        }
+        for name, imp in pairs
+    ]

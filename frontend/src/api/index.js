@@ -2,7 +2,27 @@
 // API Layer — Fetches data from Flask backend
 // ══════════════════════════════════════════
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+
+// ── Auth interceptor: attaches Bearer token and handles 401 ──
+export async function fetchWithAuth(url, options = {}) {
+  const token = localStorage.getItem('token');
+  const headers = { ...options.headers };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(url, { ...options, headers });
+
+  if (res.status === 401) {
+    localStorage.removeItem('token');
+    window.location.href = '/login';
+    return res;
+  }
+
+  return res;
+}
 
 // ── Risk classification (shared utility) ──
 export function getRiskClass(score) {
@@ -11,39 +31,147 @@ export function getRiskClass(score) {
   return                 { cls: 'low',  label: 'Risiko Rendah', color: '#2da44e' };
 }
 
-// ── API Fetch helpers ──
+// ── Auth API functions ──
+export async function loginApi(email, password) {
+  const res = await fetch(`${API_BASE}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Login gagal');
+  return data;
+}
+
+export async function logoutApi() {
+  const res = await fetchWithAuth(`${API_BASE}/api/auth/logout`, {
+    method: 'POST',
+  });
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.error || 'Logout gagal');
+  }
+  return res.json();
+}
+
+export async function getMeApi() {
+  const res = await fetchWithAuth(`${API_BASE}/api/auth/me`);
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.error || 'Gagal mengambil data pengguna');
+  }
+  return res.json();
+}
+
+export async function getUsersApi() {
+  const res = await fetchWithAuth(`${API_BASE}/api/auth/users`);
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.error || 'Gagal mengambil daftar pengguna');
+  }
+  return res.json();
+}
+
+export async function createUserApi(data) {
+  const res = await fetchWithAuth(`${API_BASE}/api/auth/users`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.error || 'Gagal membuat pengguna');
+  return result;
+}
+
+export async function updateUserApi(id, data) {
+  const res = await fetchWithAuth(`${API_BASE}/api/auth/users/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.error || 'Gagal memperbarui pengguna');
+  return result;
+}
+
+export async function deactivateUserApi(id) {
+  const res = await fetchWithAuth(`${API_BASE}/api/auth/users/${id}/deactivate`, {
+    method: 'POST',
+  });
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.error || 'Gagal menonaktifkan pengguna');
+  return result;
+}
+
+export async function activateUserApi(id) {
+  const res = await fetchWithAuth(`${API_BASE}/api/auth/users/${id}/activate`, {
+    method: 'POST',
+  });
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.error || 'Gagal mengaktifkan pengguna');
+  return result;
+}
+
+export async function getStatsApi() {
+  const res = await fetchWithAuth(`${API_BASE}/api/auth/stats`);
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.error || 'Gagal mengambil statistik sistem');
+  }
+  return res.json();
+}
+
+// ── Data API Fetch helpers (with auth) ──
 export async function fetchCustomers() {
-  const res = await fetch(`${API_BASE}/customers`);
+  const res = await fetchWithAuth(`${API_BASE}/api/customers`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
 
 export async function fetchCustomer(id) {
-  const res = await fetch(`${API_BASE}/customers/${id}`);
+  const res = await fetchWithAuth(`${API_BASE}/api/customers/${id}`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
 
 export async function fetchStats() {
-  const res = await fetch(`${API_BASE}/customers/stats`);
+  const res = await fetchWithAuth(`${API_BASE}/api/customers/stats`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
 
 export async function fetchTrend() {
-  const res = await fetch(`${API_BASE}/trend`);
+  const res = await fetchWithAuth(`${API_BASE}/api/trend`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+export async function fetchFeatureImportance() {
+  const res = await fetchWithAuth(`${API_BASE}/api/feature-importance`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
 
 export async function fetchPredict(formData) {
-  const res = await fetch(`${API_BASE}/predict`, {
+  const res = await fetchWithAuth(`${API_BASE}/api/predict`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(formData),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
+}
+
+// ── Manual add customer (all feature values), scoped to current user ──
+export async function createCustomer(data) {
+  const res = await fetchWithAuth(`${API_BASE}/api/customers`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+  return json;
 }
 
 // ── Factor analysis (client-side, based on customer data) ──
@@ -127,4 +255,23 @@ export function getRecos(c) {
   return r.slice(0, 4);
 }
 
-export default { getRiskClass, getFactors, getRecos, fetchCustomers, fetchCustomer, fetchStats, fetchTrend, fetchPredict };
+export default {
+  fetchWithAuth,
+  getRiskClass,
+  getFactors,
+  getRecos,
+  fetchCustomers,
+  fetchCustomer,
+  fetchStats,
+  fetchTrend,
+  fetchPredict,
+  loginApi,
+  logoutApi,
+  getMeApi,
+  getUsersApi,
+  createUserApi,
+  updateUserApi,
+  deactivateUserApi,
+  activateUserApi,
+  getStatsApi,
+};

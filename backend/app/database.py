@@ -1,6 +1,7 @@
 """
 Database — SQLAlchemy models & MySQL connection.
-Auto-creates database if it doesn't exist, then seeds from CSV.
+Auto-creates database and tables if they don't exist.
+Data is populated via CSV uploads through the /api/upload endpoint.
 """
 
 import os
@@ -8,7 +9,7 @@ import sys
 import pymysql
 from sqlalchemy import (
     create_engine, Column, Integer, String, Float, Text,
-    DateTime, Index
+    DateTime, Index, Boolean, ForeignKey, UniqueConstraint
 )
 from sqlalchemy.orm import declarative_base, sessionmaker, scoped_session
 from datetime import datetime
@@ -25,7 +26,8 @@ class Customer(Base):
     __tablename__ = 'customers'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    customer_id = Column(String(20), unique=True, nullable=False, index=True)
+    customer_id = Column(String(20), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=True)
     plan_type = Column(String(50))
     contract_type = Column(String(50))
     tenure_days = Column(Integer)
@@ -70,12 +72,17 @@ class Customer(Base):
     risk_class = Column(String(10))
     uploaded_at = Column(DateTime, default=datetime.utcnow)
 
+    __table_args__ = (
+        UniqueConstraint('user_id', 'customer_id', name='uq_user_customer'),
+    )
+
 
 class Prediction(Base):
     __tablename__ = 'predictions'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     customer_id = Column(String(20), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=True)
     risk_score = Column(Float, nullable=False)
     risk_class = Column(String(10), nullable=False)
     predicted_at = Column(DateTime, default=datetime.utcnow)
@@ -122,55 +129,14 @@ def _ensure_database_exists():
         print(f"[DB WARNING] Cannot connect to MySQL server: {e}")
         return False
 
+# NOTE: _seed_from_csv() function removed
+# Automatic database seeding is disabled. Data is now only inserted via CSV uploads
+# through the /api/upload endpoint.
 
-def _seed_from_csv(session):
-    """Seed database from merged_dataset.csv if table is empty."""
-    import pandas as pd
-    import numpy as np
-
-    count = session.query(Customer).count()
-    if count > 0:
-        print(f"[DB] Customers table already has {count} rows. Skipping seed.")
-        return
-
-    if not os.path.exists(config.DATA_PATH):
-        print(f"[DB] CSV not found at {config.DATA_PATH}. Skipping seed.")
-        return
-
-    print(f"[DB] Seeding from {config.DATA_PATH}...")
-    df = pd.read_csv(config.DATA_PATH)
-
-    # Map DataFrame columns to Customer model columns
-    customer_columns = [c.name for c in Customer.__table__.columns if c.name not in ('id', 'risk_score', 'risk_class', 'uploaded_at')]
-
-    inserted = 0
-    for _, row in df.iterrows():
-        data = {}
-        for col in customer_columns:
-            if col in row.index:
-                val = row[col]
-                # Handle NaN
-                if pd.isna(val):
-                    data[col] = None
-                else:
-                    data[col] = val
-            else:
-                data[col] = None
-
-        customer = Customer(**data)
-        session.add(customer)
-        inserted += 1
-
-        # Batch commit every 500 rows
-        if inserted % 500 == 0:
-            session.commit()
-
-    session.commit()
-    print(f"[DB] Seeded {inserted} customers from CSV.")
 
 
 def init_db():
-    """Initialize database connection, create tables, and seed if needed."""
+    """Initialize database connection, create tables, and seed default admin."""
     global engine, SessionLocal
 
     # Step 1: Ensure database exists
@@ -187,24 +153,154 @@ def init_db():
             echo=False
         )
 
-        # Step 3: Create tables
+        # Step 3: Create tables (including users table)
+        # Import User model to ensure it's registered with Base metadata
+        from app.models.user import User
         Base.metadata.create_all(engine)
 
         SessionLocal = scoped_session(sessionmaker(bind=engine))
         print(f"[DB] Connected to MySQL: {config.MYSQL_DB}@{config.MYSQL_HOST}")
+        print("[DB] Database initialized. Data will be populated via CSV uploads.")
 
-        # Step 4: Seed from CSV if empty
-        session = SessionLocal()
-        try:
-            _seed_from_csv(session)
-        finally:
-            session.close()
+        # Step 3b: Migrate legacy schema — customer_id used to be globally unique,
+        # which prevented two users from owning the same customer_id. Switch to a
+        # composite unique on (user_id, customer_id).
+        _migrate_customer_unique_constraint()
+
+        # Step 4: Seed default admin if users table is empty
+        _seed_default_admin()
 
         return True
     except Exception as e:
         print(f"[DB WARNING] MySQL not available: {e}")
         print("[DB WARNING] Running in CSV-fallback mode.")
         return False
+
+
+def _migrate_customer_unique_constraint():
+    """
+    Migrate the `customers` table from a global UNIQUE(customer_id) to a
+    composite UNIQUE(user_id, customer_id). Idempotent and safe to run on
+    every startup.
+    """
+    from sqlalchemy import text
+
+    session = get_session()
+    if session is None:
+        return
+
+    try:
+        # Inspect existing indexes on the customers table
+        rows = session.execute(text("SHOW INDEX FROM customers")).fetchall()
+        # Each row: (Table, Non_unique, Key_name, Seq_in_index, Column_name, ...)
+        index_columns = {}   # key_name -> list of (seq, column)
+        index_unique = {}    # key_name -> is_unique (Non_unique == 0)
+        for r in rows:
+            key_name = r[2]
+            non_unique = r[1]
+            seq = r[3]
+            col = r[4]
+            index_columns.setdefault(key_name, []).append((seq, col))
+            index_unique[key_name] = (int(non_unique) == 0)
+
+        has_composite = False
+        legacy_unique_keys = []
+
+        for key_name, cols in index_columns.items():
+            if key_name == 'PRIMARY':
+                continue
+            ordered = [c for _, c in sorted(cols)]
+            is_unique = index_unique.get(key_name, False)
+            if is_unique and ordered == ['user_id', 'customer_id']:
+                has_composite = True
+            # Legacy: a UNIQUE index solely on customer_id
+            if is_unique and ordered == ['customer_id']:
+                legacy_unique_keys.append(key_name)
+
+        # Drop legacy global-unique index on customer_id
+        for key_name in legacy_unique_keys:
+            try:
+                session.execute(text(f"ALTER TABLE customers DROP INDEX `{key_name}`"))
+                print(f"[DB MIGRATION] Dropped legacy unique index '{key_name}' on customers.customer_id")
+            except Exception as e:
+                print(f"[DB MIGRATION WARNING] Could not drop index '{key_name}': {e}")
+
+        # Add composite unique constraint if missing
+        if not has_composite:
+            try:
+                session.execute(text(
+                    "ALTER TABLE customers "
+                    "ADD CONSTRAINT uq_user_customer UNIQUE (user_id, customer_id)"
+                ))
+                print("[DB MIGRATION] Added composite unique (user_id, customer_id) on customers")
+            except Exception as e:
+                print(f"[DB MIGRATION WARNING] Could not add composite unique: {e}")
+
+        # Ensure a plain (non-unique) index remains on customer_id for lookups
+        has_plain_cid_index = any(
+            [c for _, c in sorted(cols)] == ['customer_id']
+            for key_name, cols in index_columns.items()
+            if key_name != 'PRIMARY'
+        )
+        if not has_plain_cid_index and not legacy_unique_keys:
+            try:
+                session.execute(text("CREATE INDEX ix_customers_customer_id ON customers (customer_id)"))
+            except Exception:
+                pass
+
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        print(f"[DB MIGRATION WARNING] customer unique constraint migration skipped: {e}")
+    finally:
+        close_session(session)
+
+
+def _seed_default_admin():
+    """Create default admin user if users table is empty."""
+    session = get_session()
+    if session is None:
+        return
+
+    try:
+        from app.models.user import User
+
+        # Check if users table has any rows
+        user_count = session.query(User).count()
+        if user_count > 0:
+            return
+
+        # Read admin credentials from environment
+        admin_email = os.getenv('ADMIN_EMAIL')
+        admin_password = os.getenv('ADMIN_PASSWORD')
+
+        if not admin_email or not admin_password:
+            print("[DB WARNING] ADMIN_EMAIL or ADMIN_PASSWORD not set. Skipping admin seeding.")
+            return
+
+        # Hash password with bcrypt (cost factor 12)
+        import bcrypt
+        password_hash = bcrypt.hashpw(
+            admin_password.encode('utf-8'),
+            bcrypt.gensalt(rounds=12)
+        ).decode('utf-8')
+
+        # Create admin user
+        admin_user = User(
+            name='Admin',
+            email=admin_email,
+            password_hash=password_hash,
+            role='admin',
+            is_active=True
+        )
+        session.add(admin_user)
+        session.commit()
+        print(f"[DB] Default admin user created: {admin_email}")
+    except Exception as e:
+        session.rollback()
+        print(f"[DB WARNING] Failed to seed admin user: {e}")
+    finally:
+        close_session(session)
 
 
 def get_session():

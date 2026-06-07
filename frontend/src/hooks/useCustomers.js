@@ -50,6 +50,9 @@ export function useCustomers() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const refresh = () => setReloadKey(k => k + 1);
 
   useEffect(() => {
     let cancelled = false;
@@ -76,9 +79,9 @@ export function useCustomers() {
 
     load();
     return () => { cancelled = true; };
-  }, []);
+  }, [reloadKey]);
 
-  return { customers, counts, total, loading, error };
+  return { customers, counts, total, loading, error, refresh };
 }
 
 export function useCustomer(id) {

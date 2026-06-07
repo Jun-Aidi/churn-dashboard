@@ -71,6 +71,11 @@ ATURAN KETAT:
 Jawab dalam Bahasa Indonesia kecuali user bertanya dalam bahasa Inggris.
 Gunakan data dari tools yang tersedia untuk memberikan jawaban akurat.
 Format jawaban dengan markdown jika perlu (bold, list, tabel).
+
+CATATAN DATA:
+- Semua data pelanggan yang kamu akses melalui tools HANYA berisi data milik user yang sedang login.
+- Jika user menanyakan pelanggan tertentu (mis. C-0001) dan tool mengembalikan "tidak ditemukan", beritahu user dengan jelas bahwa pelanggan tersebut tidak ada di data mereka. JANGAN mengarang data.
+- Pertanyaan agregat (mis. "berapa pelanggan risiko tinggi") harus dijawab berdasarkan statistik dari tool, yang sudah otomatis terbatas pada data user yang login.
 """
 
 # ── Tools Definition ──
@@ -79,7 +84,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_customer_profile",
-            "description": "Ambil profil lengkap satu pelanggan berdasarkan customer_id (format: C-XXXX)",
+            "description": "Ambil profil lengkap satu pelanggan milik user yang sedang login berdasarkan customer_id. Jika pelanggan tidak ada di data user, akan mengembalikan pesan tidak ditemukan.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -96,7 +101,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_risk_statistics",
-            "description": "Ambil statistik ringkasan risiko churn seluruh pelanggan (total, high/med/low risk, revenue at risk)",
+            "description": "Ambil statistik ringkasan risiko churn untuk SELURUH pelanggan milik user yang sedang login (total, high/med/low risk, revenue at risk)",
             "parameters": {"type": "object", "properties": {}}
         }
     },
@@ -104,7 +109,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_high_risk_customers",
-            "description": "Ambil daftar pelanggan dengan risiko churn tinggi, diurutkan dari skor tertinggi",
+            "description": "Ambil daftar pelanggan dengan risiko churn tinggi milik user yang sedang login, diurutkan dari skor tertinggi",
             "parameters": {"type": "object", "properties": {}}
         }
     },
@@ -129,26 +134,30 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_segment_analysis",
-            "description": "Ambil analisis churn per segmen (per plan_type dan contract_type)",
+            "description": "Ambil analisis churn per segmen (per plan_type dan contract_type) untuk pelanggan milik user yang sedang login",
             "parameters": {"type": "object", "properties": {}}
         }
     },
 ]
 
 
-def _execute_tool(tool_name: str, arguments: dict) -> str:
-    """Execute a tool call and return result as string."""
+def _execute_tool(tool_name: str, arguments: dict, user_id: Optional[int] = None) -> str:
+    """Execute a tool call and return result as string.
+
+    `user_id` scopes customer data lookups to the logged-in user so the chatbot
+    only ever sees that user's own dashboard data.
+    """
     from app.services.customer_service import CustomerService
     from app.nlp.rag_engine import search_papers as rag_search
 
-    service = CustomerService()
+    service = CustomerService(user_id=user_id)
 
     if tool_name == "get_customer_profile":
         customer_id = arguments.get("customer_id", "")
         result = service.get_customer(customer_id)
         if result:
             return json.dumps(result, ensure_ascii=False)
-        return json.dumps({"error": f"Pelanggan {customer_id} tidak ditemukan"})
+        return json.dumps({"error": f"Pelanggan {customer_id} tidak ditemukan di data Anda"})
 
     elif tool_name == "get_risk_statistics":
         return json.dumps(service.get_stats(), ensure_ascii=False)
@@ -170,10 +179,12 @@ def _execute_tool(tool_name: str, arguments: dict) -> str:
     return json.dumps({"error": f"Tool '{tool_name}' tidak dikenali"})
 
 
-def chat_with_llm(user_message: str, session_id: str = "default") -> dict:
+def chat_with_llm(user_message: str, session_id: str = "default", user_id: Optional[int] = None) -> dict:
     """
     Send message to LLM with function calling support.
     Returns dict with 'response', 'tokens_used', 'source'.
+
+    `user_id` scopes all customer-data tool calls to the logged-in user.
     """
     if _client is None:
         return {
@@ -215,7 +226,7 @@ def chat_with_llm(user_message: str, session_id: str = "default") -> dict:
             for tool_call in assistant_message.tool_calls:
                 fn_name = tool_call.function.name
                 fn_args = json.loads(tool_call.function.arguments)
-                result = _execute_tool(fn_name, fn_args)
+                result = _execute_tool(fn_name, fn_args, user_id=user_id)
 
                 messages.append({
                     "role": "tool",
