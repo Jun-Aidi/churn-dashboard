@@ -83,7 +83,7 @@ export default function Login() {
             </span>
             <span>
               <span className="block text-sm font-black uppercase tracking-[0.14em]">Ghosting Detection Unit</span>
-              <span className="block text-xs font-semibold text-[#60716c]">Retention Intelligence</span>
+              <span className="block text-xs font-semibold text-[#60716c]">Retensi Cerdas</span>
             </span>
           </Link>
 
@@ -131,7 +131,7 @@ export default function Login() {
                   <div className="mx-auto mb-5 flex h-24 w-52 items-center justify-center rounded-3xl px-0">
                     <img src={logoSrc} alt="Ghosting Detection Unit logo" className="h-16 w-auto object-contain" />
                   </div>
-                  <p className="text-xs font-black uppercase tracking-[0.22em] text-[#00a6a6]">Welcome back</p>
+                  <p className="text-xs font-black uppercase tracking-[0.22em] text-[#00a6a6]">Selamat Datang</p>
                   <h1 className="mt-3 text-3xl font-black tracking-[-0.04em] text-[#15201d]">Masuk ke Dashboard</h1>
                   <p className="mt-2 text-sm font-medium leading-6 text-[#60716c]">
                     Gunakan kredensial admin untuk membuka Ghosting Detection Unit.

@@ -22,7 +22,7 @@ function normalize(c) {
     nps: c.nps_latest,
     delay: c.late_payment_count,
     score: c.risk_score,
-    churned: c.risk_class === 'high' ? 1 : 0, // Approximate: high risk = likely churned
+    churned: c.risk_score >= 57.37 ? 1 : 0, // Updated to use the actual model threshold
     risk_class: c.risk_class,
     risk_label: c.risk_label,
   };

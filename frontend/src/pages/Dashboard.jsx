@@ -77,7 +77,7 @@ export default function Dashboard() {
                 </span>
               </div>
               <h1 className="max-w-3xl text-2xl font-black leading-[1.05] tracking-[-0.04em] sm:text-3xl lg:text-4xl">
-                Dashboard retensi untuk membaca risiko lebih awal.
+                Dashboard retensi untuk membaca risiko lebih awal
               </h1>
               <p className="mt-3 max-w-2xl text-xs font-medium leading-6 text-[#fffaf0]/70">
                 Monitor skor churn, pola pelanggan, dan prioritas intervensi dalam warna visual yang selaras dengan landing page.
@@ -140,7 +140,7 @@ export default function Dashboard() {
           <>
             <div className="grid-stat-cards">
               {cards.map((c, i) => (
-                <div key={c.label} className={`fade-in stagger-${i + 1} group relative overflow-hidden`} style={{...shellCard, padding: '20px'}}>
+                <div key={c.label} className={`fade-in stagger-${i + 1} group relative overflow-hidden`} style={{ ...shellCard, padding: '20px' }}>
                   <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${c.gradient}`} />
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-2xl" style={{ background: c.iconBg }}>
@@ -173,7 +173,7 @@ export default function Dashboard() {
               </div>
               <div className="fade-in stagger-2" style={shellCard}>
                 <div className="mb-5">
-                  <div className="text-lg font-black tracking-[-0.03em] gdu-title">Feature Importance</div>
+                  <div className="text-lg font-black tracking-[-0.03em] gdu-title">Fitur Penting</div>
                   <div className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] gdu-muted">Faktor paling berpengaruh pada model prediksi churn</div>
                 </div>
                 <FeatureImportanceChart />
@@ -198,7 +198,6 @@ export default function Dashboard() {
             <div className="fade-in" style={shellCard}>
               <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--gdu-teal)]">Customer watchlist</p>
                   <div className="mt-1 text-xl font-black tracking-[-0.03em] gdu-title">Daftar Pelanggan</div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2.5">

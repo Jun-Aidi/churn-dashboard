@@ -364,225 +364,224 @@ export default function Admin() {
   return (
     <div className="gdu-page">
       <div className="gdu-content fade-in">
-      {/* Toast Notification */}
-      {toast && (
-        <div
-          className="fixed top-4 right-4 z-50 px-4 py-3 rounded-lg text-sm font-medium shadow-lg flex items-center gap-2 animate-fade-in"
-          style={{
-            background: toast.type === 'success' ? 'var(--gdu-teal)' : 'var(--gdu-red)',
-            color: '#fff',
-          }}
-        >
-          <i className={`fa-solid ${toast.type === 'success' ? 'fa-check-circle' : 'fa-circle-exclamation'}`}></i>
-          {toast.message}
-        </div>
-      )}
-
-      {/* Page Header */}
-      <div className="mb-6 rounded-[2rem] p-6 gdu-hero">
-        <p className="text-xs font-black uppercase tracking-[0.2em] text-[#8ee7df]">Control room</p>
-        <h1 className="mt-2 text-4xl font-black tracking-[-0.05em]">Admin Panel</h1>
-        <p className="mt-2 text-sm font-medium text-[#fffaf0]/70">Kelola pengguna dan pantau statistik sistem</p>
-      </div>
-
-      {/* ═══ System Statistics Section ═══ */}
-      <section className="mb-8">
-        <h2 className="text-base font-semibold mb-4" style={{ color: 'var(--gdu-text)' }}>
-          <i className="fa-solid fa-chart-pie mr-2 text-sm" style={{ color: 'var(--gdu-subtle)' }}></i>
-          Statistik Sistem
-        </h2>
-
-        {loadingStats ? (
-          <div className="text-center py-8 text-sm" style={{ color: 'var(--gdu-subtle)' }}>
-            <i className="fa-solid fa-circle-notch fa-spin mr-2"></i> Memuat statistik...
-          </div>
-        ) : errorStats ? (
-          <div className="text-center py-8 text-sm text-red-600">
-            <i className="fa-solid fa-triangle-exclamation mr-2"></i> {errorStats}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            <StatCard
-              title="Pengguna Aktif"
-              value={stats?.active_users}
-              icon="fa-solid fa-user-check"
-              color="var(--gdu-teal)"
-            />
-            <StatCard
-              title="Pengguna Nonaktif"
-              value={stats?.inactive_users}
-              icon="fa-solid fa-user-xmark"
-              color="var(--gdu-red)"
-            />
-            <StatCard
-              title="Total Pelanggan"
-              value={stats?.total_customers}
-              icon="fa-solid fa-users"
-              color="var(--gdu-teal)"
-            />
-            <StatCard
-              title="Total Prediksi"
-              value={stats?.total_predictions}
-              icon="fa-solid fa-brain"
-              color="var(--gdu-amber)"
-            />
-            <StatCard
-              title="Total Sesi Chat"
-              value={stats?.total_chat_sessions}
-              icon="fa-solid fa-comments"
-              color="var(--gdu-amber)"
-            />
-          </div>
-        )}
-      </section>
-
-      {/* ═══ User Management Section ═══ */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold" style={{ color: 'var(--gdu-text)' }}>
-            <i className="fa-solid fa-users-gear mr-2 text-sm" style={{ color: 'var(--gdu-subtle)' }}></i>
-            Manajemen Pengguna
-          </h2>
-          <button
-            onClick={() => { setEditingUser(null); setShowModal(true); }}
-            className="px-4 py-2 rounded-lg text-sm font-medium text-white cursor-pointer flex items-center gap-2"
-            style={{ background: 'var(--gdu-teal)' }}
-          >
-            <i className="fa-solid fa-plus text-xs"></i> Tambah Pengguna
-          </button>
-        </div>
-
-        {loadingUsers ? (
-          <div className="text-center py-8 text-sm" style={{ color: 'var(--gdu-subtle)' }}>
-            <i className="fa-solid fa-circle-notch fa-spin mr-2"></i> Memuat daftar pengguna...
-          </div>
-        ) : errorUsers ? (
-          <div className="text-center py-8 text-sm text-red-600">
-            <i className="fa-solid fa-triangle-exclamation mr-2"></i> {errorUsers}
-          </div>
-        ) : (
+        {/* Toast Notification */}
+        {toast && (
           <div
-            className="rounded-xl border overflow-hidden"
+            className="fixed top-4 right-4 z-50 px-4 py-3 rounded-lg text-sm font-medium shadow-lg flex items-center gap-2 animate-fade-in"
             style={{
-              background: 'var(--gdu-card)',
-              borderColor: 'var(--gdu-border)',
-              boxShadow: 'var(--gdu-shadow)',
+              background: toast.type === 'success' ? 'var(--gdu-teal)' : 'var(--gdu-red)',
+              color: '#fff',
             }}
           >
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr
-                    className="border-b"
-                    style={{ borderColor: 'var(--gdu-border)', background: 'var(--gdu-hover)' }}
-                  >
-                    <th className="text-left px-4 py-3 font-medium" style={{ color: 'var(--gdu-muted)' }}>Nama</th>
-                    <th className="text-left px-4 py-3 font-medium" style={{ color: 'var(--gdu-muted)' }}>Email</th>
-                    <th className="text-left px-4 py-3 font-medium" style={{ color: 'var(--gdu-muted)' }}>Role</th>
-                    <th className="text-left px-4 py-3 font-medium" style={{ color: 'var(--gdu-muted)' }}>Status</th>
-                    <th className="text-left px-4 py-3 font-medium" style={{ color: 'var(--gdu-muted)' }}>Tanggal Registrasi</th>
-                    <th className="text-center px-4 py-3 font-medium" style={{ color: 'var(--gdu-muted)' }}>Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((u) => (
-                    <tr
-                      key={u.id}
-                      className="border-b last:border-b-0 transition-colors"
-                      style={{ borderColor: 'var(--gdu-border)' }}
-                    >
-                      <td className="px-4 py-3 font-medium" style={{ color: 'var(--gdu-text)' }}>
-                        {u.name}
-                      </td>
-                      <td className="px-4 py-3" style={{ color: 'var(--gdu-muted)' }}>
-                        {u.email}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                          style={{
-                            background: u.role === 'admin' ? 'rgba(79,142,247,0.15)' : 'rgba(107,114,128,0.15)',
-                            color: u.role === 'admin' ? 'var(--gdu-teal)' : '#6b7280',
-                          }}
-                        >
-                          {u.role === 'admin' ? 'Admin' : 'User'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium"
-                          style={{
-                            background: u.is_active ? 'rgba(22,163,74,0.15)' : 'rgba(220,38,38,0.15)',
-                            color: u.is_active ? 'var(--gdu-teal)' : 'var(--gdu-red)',
-                          }}
-                        >
-                          <span
-                            className="w-1.5 h-1.5 rounded-full"
-                            style={{ background: u.is_active ? 'var(--gdu-teal)' : 'var(--gdu-red)' }}
-                          ></span>
-                          {u.is_active ? 'Aktif' : 'Nonaktif'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-xs" style={{ color: 'var(--gdu-subtle)' }}>
-                        {formatDate(u.created_at)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-center gap-2">
-                          {/* Edit button */}
-                          <button
-                            onClick={() => { setEditingUser(u); setShowModal(true); }}
-                            className="p-1.5 rounded-md text-xs cursor-pointer border-none transition-colors"
-                            style={{ background: 'var(--gdu-hover)', color: 'var(--gdu-muted)' }}
-                            title="Edit pengguna"
-                          >
-                            <i className="fa-solid fa-pen-to-square"></i>
-                          </button>
-                          {/* Activate/Deactivate toggle */}
-                          {u.is_active ? (
-                            <button
-                              onClick={() => handleDeactivate(u)}
-                              className="p-1.5 rounded-md text-xs cursor-pointer border-none transition-colors"
-                              style={{ background: 'rgba(220,38,38,0.1)', color: 'var(--gdu-red)' }}
-                              title="Nonaktifkan pengguna"
-                            >
-                              <i className="fa-solid fa-user-slash"></i>
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => handleActivate(u)}
-                              className="p-1.5 rounded-md text-xs cursor-pointer border-none transition-colors"
-                              style={{ background: 'rgba(22,163,74,0.1)', color: 'var(--gdu-teal)' }}
-                              title="Aktifkan pengguna"
-                            >
-                              <i className="fa-solid fa-user-check"></i>
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {users.length === 0 && (
-                    <tr>
-                      <td colSpan={6} className="text-center py-8 text-sm" style={{ color: 'var(--gdu-subtle)' }}>
-                        Belum ada pengguna terdaftar.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <i className={`fa-solid ${toast.type === 'success' ? 'fa-check-circle' : 'fa-circle-exclamation'}`}></i>
+            {toast.message}
           </div>
         )}
-      </section>
 
-      {/* User Form Modal */}
-      <UserFormModal
-        isOpen={showModal}
-        onClose={() => { setShowModal(false); setEditingUser(null); }}
-        onSubmit={editingUser ? handleEditUser : handleCreateUser}
-        initialData={editingUser}
-        isEdit={Boolean(editingUser)}
-      />
+        {/* Page Header */}
+        <div className="mb-6 rounded-[2rem] p-6 gdu-hero">
+          <h1 className="mt-2 text-4xl font-black tracking-[-0.05em]">Admin Panel</h1>
+          <p className="mt-2 text-sm font-medium text-[#fffaf0]/70">Kelola pengguna dan pantau statistik sistem</p>
+        </div>
+
+        {/* ═══ System Statistics Section ═══ */}
+        <section className="mb-8">
+          <h2 className="text-base font-semibold mb-4" style={{ color: 'var(--gdu-text)' }}>
+            <i className="fa-solid fa-chart-pie mr-2 text-sm" style={{ color: 'var(--gdu-subtle)' }}></i>
+            Statistik Sistem
+          </h2>
+
+          {loadingStats ? (
+            <div className="text-center py-8 text-sm" style={{ color: 'var(--gdu-subtle)' }}>
+              <i className="fa-solid fa-circle-notch fa-spin mr-2"></i> Memuat statistik...
+            </div>
+          ) : errorStats ? (
+            <div className="text-center py-8 text-sm text-red-600">
+              <i className="fa-solid fa-triangle-exclamation mr-2"></i> {errorStats}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              <StatCard
+                title="Pengguna Aktif"
+                value={stats?.active_users}
+                icon="fa-solid fa-user-check"
+                color="var(--gdu-teal)"
+              />
+              <StatCard
+                title="Pengguna Nonaktif"
+                value={stats?.inactive_users}
+                icon="fa-solid fa-user-xmark"
+                color="var(--gdu-red)"
+              />
+              <StatCard
+                title="Total Pelanggan"
+                value={stats?.total_customers}
+                icon="fa-solid fa-users"
+                color="var(--gdu-teal)"
+              />
+              <StatCard
+                title="Total Prediksi"
+                value={stats?.total_predictions}
+                icon="fa-solid fa-brain"
+                color="var(--gdu-amber)"
+              />
+              <StatCard
+                title="Total Sesi Chat"
+                value={stats?.total_chat_sessions}
+                icon="fa-solid fa-comments"
+                color="var(--gdu-amber)"
+              />
+            </div>
+          )}
+        </section>
+
+        {/* ═══ User Management Section ═══ */}
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-semibold" style={{ color: 'var(--gdu-text)' }}>
+              <i className="fa-solid fa-users-gear mr-2 text-sm" style={{ color: 'var(--gdu-subtle)' }}></i>
+              Manajemen Pengguna
+            </h2>
+            <button
+              onClick={() => { setEditingUser(null); setShowModal(true); }}
+              className="px-4 py-2 rounded-lg text-sm font-medium text-white cursor-pointer flex items-center gap-2"
+              style={{ background: 'var(--gdu-teal)' }}
+            >
+              <i className="fa-solid fa-plus text-xs"></i> Tambah Pengguna
+            </button>
+          </div>
+
+          {loadingUsers ? (
+            <div className="text-center py-8 text-sm" style={{ color: 'var(--gdu-subtle)' }}>
+              <i className="fa-solid fa-circle-notch fa-spin mr-2"></i> Memuat daftar pengguna...
+            </div>
+          ) : errorUsers ? (
+            <div className="text-center py-8 text-sm text-red-600">
+              <i className="fa-solid fa-triangle-exclamation mr-2"></i> {errorUsers}
+            </div>
+          ) : (
+            <div
+              className="rounded-xl border overflow-hidden"
+              style={{
+                background: 'var(--gdu-card)',
+                borderColor: 'var(--gdu-border)',
+                boxShadow: 'var(--gdu-shadow)',
+              }}
+            >
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr
+                      className="border-b"
+                      style={{ borderColor: 'var(--gdu-border)', background: 'var(--gdu-hover)' }}
+                    >
+                      <th className="text-left px-4 py-3 font-medium" style={{ color: 'var(--gdu-muted)' }}>Nama</th>
+                      <th className="text-left px-4 py-3 font-medium" style={{ color: 'var(--gdu-muted)' }}>Email</th>
+                      <th className="text-left px-4 py-3 font-medium" style={{ color: 'var(--gdu-muted)' }}>Role</th>
+                      <th className="text-left px-4 py-3 font-medium" style={{ color: 'var(--gdu-muted)' }}>Status</th>
+                      <th className="text-left px-4 py-3 font-medium" style={{ color: 'var(--gdu-muted)' }}>Tanggal Registrasi</th>
+                      <th className="text-center px-4 py-3 font-medium" style={{ color: 'var(--gdu-muted)' }}>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map((u) => (
+                      <tr
+                        key={u.id}
+                        className="border-b last:border-b-0 transition-colors"
+                        style={{ borderColor: 'var(--gdu-border)' }}
+                      >
+                        <td className="px-4 py-3 font-medium" style={{ color: 'var(--gdu-text)' }}>
+                          {u.name}
+                        </td>
+                        <td className="px-4 py-3" style={{ color: 'var(--gdu-muted)' }}>
+                          {u.email}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                            style={{
+                              background: u.role === 'admin' ? 'rgba(79,142,247,0.15)' : 'rgba(107,114,128,0.15)',
+                              color: u.role === 'admin' ? 'var(--gdu-teal)' : '#6b7280',
+                            }}
+                          >
+                            {u.role === 'admin' ? 'Admin' : 'User'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium"
+                            style={{
+                              background: u.is_active ? 'rgba(22,163,74,0.15)' : 'rgba(220,38,38,0.15)',
+                              color: u.is_active ? 'var(--gdu-teal)' : 'var(--gdu-red)',
+                            }}
+                          >
+                            <span
+                              className="w-1.5 h-1.5 rounded-full"
+                              style={{ background: u.is_active ? 'var(--gdu-teal)' : 'var(--gdu-red)' }}
+                            ></span>
+                            {u.is_active ? 'Aktif' : 'Nonaktif'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-xs" style={{ color: 'var(--gdu-subtle)' }}>
+                          {formatDate(u.created_at)}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-center gap-2">
+                            {/* Edit button */}
+                            <button
+                              onClick={() => { setEditingUser(u); setShowModal(true); }}
+                              className="p-1.5 rounded-md text-xs cursor-pointer border-none transition-colors"
+                              style={{ background: 'var(--gdu-hover)', color: 'var(--gdu-muted)' }}
+                              title="Edit pengguna"
+                            >
+                              <i className="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            {/* Activate/Deactivate toggle */}
+                            {u.is_active ? (
+                              <button
+                                onClick={() => handleDeactivate(u)}
+                                className="p-1.5 rounded-md text-xs cursor-pointer border-none transition-colors"
+                                style={{ background: 'rgba(220,38,38,0.1)', color: 'var(--gdu-red)' }}
+                                title="Nonaktifkan pengguna"
+                              >
+                                <i className="fa-solid fa-user-slash"></i>
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleActivate(u)}
+                                className="p-1.5 rounded-md text-xs cursor-pointer border-none transition-colors"
+                                style={{ background: 'rgba(22,163,74,0.1)', color: 'var(--gdu-teal)' }}
+                                title="Aktifkan pengguna"
+                              >
+                                <i className="fa-solid fa-user-check"></i>
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {users.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="text-center py-8 text-sm" style={{ color: 'var(--gdu-subtle)' }}>
+                          Belum ada pengguna terdaftar.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* User Form Modal */}
+        <UserFormModal
+          isOpen={showModal}
+          onClose={() => { setShowModal(false); setEditingUser(null); }}
+          onSubmit={editingUser ? handleEditUser : handleCreateUser}
+          initialData={editingUser}
+          isEdit={Boolean(editingUser)}
+        />
       </div>
     </div>
   );

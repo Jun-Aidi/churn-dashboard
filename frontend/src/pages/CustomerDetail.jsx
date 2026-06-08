@@ -64,7 +64,7 @@ export default function CustomerDetail() {
             <i className="fa-solid fa-angle-left text-xs"></i> Kembali
           </button>
           <div>
-            <h1 className="page-title">Detail — {customer.name}</h1>
+            <h1 className="page-title">Detail Customer</h1>
             <p className="page-subtitle">Analisis mendalam faktor risiko churn dan rekomendasi aksi</p>
           </div>
         </div>
