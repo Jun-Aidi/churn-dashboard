@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pelanggan – Ghosting Detection Unit</title>
+  <meta name="description" content="Daftar semua pelanggan beserta skor risiko churn masing-masing." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <style>
+    /* ═══ Theme variables ═══ */
+    :root {
+      --gdu-bg: #f5efe4;
+      --gdu-panel: #15201d;
+      --gdu-card: rgba(255,250,240,0.86);
+      --gdu-card-solid: #fffaf0;
+      --gdu-text: #15201d;
+      --gdu-muted: #60716c;
+      --gdu-subtle: #8a9995;
+      --gdu-border: rgba(21,32,29,0.12);
+      --gdu-input: rgba(255,255,255,0.78);
+      --gdu-hover: rgba(21,32,29,0.06);
+      --gdu-teal: #00a6a6;
+      --gdu-teal-dark: #008f8f;
+      --gdu-amber: #f59e0b;
+      --gdu-red: #ef4444;
+      --gdu-shadow: 0 24px 80px rgba(21,32,29,0.10);
+    }
+    .dark {
+      --gdu-bg: #0d1117;
+      --gdu-panel: #101820;
+      --gdu-card: rgba(22,27,39,0.88);
+      --gdu-card-solid: #161b27;
+      --gdu-text: #e2e8f0;
+      --gdu-muted: #aab7c8;
+      --gdu-subtle: #7c8aa0;
+      --gdu-border: rgba(226,232,240,0.12);
+      --gdu-input: rgba(30,37,53,0.92);
+      --gdu-hover: rgba(255,255,255,0.07);
+      --gdu-teal: #2dd4bf;
+      --gdu-teal-dark: #14b8a6;
+      --gdu-amber: #fbbf24;
+      --gdu-red: #f87171;
+      --gdu-shadow: 0 24px 80px rgba(0,0,0,0.32);
+    }
+
+    /* ═══ Reset ═══ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100vh; overflow-x: hidden; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--gdu-bg);
+      color: var(--gdu-text);
+      transition: background 0.2s, color 0.2s;
+    }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--gdu-teal); }
+    .dark ::-webkit-scrollbar-thumb { background: #2e3b55; }
+
+    /* ═══ Animations ═══ */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in   { animation: fadeIn 0.35s ease both; }
+    .stagger-1 { animation-delay: 0.05s; }
+    .stagger-2 { animation-delay: 0.10s; }
+    .stagger-3 { animation-delay: 0.15s; }
+
+    /* ═══ Navbar ═══ */
+    .top-navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 90;
+      height: 60px;
+      display: flex; align-items: center;
+      padding: 0 20px 0 24px; gap: 12px;
+      background: var(--gdu-card);
+      border-bottom: 1px solid var(--gdu-border);
+      box-shadow: var(--gdu-shadow);
+      backdrop-filter: blur(18px);
+    }
+    .navbar-brand { display: flex; align-items: center; gap: 8px; margin-right: 20px; flex-shrink: 0; text-decoration: none; }
+    .navbar-brand img { height: 40px; width: auto; }
+    .top-nav-links { display: flex; align-items: center; gap: 2px; flex: 1; }
+    .nav-link {
+      display: flex; align-items: center; gap: 8px;
+      text-decoration: none; font-size: 13.5px; font-weight: 500;
+      color: var(--gdu-muted); padding: 7px 14px; border-radius: 999px;
+      background: transparent; transition: all 0.15s; white-space: nowrap;
+    }
+    .nav-link:hover { background: var(--gdu-hover); color: var(--gdu-text); }
+    .nav-link.active { font-weight: 600; color: var(--gdu-teal); background: color-mix(in srgb, var(--gdu-teal) 14%, transparent); }
+    .navbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .nav-search {
+      display: flex; align-items: center; gap: 8px;
+      border-radius: 10px; padding: 7px 13px; width: 190px;
+      border: 1px solid var(--gdu-border); background: var(--gdu-input);
+    }
+    .nav-search input { background: transparent; border: none; outline: none; font-size: 13px; font-family: inherit; width: 100%; color: var(--gdu-text); }
+    .nav-search input::placeholder { color: var(--gdu-subtle); }
+    .icon-btn {
+      position: relative; width: 36px; height: 36px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; border: 1px solid var(--gdu-border);
+      background: var(--gdu-input); color: var(--gdu-text); font-size: 14px;
+      flex-shrink: 0; transition: background 0.15s;
+    }
+    .icon-btn:hover { background: var(--gdu-hover); }
+    .notif-dot {
+      position: absolute; top: 7px; right: 7px;
+      width: 7px; height: 7px; background: #ef4444;
+      border-radius: 50%; border: 2px solid var(--gdu-card-solid);
+    }
+    .user-pill {
+      display: flex; align-items: center; gap: 8px;
+      padding: 4px 10px 4px 4px; border-radius: 10px;
+      border: 1px solid var(--gdu-border); background: var(--gdu-input); flex-shrink: 0;
+    }
+    .user-avatar {
+      width: 28px; height: 28px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: #fff;
+      background: linear-gradient(135deg, var(--gdu-teal) 0%, var(--gdu-amber) 100%);
+      flex-shrink: 0; letter-spacing: -0.5px;
+    }
+    .user-name { font-size: 12.5px; font-weight: 600; color: var(--gdu-text); line-height: 1.2; }
+    .user-role { font-size: 10.5px; color: var(--gdu-muted); }
+
+    /* ═══ Page wrapper ═══ */
+    .app-body { padding: 60px 12px 12px; min-height: 100vh; }
+    .gdu-page {
+      position: relative; overflow: hidden;
+      border-radius: 28px; background: var(--gdu-bg); color: var(--gdu-text);
+      min-height: calc(100vh - 72px); padding: clamp(16px,3vw,28px); margin-top: 8px;
+    }
+    .gdu-page::before {
+      content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0.85;
+      background:
+        radial-gradient(circle at 8% 8%, color-mix(in srgb, var(--gdu-teal) 24%, transparent), transparent 28%),
+        radial-gradient(circle at 90% 4%, color-mix(in srgb, var(--gdu-amber) 22%, transparent), transparent 25%),
+        radial-gradient(circle at 52% 100%, color-mix(in srgb, var(--gdu-red) 14%, transparent), transparent 32%);
+    }
+    .gdu-page::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0.52;
+      background: linear-gradient(var(--gdu-border) 1px, transparent 1px), linear-gradient(90deg, var(--gdu-border) 1px, transparent 1px);
+      background-size: 44px 44px;
+    }
+    .gdu-content { position: relative; z-index: 1; }
+
+    /* ═══ Hero banner ═══ */
+    .page-hero {
+      margin-bottom: 24px;
+      display: flex; flex-direction: column; justify-content: space-between; gap: 16px;
+      border-radius: 2rem; padding: 24px 28px;
+      background: var(--gdu-panel); color: #fffaf0;
+      border: 1px solid var(--gdu-border);
+      box-shadow: 0 28px 90px rgba(21,32,29,0.20);
+    }
+    @media(min-width:640px) { .page-hero { flex-direction: row; align-items: flex-end; } }
+    .hero-kicker { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.20em; color: #8ee7df; }
+    .hero-h1 { margin-top: 8px; font-size: clamp(28px,5vw,40px); font-weight: 900; letter-spacing: -0.05em; }
+    .hero-sub { margin-top: 8px; font-size: 13px; font-weight: 500; color: rgba(255,250,240,0.70); }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; flex-shrink: 0; }
+    .btn-ghost-hero {
+      display: inline-flex; align-items: center; gap: 8px;
+      border-radius: 16px; border: 1px solid rgba(255,250,240,0.15);
+      background: rgba(255,255,255,0.10); padding: 10px 16px;
+      font-size: 13.5px; font-weight: 700; color: #fffaf0;
+      cursor: pointer; font-family: inherit; transition: background 0.15s;
+    }
+    .btn-ghost-hero:hover { background: rgba(255,255,255,0.18); }
+    .btn-amber {
+      display: inline-flex; align-items: center; gap: 8px;
+      border-radius: 16px; border: none;
+      background: var(--gdu-amber); padding: 10px 16px;
+      font-size: 13.5px; font-weight: 900; color: #15201d;
+      cursor: pointer; font-family: inherit; transition: filter 0.15s;
+    }
+    .btn-amber:hover { filter: brightness(1.08); }
+
+    /* ═══ Filter bar ═══ */
+    .filter-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+    .search-field {
+      flex: 1; min-width: 200px; position: relative;
+    }
+    .search-field i {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      font-size: 13px; color: var(--gdu-subtle); pointer-events: none;
+    }
+    .search-field input {
+      width: 100%; border-radius: 9px; padding: 10px 16px 10px 38px;
+      font-size: 13px; font-family: inherit; outline: none;
+      background: var(--gdu-card); border: 1px solid var(--gdu-border); color: var(--gdu-text);
+    }
+    .search-field input::placeholder { color: var(--gdu-subtle); }
+    .tab-group {
+      display: flex; overflow: hidden; border-radius: 9px;
+      border: 1px solid var(--gdu-border); background: var(--gdu-card);
+    }
+    .tab-btn {
+      padding: 10px 16px; font-size: 12.5px; font-weight: 500;
+      border: none; cursor: pointer; font-family: inherit;
+      white-space: nowrap; transition: all 0.15s;
+      color: var(--gdu-muted); background: transparent;
+    }
+    .tab-btn.active { font-weight: 600; background: var(--gdu-teal); color: #fff; }
+    .tab-btn:hover:not(.active) { background: var(--gdu-hover); color: var(--gdu-text); }
+
+    /* ═══ Customer cards grid ═══ */
+    .grid-customers {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    @media(max-width:900px) { .grid-customers { grid-template-columns: repeat(2,1fr); } }
+    @media(max-width:540px) { .grid-customers { grid-template-columns: 1fr; } }
+
+    .cust-card {
+      border-radius: 14px; padding: 18px 20px; cursor: pointer;
+      background: var(--gdu-card);
+      box-shadow: var(--gdu-shadow);
+      border: 1px solid var(--gdu-border);
+      transition: transform 0.18s, box-shadow 0.18s;
+    }
+    .cust-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+
+    .cust-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .cust-name { font-size: 13.5px; font-weight: 600; color: var(--gdu-text); }
+    .cust-id { font-size: 11.5px; font-family: monospace; margin-top: 2px; color: var(--gdu-subtle); }
+    .cust-score { font-size: 28px; font-weight: 700; font-family: monospace; line-height: 1; }
+
+    .score-track { height: 5px; border-radius: 4px; overflow: hidden; background: var(--gdu-hover); margin-bottom: 10px; }
+    .score-fill  { height: 100%; border-radius: 4px; }
+
+    .risk-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 11.5px; font-weight: 600; padding: 3px 10px; border-radius: 999px;
+    }
+    .risk-badge-high { background: rgba(220,38,38,0.12); color: #dc2626; }
+    .risk-badge-med  { background: rgba(217,119,6,0.12);  color: #d97706; }
+    .risk-badge-low  { background: rgba(22,163,74,0.12);  color: #16a34a; }
+
+    .cust-meta { display: flex; gap: 10px; flex-wrap: wrap; font-size: 11.5px; color: var(--gdu-subtle); margin-top: 10px; }
+    .cust-meta span { display: flex; align-items: center; gap: 4px; }
+    .cust-status {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 999px; margin-top: 10px;
+    }
+    .status-active  { background: rgba(22,163,74,0.15);  color: var(--gdu-teal); }
+    .status-churned { background: rgba(220,38,38,0.15);  color: var(--gdu-red); }
+
+    /* ═══ Pagination ═══ */
+    .pagination {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+      gap: 12px; margin-top: 24px; font-size: 13.5px; font-weight: 600; color: var(--gdu-muted);
+    }
+    .pg-btns { display: flex; align-items: center; gap: 6px; }
+    .pg-btn {
+      height: 36px; padding: 0 16px; border-radius: 12px;
+      border: 1px solid var(--gdu-border); background: var(--gdu-card);
+      font-size: 13.5px; font-weight: 700; color: var(--gdu-text);
+      cursor: pointer; font-family: inherit; transition: background 0.12s;
+    }
+    .pg-btn:hover { background: var(--gdu-hover); }
+    .pg-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .pg-current {
+      height: 36px; padding: 0 16px; border-radius: 12px;
+      background: var(--gdu-teal); font-size: 13.5px; font-weight: 900;
+      color: #fff; display: flex; align-items: center;
+    }
+
+    /* ═══ Modal ═══ */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 1000;
+      background: rgba(0,0,0,0.45); align-items: center; justify-content: center; padding: 24px 16px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--gdu-card-solid); border-radius: 14px;
+      border: 1px solid var(--gdu-border); box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+      width: 100%; max-width: 640px; max-height: calc(100vh - 48px);
+      display: flex; flex-direction: column; animation: fadeIn 0.2s ease both;
+    }
+    .modal-header { padding: 24px 26px 14px; border-bottom: 1px solid var(--gdu-border); }
+    .modal-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .modal-title { font-size: 17px; font-weight: 700; color: var(--gdu-text); }
+    .modal-close {
+      width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--gdu-border);
+      background: var(--gdu-input); color: var(--gdu-text); font-size: 13px;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+    .modal-close:hover { background: var(--gdu-hover); }
+    .modal-desc { font-size: 12.5px; color: var(--gdu-muted); line-height: 1.6; }
+    .modal-body { padding: 18px 26px; overflow-y: auto; flex: 1; }
+    .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media(max-width:480px) { .modal-grid { grid-template-columns: 1fr; } }
+    .field-label {
+      display: block; font-size: 11px; font-weight: 600; color: var(--gdu-subtle);
+      text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 5px;
+    }
+    .field-input, .field-select {
+      width: 100%; background: var(--gdu-input); border: 1px solid var(--gdu-border);
+      border-radius: 9px; padding: 9px 12px; font-size: 13px;
+      color: var(--gdu-text); outline: none; font-family: inherit;
+    }
+    .field-input::placeholder { color: var(--gdu-subtle); }
+    .field-input:focus, .field-select:focus { border-color: var(--gdu-teal); }
+    .modal-footer {
+      padding: 14px 26px 22px; border-top: 1px solid var(--gdu-border);
+      display: flex; justify-content: flex-end; gap: 10px;
+    }
+    .btn-modal-cancel {
+      padding: 9px 18px; border-radius: 9px; border: 1px solid var(--gdu-border);
+      background: var(--gdu-input); color: var(--gdu-text); font-size: 13.5px;
+      font-weight: 600; cursor: pointer; font-family: inherit;
+    }
+    .btn-modal-cancel:hover { background: var(--gdu-hover); }
+    .btn-modal-save {
+      padding: 9px 18px; border-radius: 9px; border: none;
+      background: var(--gdu-teal); color: #fff; font-size: 13.5px;
+      font-weight: 700; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 6px;
+      transition: background 0.15s;
+    }
+    .btn-modal-save:hover { background: var(--gdu-teal-dark); }
+
+    /* ═══ Responsive navbar ═══ */
+    @media(max-width:768px) {
+      .top-nav-links { display: none; }
+      .nav-search    { display: none; }
+      .user-name, .user-role { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ NAVBAR ═══ -->
+<header class="top-navbar">
+  <a class="navbar-brand" href="dashboard.html">
+    <img src="logo_ghosting.png" alt="GDU" onerror="this.style.display='none';this.nextSibling.style.display='flex'" />
+    <span style="display:none;align-items:center;justify-content:center;width:36px;height:36px;background:linear-gradient(135deg,#00a6a6,#f59e0b);border-radius:10px;color:#fff;font-weight:900;font-size:14px;">G</span>
+  </a>
+  <nav class="top-nav-links">
+    <a class="nav-link" href="dashboard.html"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+    <a class="nav-link active" href="#"><i class="fa-solid fa-users"></i> Pelanggan</a>
+    <a class="nav-link" href="#"><i class="fa-solid fa-upload"></i> Upload Data</a>
+  </nav>
+  <div class="navbar-right">
+    <div class="nav-search">
+      <i class="fa-solid fa-magnifying-glass" style="color:var(--gdu-subtle);font-size:13px"></i>
+      <input type="text" placeholder="Cari..." />
+    </div>
+    <button class="icon-btn" id="btn-theme" title="Toggle dark mode">
+      <i class="fa-solid fa-moon"></i>
+    </button>
+    <button class="icon-btn">
+      <i class="fa-solid fa-bell"></i>
+      <span class="notif-dot"></span>
+    </button>
+    <div class="user-pill">
+      <div class="user-avatar">FA</div>
+      <div>
+        <div class="user-name">Fahrezi</div>
+        <div class="user-role">Admin</div>
+      </div>
+    </div>
+    <button class="icon-btn" title="Keluar">
+      <i class="fa-solid fa-right-from-bracket"></i>
+    </button>
+  </div>
+</header>
+
+<!-- ═══ MAIN BODY ═══ -->
+<div class="app-body">
+  <div class="gdu-page">
+    <div class="gdu-content fade-in">
+
+      <!-- HERO BANNER -->
+      <div class="page-hero">
+        <div>
+          <p class="hero-kicker">Customer watchlist</p>
+          <h1 class="hero-h1">Pelanggan</h1>
+          <p class="hero-sub">Semua pelanggan beserta skor risiko churn</p>
+        </div>
+        <div class="hero-actions">
+          <button class="btn-ghost-hero" id="btn-export">
+            <i class="fa-solid fa-download" style="font-size:11px"></i> Export CSV
+          </button>
+          <button class="btn-amber" id="btn-add">
+            <i class="fa-solid fa-plus" style="font-size:11px"></i> Tambah Pelanggan
+          </button>
+        </div>
+      </div>
+
+      <!-- FILTER BAR -->
+      <div class="filter-bar">
+        <div class="search-field">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="search-input" placeholder="Cari nama atau customer ID..." />
+        </div>
+        <div class="tab-group" id="tab-group">
+          <button class="tab-btn active" data-filter="all">Semua (<span class="cnt-all">15</span>)</button>
+          <button class="tab-btn" data-filter="high">Risiko Tinggi (<span class="cnt-high">0</span>)</button>
+          <button class="tab-btn" data-filter="med">Sedang (<span class="cnt-med">0</span>)</button>
+          <button class="tab-btn" data-filter="low">Rendah (<span class="cnt-low">0</span>)</button>
+        </div>
+      </div>
+
+      <!-- CUSTOMER CARDS -->
+      <div class="grid-customers" id="cards-grid"></div>
+
+      <!-- PAGINATION -->
+      <div class="pagination">
+        <span id="pg-info"></span>
+        <div class="pg-btns">
+          <button class="pg-btn" id="pg-prev" disabled>
+            <i class="fa-solid fa-arrow-left" style="font-size:11px;margin-right:4px"></i> Prev
+          </button>
+          <span class="pg-current" id="pg-label">1 / 1</span>
+          <button class="pg-btn" id="pg-next">
+            Next <i class="fa-solid fa-arrow-right" style="font-size:11px;margin-left:4px"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ADD CUSTOMER MODAL ═══ -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box" id="modal-box">
+    <div class="modal-header">
+      <div class="modal-title-row">
+        <h2 class="modal-title">Tambah Pelanggan</h2>
+        <button class="modal-close" id="modal-close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <p class="modal-desc">Masukkan nilai semua fitur. Skor risiko churn dihitung otomatis. Data ini hanya muncul di dashboard akun Anda.</p>
+    </div>
+    <div class="modal-body">
+      <div class="modal-grid" id="modal-fields"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" id="modal-cancel">Batal</button>
+      <button class="btn-modal-save" id="modal-save">
+        <i class="fa-solid fa-plus" style="font-size:11px"></i> Simpan Pelanggan
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════ Data dummy ══════ */
+const CUSTOMERS = [
+  { id:'CUST-001', name:'Andi Wijaya',       plan:'Premium',  score:82, tenure:18, tickets:4, churned:false },
+  { id:'CUST-002', name:'Sari Dewi',          plan:'Basic',    score:71, tenure:7,  tickets:2, churned:false },
+  { id:'CUST-003', name:'Budi Santoso',        plan:'Standard', score:55, tenure:24, tickets:1, churned:false },
+  { id:'CUST-004', name:'Citra Lestari',       plan:'Premium',  score:43, tenure:11, tickets:3, churned:false },
+  { id:'CUST-005', name:'Denny Prasetyo',      plan:'Basic',    score:90, tenure:3,  tickets:7, churned:true  },
+  { id:'CUST-006', name:'Eka Putri',           plan:'Standard', score:28, tenure:36, tickets:0, churned:false },
+  { id:'CUST-007', name:'Fajar Nugroho',       plan:'Premium',  score:67, tenure:15, tickets:2, churned:false },
+  { id:'CUST-008', name:'Gita Ramadhani',      plan:'Basic',    score:19, tenure:29, tickets:1, churned:false },
+  { id:'CUST-009', name:'Hendra Kusuma',       plan:'Standard', score:76, tenure:8,  tickets:5, churned:false },
+  { id:'CUST-010', name:'Indah Permata',       plan:'Premium',  score:34, tenure:21, tickets:1, churned:false },
+  { id:'CUST-011', name:'Joko Setiawan',       plan:'Basic',    score:88, tenure:5,  tickets:6, churned:true  },
+  { id:'CUST-012', name:'Kartika Sari',        plan:'Standard', score:22, tenure:40, tickets:0, churned:false },
+  { id:'CUST-013', name:'Luthfi Hidayat',      plan:'Premium',  score:61, tenure:13, tickets:3, churned:false },
+  { id:'CUST-014', name:'Maya Anggraini',      plan:'Basic',    score:47, tenure:17, tickets:2, churned:false },
+  { id:'CUST-015', name:'Nanda Firmansyah',    plan:'Standard', score:93, tenure:2,  tickets:9, churned:true  },
+  { id:'CUST-016', name:'Omar Fauzan',         plan:'Premium',  score:15, tenure:48, tickets:0, churned:false },
+  { id:'CUST-017', name:'Putri Handayani',     plan:'Basic',    score:78, tenure:6,  tickets:5, churned:false },
+  { id:'CUST-018', name:'Rizky Maulana',       plan:'Standard', score:39, tenure:22, tickets:1, churned:false },
+];
+
+/* ══════ Helpers ══════ */
+function getRisk(score) {
+  if (score >= 66) return { cls:'high', label:'Risiko Tinggi', color:'#dc2626', borderColor:'var(--gdu-red)' };
+  if (score >= 31) return { cls:'med',  label:'Risiko Sedang', color:'#d97706', borderColor:'var(--gdu-amber)' };
+  return              { cls:'low',  label:'Risiko Rendah', color:'#16a34a', borderColor:'var(--gdu-teal)' };
+}
+
+/* ══════ State ══════ */
+const PAGE_SIZE = 12;
+let currentPage   = 1;
+let currentSearch = '';
+let currentFilter = 'all';
+let allCustomers  = [...CUSTOMERS];
+
+/* ══════ Count & tab labels ══════ */
+function updateCounts() {
+  const high = allCustomers.filter(c => getRisk(c.score).cls === 'high').length;
+  const med  = allCustomers.filter(c => getRisk(c.score).cls === 'med').length;
+  const low  = allCustomers.filter(c => getRisk(c.score).cls === 'low').length;
+  document.querySelectorAll('.cnt-all').forEach(el => el.textContent = allCustomers.length);
+  document.querySelectorAll('.cnt-high').forEach(el => el.textContent = high);
+  document.querySelectorAll('.cnt-med').forEach(el => el.textContent = med);
+  document.querySelectorAll('.cnt-low').forEach(el => el.textContent = low);
+}
+
+/* ══════ Filter ══════ */
+function getFiltered() {
+  const q = currentSearch.toLowerCase();
+  return allCustomers.filter(c => {
+    const match = c.name.toLowerCase().includes(q) || c.id.toLowerCase().includes(q);
+    if (currentFilter === 'all') return match;
+    return match && getRisk(c.score).cls === currentFilter;
+  });
+}
+
+/* ══════ Render cards ══════ */
+function renderCards() {
+  const rows = getFiltered();
+  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  currentPage = Math.min(currentPage, totalPages);
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const page  = rows.slice(start, start + PAGE_SIZE);
+
+  const grid = document.getElementById('cards-grid');
+  grid.innerHTML = '';
+
+  if (page.length === 0) {
+    grid.style.display = 'block';
+    grid.innerHTML = `<div style="text-align:center;padding:48px 0;font-size:13.5px;color:var(--gdu-subtle)">Tidak ada pelanggan yang ditemukan.</div>`;
+  } else {
+    grid.style.display = '';
+    page.forEach(c => {
+      const risk = getRisk(c.score);
+      const card = document.createElement('div');
+      card.className = 'cust-card fade-in';
+      card.style.borderLeft = `3px solid ${risk.borderColor}`;
+      card.innerHTML = `
+        <div class="cust-top">
+          <div>
+            <div class="cust-name">${c.name}</div>
+            <div class="cust-id">${c.id}</div>
+          </div>
+          <div class="cust-score" style="color:${risk.color}">${c.score}</div>
+        </div>
+        <div class="score-track">
+          <div class="score-fill" style="width:${c.score}%;background:${risk.borderColor}"></div>
+        </div>
+        <div><span class="risk-badge risk-badge-${risk.cls}">${risk.label}</span></div>
+        <div class="cust-meta">
+          <span><i class="fa-solid fa-box" style="font-size:10px"></i> ${c.plan}</span>
+          <span><i class="fa-solid fa-clock" style="font-size:10px"></i> ${c.tenure} bln</span>
+          <span><i class="fa-solid fa-ticket" style="font-size:10px"></i> ${c.tickets} tiket</span>
+        </div>
+        <div>
+          <span class="cust-status ${c.churned ? 'status-churned' : 'status-active'}">
+            ${c.churned ? '✕ Churned' : '✓ Aktif'}
+          </span>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  const rangeStart = rows.length === 0 ? 0 : start + 1;
+  const rangeEnd   = Math.min(start + PAGE_SIZE, rows.length);
+  document.getElementById('pg-info').textContent  = `Menampilkan ${rangeStart}–${rangeEnd} dari ${rows.length} pelanggan`;
+  document.getElementById('pg-label').textContent = `${currentPage} / ${totalPages}`;
+  document.getElementById('pg-prev').disabled = currentPage <= 1;
+  document.getElementById('pg-next').disabled = currentPage >= totalPages;
+}
+
+/* ══════ Events — search & tabs ══════ */
+document.getElementById('search-input').addEventListener('input', e => {
+  currentSearch = e.target.value;
+  currentPage = 1;
+  renderCards();
+});
+
+document.getElementById('tab-group').addEventListener('click', e => {
+  const btn = e.target.closest('.tab-btn');
+  if (!btn) return;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFilter = btn.dataset.filter;
+  currentPage = 1;
+  renderCards();
+});
+
+document.getElementById('pg-prev').addEventListener('click', () => { currentPage--; renderCards(); });
+document.getElementById('pg-next').addEventListener('click', () => { currentPage++; renderCards(); });
+
+/* ══════ Export CSV (simple) ══════ */
+document.getElementById('btn-export').addEventListener('click', () => {
+  const rows = getFiltered();
+  if (!rows.length) return;
+  const header = ['Customer ID','Nama','Plan','Skor Risiko','Kategori','Tenure (bln)','Status'];
+  const lines  = rows.map(c => [
+    c.id, c.name, c.plan, c.score,
+    getRisk(c.score).label, c.tenure,
+    c.churned ? 'Churned' : 'Aktif',
+  ].join(','));
+  const csv  = [header.join(','), ...lines].join('\n');
+  const blob = new Blob([csv], { type:'text/csv' });
+  const a    = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `pelanggan_${currentFilter}.csv`;
+  a.click();
+});
+
+/* ══════ Modal ══════ */
+const ADD_FIELDS = [
+  { key:'customer_id',          label:'Customer ID',               type:'text',   placeholder:'C-0001' },
+  { key:'plan_type',            label:'Plan Type',                 type:'select', options:['starter','professional','enterprise'] },
+  { key:'contract_type',        label:'Contract Type',             type:'select', options:['monthly','annual'] },
+  { key:'tenure_days',          label:'Tenure (hari)',             type:'number', placeholder:'365' },
+  { key:'monthly_usage_hrs',    label:'Penggunaan (jam/bln)',      type:'number', placeholder:'30' },
+  { key:'feature_adoption_pct', label:'Adopsi Fitur (%)',          type:'number', placeholder:'60' },
+  { key:'days_since_login',     label:'Hari Sejak Login Terakhir', type:'number', placeholder:'15' },
+  { key:'total_users',          label:'Jumlah Pengguna',           type:'number', placeholder:'5' },
+  { key:'nps_latest',           label:'NPS Score (0-10)',          type:'number', placeholder:'7' },
+  { key:'ticket_count',         label:'Total Tiket Support',       type:'number', placeholder:'3' },
+  { key:'critical_tickets',     label:'Tiket Kritikal',            type:'number', placeholder:'1' },
+  { key:'open_tickets',         label:'Tiket Terbuka',             type:'number', placeholder:'1' },
+  { key:'total_billed',         label:'Total Tagihan ($)',         type:'number', placeholder:'5000' },
+  { key:'avg_payment_value',    label:'Rata-rata Nilai Bayar ($)', type:'number', placeholder:'400' },
+  { key:'late_payment_count',   label:'Jumlah Telat Bayar',       type:'number', placeholder:'1' },
+  { key:'dunning_count',        label:'Jumlah Dunning',            type:'number', placeholder:'0' },
+  { key:'avg_days_late',        label:'Rata-rata Hari Telat',      type:'number', placeholder:'2' },
+  { key:'payment_count',        label:'Jumlah Pembayaran',         type:'number', placeholder:'12' },
+];
+
+/* Build modal fields once */
+const mGrid = document.getElementById('modal-fields');
+ADD_FIELDS.forEach(f => {
+  const wrap = document.createElement('div');
+  const label = `<label class="field-label" for="f-${f.key}">${f.label}</label>`;
+  let input;
+  if (f.type === 'select') {
+    input = `<select class="field-select" id="f-${f.key}">${f.options.map(o=>`<option value="${o}">${o.charAt(0).toUpperCase()+o.slice(1)}</option>`).join('')}</select>`;
+  } else {
+    input = `<input class="field-input" id="f-${f.key}" type="${f.type}" placeholder="${f.placeholder||''}" min="${f.type==='number'?'0':''}" step="${f.type==='number'?'any':''}" />`;
+  }
+  wrap.innerHTML = label + input;
+  mGrid.appendChild(wrap);
+});
+
+function openModal()  { document.getElementById('modal-overlay').classList.add('open'); }
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+
+document.getElementById('btn-add').addEventListener('click', openModal);
+document.getElementById('modal-close').addEventListener('click', closeModal);
+document.getElementById('modal-cancel').addEventListener('click', closeModal);
+document.getElementById('modal-overlay').addEventListener('click', e => { if (e.target === document.getElementById('modal-overlay')) closeModal(); });
+
+document.getElementById('modal-save').addEventListener('click', () => {
+  const id = document.getElementById('f-customer_id').value.trim();
+  if (!id) { alert('Customer ID wajib diisi.'); return; }
+  /* Dummy: just add to local list with a random score */
+  const score = Math.floor(Math.random() * 100);
+  allCustomers.unshift({ id, name: id, plan: document.getElementById('f-plan_type').value, score, tenure: parseInt(document.getElementById('f-tenure_days').value) || 0, tickets: parseInt(document.getElementById('f-ticket_count').value) || 0, churned: false });
+  updateCounts();
+  currentPage = 1;
+  renderCards();
+  closeModal();
+});
+
+/* ══════ Dark mode ══════ */
+document.getElementById('btn-theme').addEventListener('click', () => {
+  document.documentElement.classList.toggle('dark');
+  const isDark = document.documentElement.classList.contains('dark');
+  const icon = document.querySelector('#btn-theme i');
+  icon.className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+  icon.style.color = isDark ? '#facc15' : '#6b7280';
+});
+
+/* ══════ Init ══════ */
+updateCounts();
+renderCards();
+</script>
+</body>
+</html>

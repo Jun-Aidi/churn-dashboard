@@ -65,46 +65,46 @@ export default function Dashboard() {
     <div className="gdu-page">
       <div className="gdu-content fade-in">
         <section className="mb-6 overflow-hidden rounded-[2rem] border border-[var(--gdu-border)] gdu-hero text-[#fffaf0] shadow-[0_28px_90px_rgba(21,32,29,0.20)]">
-          <div className="relative grid gap-6 p-6 sm:p-8 lg:grid-cols-[1.25fr_0.75fr] lg:p-10">
+          <div className="relative grid gap-4 p-5 sm:p-6 lg:grid-cols-[1.35fr_0.65fr] lg:p-7">
             <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[var(--gdu-teal)]/25 blur-3xl" />
             <div className="absolute bottom-0 left-1/3 h-56 w-56 rounded-full bg-[var(--gdu-amber)]/20 blur-3xl" />
 
             <div className="relative">
-              <div className="mb-6 flex flex-wrap items-center gap-3">
-                <img src={logoSrc} alt="Ghosting Detection Unit logo" className="h-14 w-auto object-contain sm:h-16" />
-                <span className="rounded-full border border-[#fffaf0]/15 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-[#8ee7df]">
+              <div className="mb-3 flex flex-wrap items-center gap-2.5">
+                <img src={logoSrc} alt="Ghosting Detection Unit logo" className="h-10 w-auto object-contain sm:h-11" />
+                <span className="rounded-full border border-[#fffaf0]/15 bg-white/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-[#8ee7df]">
                   Ghosting Detection Unit
                 </span>
               </div>
-              <h1 className="max-w-4xl text-4xl font-black leading-[0.95] tracking-[-0.055em] sm:text-5xl lg:text-6xl">
+              <h1 className="max-w-3xl text-2xl font-black leading-[1.05] tracking-[-0.04em] sm:text-3xl lg:text-4xl">
                 Dashboard retensi untuk membaca risiko lebih awal.
               </h1>
-              <p className="mt-5 max-w-2xl text-sm font-medium leading-7 text-[#fffaf0]/75 sm:text-base">
+              <p className="mt-3 max-w-2xl text-xs font-medium leading-6 text-[#fffaf0]/70">
                 Monitor skor churn, pola pelanggan, dan prioritas intervensi dalam warna visual yang selaras dengan landing page.
               </p>
             </div>
 
-            <div className="relative rounded-[1.75rem] border border-[#fffaf0]/10 bg-white/10 p-5 backdrop-blur">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#8ee7df]">High risk pulse</p>
-              <div className="mt-4 flex items-end gap-4">
-                <div className="text-6xl font-black tracking-[-0.06em]">{highRiskRate}%</div>
-                <div className="pb-2 text-sm font-semibold text-[#fffaf0]/65">pelanggan perlu perhatian</div>
+            <div className="relative rounded-[1.5rem] border border-[#fffaf0]/10 bg-white/10 p-4 backdrop-blur">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8ee7df]">High risk pulse</p>
+              <div className="mt-2 flex items-end gap-3">
+                <div className="text-4xl font-black tracking-[-0.06em]">{highRiskRate}%</div>
+                <div className="pb-1 text-xs font-semibold text-[#fffaf0]/65">pelanggan perlu perhatian</div>
               </div>
-              <div className="mt-6 h-3 overflow-hidden rounded-full bg-white/10">
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
                 <div className="h-full rounded-full bg-gradient-to-r from-[var(--gdu-teal)] via-[var(--gdu-amber)] to-[var(--gdu-red)]" style={{ width: `${Math.min(highRiskRate, 100)}%` }} />
               </div>
-              <div className="mt-5 grid grid-cols-3 gap-2 text-center">
-                <div className="rounded-2xl bg-white/10 p-3">
-                  <p className="text-xl font-black">{counts.high || 0}</p>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#fffaf0]/50">High</p>
+              <div className="mt-3 grid grid-cols-3 gap-1.5 text-center">
+                <div className="rounded-xl bg-white/10 p-2">
+                  <p className="text-base font-black">{counts.high || 0}</p>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#fffaf0]/50">High</p>
                 </div>
-                <div className="rounded-2xl bg-white/10 p-3">
-                  <p className="text-xl font-black">{counts.med || 0}</p>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#fffaf0]/50">Medium</p>
+                <div className="rounded-xl bg-white/10 p-2">
+                  <p className="text-base font-black">{counts.med || 0}</p>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#fffaf0]/50">Medium</p>
                 </div>
-                <div className="rounded-2xl bg-white/10 p-3">
-                  <p className="text-xl font-black">{counts.low || 0}</p>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#fffaf0]/50">Low</p>
+                <div className="rounded-xl bg-white/10 p-2">
+                  <p className="text-base font-black">{counts.low || 0}</p>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#fffaf0]/50">Low</p>
                 </div>
               </div>
             </div>
@@ -140,18 +140,18 @@ export default function Dashboard() {
           <>
             <div className="grid-stat-cards">
               {cards.map((c, i) => (
-                <div key={c.label} className={`fade-in stagger-${i + 1} group relative overflow-hidden`} style={shellCard}>
+                <div key={c.label} className={`fade-in stagger-${i + 1} group relative overflow-hidden`} style={{...shellCard, padding: '20px'}}>
                   <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${c.gradient}`} />
                   <div className="flex items-start justify-between gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: c.iconBg }}>
-                      <i className={`${c.icon} text-xl`} style={{ color: c.iconColor }}></i>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl" style={{ background: c.iconBg }}>
+                      <i className={`${c.icon} text-lg`} style={{ color: c.iconColor }}></i>
                     </div>
                     <span className="rounded-full px-2.5 py-1 text-xs font-black" style={{ background: c.pos ? 'rgba(0,166,166,0.12)' : 'rgba(239,68,68,0.12)', color: c.pos ? 'var(--gdu-teal)' : 'var(--gdu-red)' }}>
                       {c.badge}
                     </span>
                   </div>
-                  <div className="mt-5">
-                    <div className="text-4xl font-black leading-none tracking-[-0.06em]" style={{ color: c.vc || 'var(--gdu-text)' }}>
+                  <div className="mt-4">
+                    <div className="text-3xl font-black leading-none tracking-[-0.06em]" style={{ color: c.vc || 'var(--gdu-text)' }}>
                       {c.value}
                     </div>
                     <div className="mt-2 text-xs font-black uppercase tracking-[0.15em] gdu-muted">{c.label}</div>
@@ -180,30 +180,19 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="fade-in mb-6" style={shellCard}>
-              <div className="mb-5 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--gdu-red)]">Risk scoring system</p>
-                  <div className="mt-2 text-xl font-black tracking-[-0.03em] gdu-title">Sistem Scoring Risiko Churn</div>
-                </div>
-                <p className="max-w-xl text-sm font-medium leading-6 gdu-muted">Gunakan level risiko untuk menentukan pelanggan mana yang perlu ditindak lebih dahulu.</p>
-              </div>
-              <div className="grid-score-tiers">
-                {scoreTiers.map((tier) => (
-                  <div key={tier.cls} className="rounded-[1.5rem] p-5" style={{ border: `1.5px solid ${tier.borderColor}`, background: tier.bg }}>
-                    <div className="mb-4 flex items-center justify-between">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--gdu-input)]" style={{ color: tier.color }}>
-                        <i className={`fa-solid ${tier.icon}`}></i>
-                      </div>
-                      <span className="rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em]" style={{ background: tier.color, color: '#fff' }}>
-                        {tier.tag}
-                      </span>
-                    </div>
-                    <div className="text-3xl font-black leading-none tracking-[-0.05em]" style={{ color: tier.color }}>{tier.range}</div>
-                    <div className="mt-2 text-sm font-black gdu-title">{tier.name}</div>
-                  </div>
-                ))}
-              </div>
+            {/* Risk scoring legend — compact inline strip */}
+            <div className="fade-in mb-6 flex flex-wrap items-center gap-2.5 rounded-2xl border border-[var(--gdu-border)] bg-[var(--gdu-card)] px-5 py-3 backdrop-blur">
+              <span className="mr-1 text-[10px] font-black uppercase tracking-[0.18em] gdu-muted">Risk Level:</span>
+              {scoreTiers.map((tier) => (
+                <span
+                  key={tier.cls}
+                  className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-black"
+                  style={{ background: tier.bg, border: `1.5px solid ${tier.borderColor}`, color: tier.color }}
+                >
+                  <i className={`fa-solid ${tier.icon} text-[10px]`}></i>
+                  {tier.tag} <span className="opacity-60">({tier.range})</span>
+                </span>
+              ))}
             </div>
 
             <div className="fade-in" style={shellCard}>

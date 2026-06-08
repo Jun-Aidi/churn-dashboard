@@ -4,7 +4,7 @@ import {
 } from 'recharts';
 import { fetchFeatureImportance } from '../../api/index';
 
-const BAR_COLORS = ['#4f8ef7', '#5b8def', '#6366f1', '#7c6ef0', '#8b5cf6', '#9d6ef0', '#a78bfa', '#c4b5fd'];
+const BAR_COLORS = ['#008f8f', '#00a6a6', '#1ab0b0', '#33baba', '#4dc4c4', '#66cece', '#80d8d8', '#99e2e2'];
 
 const CustomTooltip = ({ active, payload }) => {
   if (!active || !payload?.length) return null;
@@ -94,7 +94,7 @@ export default function FeatureImportanceChart() {
             axisLine={false}
             tickLine={false}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(79,142,247,0.06)' }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,166,166,0.06)' }} />
           <Bar dataKey="importance" radius={[0, 6, 6, 0]}>
             {data.map((entry, i) => (
               <Cell key={i} fill={BAR_COLORS[i % BAR_COLORS.length]} />

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel – Ghosting Detection Unit</title>
+  <meta name="description" content="Kelola pengguna dan pantau statistik sistem Ghosting Detection Unit." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <style>
+    :root {
+      --gdu-bg:#f5efe4;--gdu-panel:#15201d;--gdu-card:rgba(255,250,240,0.86);
+      --gdu-card-solid:#fffaf0;--gdu-text:#15201d;--gdu-muted:#60716c;
+      --gdu-subtle:#8a9995;--gdu-border:rgba(21,32,29,0.12);
+      --gdu-input:rgba(255,255,255,0.78);--gdu-hover:rgba(21,32,29,0.06);
+      --gdu-teal:#00a6a6;--gdu-teal-dark:#008f8f;--gdu-amber:#f59e0b;
+      --gdu-red:#ef4444;--gdu-shadow:0 24px 80px rgba(21,32,29,0.10);
+    }
+    .dark {
+      --gdu-bg:#0d1117;--gdu-panel:#101820;--gdu-card:rgba(22,27,39,0.88);
+      --gdu-card-solid:#161b27;--gdu-text:#e2e8f0;--gdu-muted:#aab7c8;
+      --gdu-subtle:#7c8aa0;--gdu-border:rgba(226,232,240,0.12);
+      --gdu-input:rgba(30,37,53,0.92);--gdu-hover:rgba(255,255,255,0.07);
+      --gdu-teal:#2dd4bf;--gdu-teal-dark:#14b8a6;--gdu-amber:#fbbf24;
+      --gdu-red:#f87171;--gdu-shadow:0 24px 80px rgba(0,0,0,0.32);
+    }
+
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html,body{min-height:100vh;overflow-x:hidden;}
+    body{font-family:'Inter',sans-serif;background:var(--gdu-bg);color:var(--gdu-text);transition:background .2s,color .2s;}
+    ::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:#e5e7eb;border-radius:4px;}
+    ::-webkit-scrollbar-thumb:hover{background:var(--gdu-teal);}
+
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+    @keyframes slideIn{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
+    .fade-in{animation:fadeIn .35s ease both;}
+
+    /* Navbar */
+    .top-navbar{position:fixed;top:0;left:0;right:0;z-index:90;height:60px;display:flex;align-items:center;padding:0 20px 0 24px;gap:12px;background:var(--gdu-card);border-bottom:1px solid var(--gdu-border);box-shadow:var(--gdu-shadow);backdrop-filter:blur(18px);}
+    .navbar-brand{display:flex;align-items:center;gap:8px;margin-right:20px;flex-shrink:0;text-decoration:none;}
+    .navbar-brand img{height:40px;width:auto;}
+    .top-nav-links{display:flex;align-items:center;gap:2px;flex:1;}
+    .nav-link{display:flex;align-items:center;gap:8px;text-decoration:none;font-size:13.5px;font-weight:500;color:var(--gdu-muted);padding:7px 14px;border-radius:999px;background:transparent;transition:all .15s;white-space:nowrap;}
+    .nav-link:hover{background:var(--gdu-hover);color:var(--gdu-text);}
+    .nav-link.active{font-weight:600;color:var(--gdu-teal);background:color-mix(in srgb,var(--gdu-teal) 14%,transparent);}
+    .navbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+    .nav-search{display:flex;align-items:center;gap:8px;border-radius:10px;padding:7px 13px;width:190px;border:1px solid var(--gdu-border);background:var(--gdu-input);}
+    .nav-search input{background:transparent;border:none;outline:none;font-size:13px;font-family:inherit;width:100%;color:var(--gdu-text);}
+    .nav-search input::placeholder{color:var(--gdu-subtle);}
+    .icon-btn{position:relative;width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid var(--gdu-border);background:var(--gdu-input);color:var(--gdu-text);font-size:14px;flex-shrink:0;transition:background .15s;}
+    .icon-btn:hover{background:var(--gdu-hover);}
+    .notif-dot{position:absolute;top:7px;right:7px;width:7px;height:7px;background:#ef4444;border-radius:50%;border:2px solid var(--gdu-card-solid);}
+    .user-pill{display:flex;align-items:center;gap:8px;padding:4px 10px 4px 4px;border-radius:10px;border:1px solid var(--gdu-border);background:var(--gdu-input);flex-shrink:0;}
+    .user-avatar{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--gdu-teal) 0%,var(--gdu-amber) 100%);letter-spacing:-.5px;}
+    .user-name{font-size:12.5px;font-weight:600;color:var(--gdu-text);line-height:1.2;}
+    .user-role{font-size:10.5px;color:var(--gdu-muted);}
+
+    /* Layout */
+    .app-body{padding:60px 12px 12px;min-height:100vh;}
+    .gdu-page{position:relative;overflow:hidden;border-radius:28px;background:var(--gdu-bg);color:var(--gdu-text);min-height:calc(100vh - 72px);padding:clamp(16px,3vw,28px);margin-top:8px;}
+    .gdu-page::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.85;background:radial-gradient(circle at 8% 8%,color-mix(in srgb,var(--gdu-teal) 24%,transparent),transparent 28%),radial-gradient(circle at 90% 4%,color-mix(in srgb,var(--gdu-amber) 22%,transparent),transparent 25%),radial-gradient(circle at 52% 100%,color-mix(in srgb,var(--gdu-red) 14%,transparent),transparent 32%);}
+    .gdu-page::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:.52;background:linear-gradient(var(--gdu-border) 1px,transparent 1px),linear-gradient(90deg,var(--gdu-border) 1px,transparent 1px);background-size:44px 44px;}
+    .gdu-content{position:relative;z-index:1;}
+
+    /* Hero */
+    .page-hero{margin-bottom:24px;border-radius:2rem;padding:24px 28px;background:var(--gdu-panel);color:#fffaf0;border:1px solid var(--gdu-border);box-shadow:0 28px 90px rgba(21,32,29,.20);}
+    .hero-kicker{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.20em;color:#8ee7df;}
+    .hero-h1{margin-top:8px;font-size:clamp(28px,5vw,40px);font-weight:900;letter-spacing:-.05em;}
+    .hero-sub{margin-top:8px;font-size:13px;font-weight:500;color:rgba(255,250,240,.70);}
+
+    /* Section header */
+    .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+    .section-title{font-size:15px;font-weight:600;color:var(--gdu-text);}
+    .section-title i{color:var(--gdu-subtle);font-size:13px;margin-right:8px;}
+    .section-gap{margin-bottom:32px;}
+
+    /* Stat cards */
+    .stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;}
+    @media(max-width:1100px){.stats-grid{grid-template-columns:repeat(3,1fr);}}
+    @media(max-width:640px){.stats-grid{grid-template-columns:repeat(2,1fr);}}
+    .stat-card{border-radius:14px;padding:20px;border:1px solid var(--gdu-border);background:var(--gdu-card);box-shadow:var(--gdu-shadow);backdrop-filter:blur(18px);}
+    .stat-card-head{display:flex;align-items:center;gap:12px;}
+    .stat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;flex-shrink:0;}
+    .stat-label{font-size:11px;font-weight:500;color:var(--gdu-subtle);}
+    .stat-value{font-size:22px;font-weight:700;color:var(--gdu-text);margin-top:2px;}
+
+    /* Add user btn */
+    .btn-add{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;border:none;background:var(--gdu-teal);color:#fff;font-size:13.5px;font-weight:600;font-family:inherit;cursor:pointer;transition:background .15s;}
+    .btn-add:hover{background:var(--gdu-teal-dark);}
+
+    /* User table */
+    .table-wrap{border-radius:14px;border:1px solid var(--gdu-border);background:var(--gdu-card);box-shadow:var(--gdu-shadow);backdrop-filter:blur(18px);overflow:hidden;}
+    .user-table{width:100%;border-collapse:collapse;font-size:13.5px;}
+    .user-table thead tr{border-bottom:1px solid var(--gdu-border);background:var(--gdu-hover);}
+    .user-table thead th{text-align:left;padding:12px 16px;font-size:11.5px;font-weight:600;color:var(--gdu-muted);white-space:nowrap;}
+    .user-table tbody tr{border-bottom:1px solid var(--gdu-border);transition:background .12s;}
+    .user-table tbody tr:last-child{border-bottom:none;}
+    .user-table tbody tr:hover{background:var(--gdu-hover);}
+    .user-table td{padding:12px 16px;vertical-align:middle;}
+    .td-name{font-weight:600;color:var(--gdu-text);}
+    .td-email{color:var(--gdu-muted);}
+    .td-date{font-size:12px;color:var(--gdu-subtle);}
+    .role-chip{display:inline-flex;align-items:center;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;}
+    .role-admin{background:rgba(0,166,166,.14);color:var(--gdu-teal);}
+    .role-user{background:rgba(107,114,128,.15);color:#6b7280;}
+    .status-chip{display:inline-flex;align-items:center;gap:5px;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;}
+    .status-active{background:rgba(22,163,74,.15);color:var(--gdu-teal);}
+    .status-inactive{background:rgba(220,38,38,.15);color:var(--gdu-red);}
+    .status-dot{width:6px;height:6px;border-radius:50%;}
+    .action-wrap{display:flex;align-items:center;justify-content:center;gap:6px;}
+    .action-btn{padding:5px 8px;border-radius:7px;border:none;cursor:pointer;font-size:12px;transition:background .15s;}
+    .action-edit{background:var(--gdu-hover);color:var(--gdu-muted);}
+    .action-edit:hover{background:var(--gdu-border);}
+    .action-deact{background:rgba(220,38,38,.1);color:var(--gdu-red);}
+    .action-deact:hover{background:rgba(220,38,38,.2);}
+    .action-act{background:rgba(22,163,74,.1);color:var(--gdu-teal);}
+    .action-act:hover{background:rgba(22,163,74,.2);}
+
+    /* Modal */
+    .modal-overlay{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.5);align-items:center;justify-content:center;padding:16px;}
+    .modal-overlay.open{display:flex;}
+    .modal-box{background:var(--gdu-card-solid);border-radius:16px;border:1px solid var(--gdu-border);box-shadow:0 20px 60px rgba(0,0,0,.2);width:100%;max-width:440px;max-height:calc(100vh - 32px);overflow-y:auto;animation:slideIn .2s ease both;}
+    .dark .modal-box{background:var(--gdu-card-solid);}
+    .modal-pad{padding:24px;}
+    .modal-title{font-size:17px;font-weight:700;color:var(--gdu-text);margin-bottom:16px;}
+    .form-group{margin-bottom:14px;}
+    .form-label{display:block;font-size:11.5px;font-weight:600;color:var(--gdu-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;}
+    .form-input,.form-select{width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--gdu-border);background:var(--gdu-input);color:var(--gdu-text);font-size:13.5px;font-family:inherit;outline:none;transition:border-color .15s;}
+    .form-input:focus,.form-select:focus{border-color:var(--gdu-teal);}
+    .form-input.err,.form-select.err{border-color:var(--gdu-red);}
+    .form-error{font-size:11.5px;color:var(--gdu-red);margin-top:4px;}
+    .modal-footer{display:flex;justify-content:flex-end;gap:10px;padding-top:16px;border-top:1px solid var(--gdu-border);margin-top:16px;}
+    .btn-cancel{padding:9px 18px;border-radius:9px;border:1px solid var(--gdu-border);background:var(--gdu-input);color:var(--gdu-muted);font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;}
+    .btn-cancel:hover{background:var(--gdu-hover);}
+    .btn-save{padding:9px 18px;border-radius:9px;border:none;background:var(--gdu-teal);color:#fff;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s;}
+    .btn-save:hover{background:var(--gdu-teal-dark);}
+
+    /* Toast */
+    .toast{position:fixed;top:16px;right:16px;z-index:2000;display:flex;align-items:center;gap:8px;padding:12px 18px;border-radius:12px;font-size:13.5px;font-weight:600;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.18);animation:slideIn .25s ease both;}
+    .toast-success{background:var(--gdu-teal);}
+    .toast-error{background:var(--gdu-red);}
+
+    /* API alert */
+    .api-alert{border-radius:9px;padding:11px 14px;font-size:13px;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.25);color:var(--gdu-red);margin-bottom:14px;}
+
+    @media(max-width:768px){.top-nav-links,.nav-search{display:none;}.user-name,.user-role{display:none;}}
+  </style>
+</head>
+<body>
+
+<header class="top-navbar">
+  <a class="navbar-brand" href="dashboard.html">
+    <img src="logo_ghosting.png" alt="GDU" onerror="this.style.display='none';this.nextSibling.style.display='flex'" />
+    <span style="display:none;align-items:center;justify-content:center;width:36px;height:36px;background:linear-gradient(135deg,#00a6a6,#f59e0b);border-radius:10px;color:#fff;font-weight:900;font-size:14px;">G</span>
+  </a>
+  <nav class="top-nav-links">
+    <a class="nav-link" href="dashboard.html"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+    <a class="nav-link" href="pelanggan.html"><i class="fa-solid fa-users"></i> Pelanggan</a>
+    <a class="nav-link" href="upload.html"><i class="fa-solid fa-upload"></i> Upload Data</a>
+    <a class="nav-link active" href="#"><i class="fa-solid fa-shield-halved"></i> Admin</a>
+  </nav>
+  <div class="navbar-right">
+    <div class="nav-search">
+      <i class="fa-solid fa-magnifying-glass" style="color:var(--gdu-subtle);font-size:13px"></i>
+      <input type="text" placeholder="Cari..." />
+    </div>
+    <button class="icon-btn" id="btn-theme"><i class="fa-solid fa-moon"></i></button>
+    <button class="icon-btn"><i class="fa-solid fa-bell"></i><span class="notif-dot"></span></button>
+    <div class="user-pill">
+      <div class="user-avatar">FA</div>
+      <div><div class="user-name">Fahrezi</div><div class="user-role">Admin</div></div>
+    </div>
+    <button class="icon-btn"><i class="fa-solid fa-right-from-bracket"></i></button>
+  </div>
+</header>
+
+<div class="app-body">
+  <div class="gdu-page">
+    <div class="gdu-content fade-in">
+
+      <!-- Hero -->
+      <div class="page-hero">
+        <p class="hero-kicker">Control room</p>
+        <h1 class="hero-h1">Admin Panel</h1>
+        <p class="hero-sub">Kelola pengguna dan pantau statistik sistem</p>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="section-gap">
+        <div class="section-header">
+          <span class="section-title"><i class="fa-solid fa-chart-pie"></i> Statistik Sistem</span>
+        </div>
+        <div class="stats-grid" id="stats-grid"></div>
+      </div>
+
+      <!-- User management -->
+      <div>
+        <div class="section-header">
+          <span class="section-title"><i class="fa-solid fa-users-gear"></i> Manajemen Pengguna</span>
+          <button class="btn-add" id="btn-add-user">
+            <i class="fa-solid fa-plus" style="font-size:11px"></i> Tambah Pengguna
+          </button>
+        </div>
+        <div class="table-wrap">
+          <div style="overflow-x:auto">
+            <table class="user-table">
+              <thead>
+                <tr>
+                  <th>Nama</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Tanggal Registrasi</th>
+                  <th style="text-align:center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="user-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-pad">
+      <h3 class="modal-title" id="modal-title">Tambah Pengguna Baru</h3>
+      <div class="api-alert" id="api-alert" style="display:none"></div>
+
+      <div class="form-group">
+        <label class="form-label" for="f-name">Nama Lengkap</label>
+        <input class="form-input" type="text" id="f-name" placeholder="Masukkan nama lengkap" />
+        <div class="form-error" id="err-name" style="display:none"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="f-email">Email</label>
+        <input class="form-input" type="email" id="f-email" placeholder="contoh@email.com" />
+        <div class="form-error" id="err-email" style="display:none"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="f-password">Password <span id="pass-hint" style="font-weight:400;text-transform:none;letter-spacing:0"></span></label>
+        <input class="form-input" type="password" id="f-password" placeholder="Minimal 8 karakter" />
+        <div class="form-error" id="err-password" style="display:none"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="f-role">Role</label>
+        <select class="form-select" id="f-role">
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" id="modal-cancel">Batal</button>
+        <button class="btn-save" id="modal-save">Buat Pengguna</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══ Dummy data ═══ */
+const STATS = [
+  { title:'Pengguna Aktif',    value:4,   icon:'fa-solid fa-user-check', color:'var(--gdu-teal)' },
+  { title:'Pengguna Nonaktif', value:1,   icon:'fa-solid fa-user-xmark', color:'var(--gdu-red)' },
+  { title:'Total Pelanggan',   value:150, icon:'fa-solid fa-users',      color:'var(--gdu-teal)' },
+  { title:'Total Prediksi',    value:312, icon:'fa-solid fa-brain',      color:'var(--gdu-amber)' },
+  { title:'Total Sesi Chat',   value:89,  icon:'fa-solid fa-comments',   color:'var(--gdu-amber)' },
+];
+
+let USERS = [
+  { id:1, name:'Fahrezi Admin',   email:'fahrezi@gdu.id',    role:'admin', is_active:true,  created_at:'2024-01-15' },
+  { id:2, name:'Sari Peneliti',   email:'sari@gdu.id',       role:'user',  is_active:true,  created_at:'2024-02-20' },
+  { id:3, name:'Budi Analis',     email:'budi@gdu.id',       role:'user',  is_active:true,  created_at:'2024-03-05' },
+  { id:4, name:'Citra Manager',   email:'citra@gdu.id',      role:'user',  is_active:false, created_at:'2024-04-12' },
+  { id:5, name:'Denny Operator',  email:'denny@gdu.id',      role:'user',  is_active:true,  created_at:'2024-05-01' },
+];
+let nextId = 6;
+let editingId = null;
+
+/* ═══ Render stat cards ═══ */
+const statsGrid = document.getElementById('stats-grid');
+STATS.forEach(s => {
+  const div = document.createElement('div');
+  div.className = 'stat-card';
+  div.innerHTML = `
+    <div class="stat-card-head">
+      <div class="stat-icon" style="background:${s.color}"><i class="${s.icon}"></i></div>
+      <div>
+        <div class="stat-label">${s.title}</div>
+        <div class="stat-value">${s.value}</div>
+      </div>
+    </div>
+  `;
+  statsGrid.appendChild(div);
+});
+
+/* ═══ Render user table ═══ */
+function formatDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
+}
+
+function renderUsers() {
+  const tbody = document.getElementById('user-tbody');
+  tbody.innerHTML = '';
+  USERS.forEach(u => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="td-name">${u.name}</td>
+      <td class="td-email">${u.email}</td>
+      <td>
+        <span class="role-chip ${u.role==='admin'?'role-admin':'role-user'}">
+          ${u.role==='admin'?'Admin':'User'}
+        </span>
+      </td>
+      <td>
+        <span class="status-chip ${u.is_active?'status-active':'status-inactive'}">
+          <span class="status-dot" style="background:${u.is_active?'var(--gdu-teal)':'var(--gdu-red)'}"></span>
+          ${u.is_active?'Aktif':'Nonaktif'}
+        </span>
+      </td>
+      <td class="td-date">${formatDate(u.created_at)}</td>
+      <td>
+        <div class="action-wrap">
+          <button class="action-btn action-edit" data-id="${u.id}" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+          ${u.is_active
+            ? `<button class="action-btn action-deact" data-id="${u.id}" title="Nonaktifkan"><i class="fa-solid fa-user-slash"></i></button>`
+            : `<button class="action-btn action-act"   data-id="${u.id}" title="Aktifkan"><i class="fa-solid fa-user-check"></i></button>`
+          }
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Edit buttons
+  document.querySelectorAll('.action-edit').forEach(btn => btn.addEventListener('click', () => openEdit(+btn.dataset.id)));
+  document.querySelectorAll('.action-deact').forEach(btn => btn.addEventListener('click', () => toggleActive(+btn.dataset.id, false)));
+  document.querySelectorAll('.action-act').forEach(btn => btn.addEventListener('click', () => toggleActive(+btn.dataset.id, true)));
+}
+
+renderUsers();
+
+/* ═══ Toggle active ═══ */
+function toggleActive(id, active) {
+  const u = USERS.find(x => x.id === id);
+  if (!u) return;
+  if (id === 1 && !active) { showToast('Admin tidak dapat menonaktifkan akun sendiri', 'error'); return; }
+  u.is_active = active;
+  renderUsers();
+  showToast(`Pengguna ${u.name} berhasil ${active?'diaktifkan':'dinonaktifkan'}`, 'success');
+}
+
+/* ═══ Modal ═══ */
+function openModal(isEdit, user) {
+  editingId = isEdit ? user.id : null;
+  document.getElementById('modal-title').textContent = isEdit ? 'Edit Pengguna' : 'Tambah Pengguna Baru';
+  document.getElementById('modal-save').textContent = isEdit ? 'Simpan Perubahan' : 'Buat Pengguna';
+  document.getElementById('pass-hint').textContent = isEdit ? '(kosongkan jika tidak diubah)' : '';
+  document.getElementById('f-password').placeholder = isEdit ? 'Kosongkan jika tidak diubah' : 'Minimal 8 karakter';
+  document.getElementById('f-name').value    = isEdit ? user.name  : '';
+  document.getElementById('f-email').value   = isEdit ? user.email : '';
+  document.getElementById('f-password').value= '';
+  document.getElementById('f-role').value    = isEdit ? user.role  : 'user';
+  clearErrors();
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+function clearErrors() {
+  ['name','email','password'].forEach(k => {
+    document.getElementById('f-'+k).classList.remove('err');
+    document.getElementById('err-'+k).style.display = 'none';
+  });
+  document.getElementById('api-alert').style.display = 'none';
+}
+function showFieldError(k, msg) {
+  document.getElementById('f-'+k).classList.add('err');
+  const el = document.getElementById('err-'+k);
+  el.textContent = msg; el.style.display = 'block';
+}
+
+function openEdit(id) {
+  const u = USERS.find(x => x.id === id);
+  if (u) openModal(true, u);
+}
+
+document.getElementById('btn-add-user').addEventListener('click', () => openModal(false, null));
+document.getElementById('modal-cancel').addEventListener('click', closeModal);
+document.getElementById('modal-close-overlay', () => closeModal);
+document.getElementById('modal-overlay').addEventListener('click', e => { if (e.target === document.getElementById('modal-overlay')) closeModal(); });
+
+document.getElementById('modal-save').addEventListener('click', () => {
+  clearErrors();
+  const name     = document.getElementById('f-name').value.trim();
+  const email    = document.getElementById('f-email').value.trim();
+  const password = document.getElementById('f-password').value;
+  const role     = document.getElementById('f-role').value;
+  let ok = true;
+
+  if (!name)  { showFieldError('name', 'Nama wajib diisi'); ok = false; }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showFieldError('email', 'Format email tidak valid'); ok = false; }
+  if (!editingId && (!password || password.length < 8)) { showFieldError('password', 'Password minimal 8 karakter'); ok = false; }
+  if (editingId && password && password.length < 8) { showFieldError('password', 'Password minimal 8 karakter'); ok = false; }
+  if (!ok) return;
+
+  if (editingId) {
+    const u = USERS.find(x => x.id === editingId);
+    if (u) { u.name = name; u.email = email; u.role = role; }
+    showToast('Pengguna berhasil diperbarui', 'success');
+  } else {
+    // Check duplicate email
+    if (USERS.find(u => u.email === email)) {
+      const al = document.getElementById('api-alert');
+      al.innerHTML = '<i class="fa-solid fa-circle-exclamation" style="margin-right:6px"></i>Email sudah digunakan.';
+      al.style.display = 'block';
+      return;
+    }
+    USERS.push({ id: nextId++, name, email, role, is_active: true, created_at: new Date().toISOString().split('T')[0] });
+    showToast('Pengguna berhasil dibuat', 'success');
+  }
+  renderUsers();
+  closeModal();
+});
+
+/* ═══ Toast ═══ */
+function showToast(msg, type) {
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.innerHTML = `<i class="fa-solid ${type==='success'?'fa-circle-check':'fa-circle-exclamation'}"></i> ${msg}`;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+/* ═══ Dark mode ═══ */
+document.getElementById('btn-theme').addEventListener('click', () => {
+  document.documentElement.classList.toggle('dark');
+  const isDark = document.documentElement.classList.contains('dark');
+  const icon = document.querySelector('#btn-theme i');
+  icon.className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+  icon.style.color = isDark ? '#facc15' : '#6b7280';
+});
+</script>
+</body>
+</html>

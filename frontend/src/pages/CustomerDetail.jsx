@@ -68,7 +68,7 @@ export default function CustomerDetail() {
             <p className="page-subtitle">Analisis mendalam faktor risiko churn dan rekomendasi aksi</p>
           </div>
         </div>
-        <button className="btn btn-accent" onClick={() => exportCustomerReport(customer)}><i className="fa-solid fa-download text-xs"></i> Export Laporan</button>
+        <button className="btn gdu-primary" onClick={() => exportCustomerReport(customer)}><i className="fa-solid fa-download text-xs"></i> Export Laporan</button>
       </div>
 
       <div className="grid-detail">
@@ -77,7 +77,7 @@ export default function CustomerDetail() {
           <div style={{ ...card, marginBottom: 16 }}>
             <div className="flex items-center gap-3.5 mb-5">
               <div className="w-[52px] h-[52px] rounded-[14px] flex items-center justify-center text-xl flex-shrink-0 text-white font-bold"
-                style={{ background: 'linear-gradient(135deg, #4f8ef7 0%, #8b5cf6 100%)' }}>
+                style={{ background: 'linear-gradient(135deg, var(--gdu-teal) 0%, var(--gdu-teal-dark) 100%)' }}>
                 {customer.name?.charAt(0) || '?'}
               </div>
               <div>

@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Detail Pelanggan – Ghosting Detection Unit</title>
+  <meta name="description" content="Analisis mendalam faktor risiko churn dan rekomendasi aksi untuk pelanggan." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <style>
+    /* ═══ Theme variables ═══ */
+    :root {
+      --gdu-bg: #f5efe4;
+      --gdu-panel: #15201d;
+      --gdu-card: rgba(255,250,240,0.86);
+      --gdu-card-solid: #fffaf0;
+      --gdu-text: #15201d;
+      --gdu-muted: #60716c;
+      --gdu-subtle: #8a9995;
+      --gdu-border: rgba(21,32,29,0.12);
+      --gdu-input: rgba(255,255,255,0.78);
+      --gdu-hover: rgba(21,32,29,0.06);
+      --gdu-teal: #00a6a6;
+      --gdu-teal-dark: #008f8f;
+      --gdu-amber: #f59e0b;
+      --gdu-red: #ef4444;
+      --gdu-shadow: 0 24px 80px rgba(21,32,29,0.10);
+      --color-border: #eef0f4;
+      --color-text: #111827;
+      --color-muted: #6b7280;
+      --color-subtle: #9ca3af;
+      --color-input: #f9fafb;
+      --color-card: #ffffff;
+      --color-hover: #f3f4f6;
+    }
+    .dark {
+      --gdu-bg: #0d1117;
+      --gdu-panel: #101820;
+      --gdu-card: rgba(22,27,39,0.88);
+      --gdu-card-solid: #161b27;
+      --gdu-text: #e2e8f0;
+      --gdu-muted: #aab7c8;
+      --gdu-subtle: #7c8aa0;
+      --gdu-border: rgba(226,232,240,0.12);
+      --gdu-input: rgba(30,37,53,0.92);
+      --gdu-hover: rgba(255,255,255,0.07);
+      --gdu-teal: #2dd4bf;
+      --gdu-teal-dark: #14b8a6;
+      --gdu-amber: #fbbf24;
+      --gdu-red: #f87171;
+      --gdu-shadow: 0 24px 80px rgba(0,0,0,0.32);
+      --color-border: #252f45;
+      --color-text: #e2e8f0;
+      --color-muted: #8896ab;
+      --color-subtle: #5d6e82;
+      --color-input: #1e2535;
+      --color-card: #161b27;
+      --color-hover: #1e2535;
+    }
+
+    /* ═══ Reset ═══ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100vh; overflow-x: hidden; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--gdu-bg);
+      color: var(--gdu-text);
+      transition: background 0.2s, color 0.2s;
+    }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--gdu-teal); }
+    .dark ::-webkit-scrollbar-thumb { background: #2e3b55; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeIn 0.35s ease both; }
+
+    /* ═══ Navbar ═══ */
+    .top-navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 90;
+      height: 60px; display: flex; align-items: center;
+      padding: 0 20px 0 24px; gap: 12px;
+      background: var(--gdu-card); border-bottom: 1px solid var(--gdu-border);
+      box-shadow: var(--gdu-shadow); backdrop-filter: blur(18px);
+    }
+    .navbar-brand { display: flex; align-items: center; gap: 8px; margin-right: 20px; flex-shrink: 0; text-decoration: none; }
+    .navbar-brand img { height: 40px; width: auto; }
+    .top-nav-links { display: flex; align-items: center; gap: 2px; flex: 1; }
+    .nav-link {
+      display: flex; align-items: center; gap: 8px; text-decoration: none;
+      font-size: 13.5px; font-weight: 500; color: var(--gdu-muted);
+      padding: 7px 14px; border-radius: 999px; background: transparent; transition: all 0.15s;
+    }
+    .nav-link:hover { background: var(--gdu-hover); color: var(--gdu-text); }
+    .nav-link.active { font-weight: 600; color: var(--gdu-teal); background: color-mix(in srgb, var(--gdu-teal) 14%, transparent); }
+    .navbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .nav-search {
+      display: flex; align-items: center; gap: 8px; border-radius: 10px;
+      padding: 7px 13px; width: 190px; border: 1px solid var(--gdu-border); background: var(--gdu-input);
+    }
+    .nav-search input { background: transparent; border: none; outline: none; font-size: 13px; font-family: inherit; width: 100%; color: var(--gdu-text); }
+    .nav-search input::placeholder { color: var(--gdu-subtle); }
+    .icon-btn {
+      position: relative; width: 36px; height: 36px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      border: 1px solid var(--gdu-border); background: var(--gdu-input);
+      color: var(--gdu-text); font-size: 14px; flex-shrink: 0; transition: background 0.15s;
+    }
+    .icon-btn:hover { background: var(--gdu-hover); }
+    .notif-dot { position: absolute; top: 7px; right: 7px; width: 7px; height: 7px; background: #ef4444; border-radius: 50%; border: 2px solid var(--gdu-card-solid); }
+    .user-pill { display: flex; align-items: center; gap: 8px; padding: 4px 10px 4px 4px; border-radius: 10px; border: 1px solid var(--gdu-border); background: var(--gdu-input); flex-shrink: 0; }
+    .user-avatar { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; background: linear-gradient(135deg, var(--gdu-teal) 0%, var(--gdu-amber) 100%); letter-spacing: -0.5px; }
+    .user-name { font-size: 12.5px; font-weight: 600; color: var(--gdu-text); line-height: 1.2; }
+    .user-role { font-size: 10.5px; color: var(--gdu-muted); }
+
+    /* ═══ Layout ═══ */
+    .app-body { padding: 60px 12px 12px; min-height: 100vh; }
+    .gdu-page {
+      position: relative; overflow: hidden; border-radius: 28px;
+      background: var(--gdu-bg); color: var(--gdu-text);
+      min-height: calc(100vh - 72px); padding: clamp(16px, 3vw, 28px); margin-top: 8px;
+    }
+    .gdu-page::before {
+      content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0.85;
+      background:
+        radial-gradient(circle at 8% 8%, color-mix(in srgb, var(--gdu-teal) 24%, transparent), transparent 28%),
+        radial-gradient(circle at 90% 4%, color-mix(in srgb, var(--gdu-amber) 22%, transparent), transparent 25%),
+        radial-gradient(circle at 52% 100%, color-mix(in srgb, var(--gdu-red) 14%, transparent), transparent 32%);
+    }
+    .gdu-page::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0.52;
+      background: linear-gradient(var(--gdu-border) 1px, transparent 1px), linear-gradient(90deg, var(--gdu-border) 1px, transparent 1px);
+      background-size: 44px 44px;
+    }
+    .gdu-content { position: relative; z-index: 1; }
+
+    /* ═══ Card style ═══ */
+    .card {
+      background: var(--color-card); border-radius: 14px;
+      padding: 22px 24px; box-shadow: var(--color-card-shadow, 0 1px 6px rgba(0,0,0,0.05));
+      border: 1px solid var(--color-border);
+    }
+    .dark .card { background: #161b27; border-color: #252f45; }
+
+    /* ═══ Page header ═══ */
+    .page-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px;
+      border-radius: 9px; border: 1px solid var(--color-border); background: var(--color-card);
+      color: var(--color-text); font-size: 13px; font-weight: 600; font-family: inherit;
+      cursor: pointer; transition: background 0.15s; text-decoration: none;
+    }
+    .btn-back:hover { background: var(--color-hover); }
+    .dark .btn-back { background: #161b27; border-color: #252f45; color: #e2e8f0; }
+    .dark .btn-back:hover { background: #1e2535; }
+    .page-title { font-size: 22px; font-weight: 700; color: var(--color-text); letter-spacing: -0.5px; }
+    .dark .page-title { color: #e2e8f0; }
+    .page-subtitle { font-size: 13px; color: var(--color-muted); margin-top: 3px; }
+    .dark .page-subtitle { color: #8896ab; }
+    .btn-export {
+      display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px;
+      border-radius: 9px; border: none; background: var(--gdu-teal); color: #fff;
+      font-size: 13.5px; font-weight: 700; font-family: inherit; cursor: pointer; transition: background 0.15s;
+    }
+    .btn-export:hover { background: var(--gdu-teal-dark); }
+
+    /* ═══ Grid layout ═══ */
+    .grid-detail {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    @media(max-width:900px) { .grid-detail { grid-template-columns: 1fr; } }
+
+    /* ═══ Left column: profile card ═══ */
+    .avatar-box {
+      width: 52px; height: 52px; border-radius: 14px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 700; color: #fff;
+      background: linear-gradient(135deg, var(--gdu-teal) 0%, var(--gdu-teal-dark) 100%);
+    }
+    .cust-name-lg { font-size: 17px; font-weight: 700; color: var(--color-text); }
+    .dark .cust-name-lg { color: #e2e8f0; }
+    .cust-meta-sm { font-size: 11.5px; font-family: monospace; margin-top: 2px; color: var(--color-subtle); }
+    .dark .cust-meta-sm { color: #5d6e82; }
+
+    .score-box {
+      border-radius: 10px; padding: 16px;
+      background: var(--color-input); border: 1px solid var(--color-border);
+    }
+    .dark .score-box { background: #1e2535; border-color: #252f45; }
+    .score-label { font-size: 11px; font-weight: 500; color: var(--color-subtle); }
+    .dark .score-label { color: #5d6e82; }
+    .score-value { font-size: 30px; font-weight: 700; font-family: monospace; }
+    .score-track { height: 8px; border-radius: 6px; overflow: hidden; background: var(--color-hover); margin: 8px 0 10px; }
+    .dark .score-track { background: #1e2535; }
+    .score-fill { height: 100%; border-radius: 6px; transition: width 0.8s cubic-bezier(0.23,1,0.32,1); }
+    .risk-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11.5px; font-weight: 600; padding: 4px 12px; border-radius: 999px;
+    }
+
+    /* Info rows */
+    .info-section-title { font-size: 13.5px; font-weight: 700; color: var(--color-text); margin-bottom: 14px; }
+    .dark .info-section-title { color: #e2e8f0; }
+    .info-row {
+      display: flex; justify-content: space-between; align-items: center;
+      border-radius: 9px; padding: 10px 12px; border: 1px solid var(--color-border);
+      background: var(--color-input); margin-bottom: 8px;
+    }
+    .dark .info-row { background: #1e2535; border-color: #252f45; }
+    .info-row:last-child { margin-bottom: 0; }
+    .info-key { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-subtle); }
+    .dark .info-key { color: #5d6e82; }
+    .info-val { font-size: 13.5px; font-weight: 600; color: var(--color-text); }
+    .dark .info-val { color: #e2e8f0; }
+
+    /* ═══ Right column: factors ═══ */
+    .factors-title { font-size: 13.5px; font-weight: 700; color: var(--color-text); margin-bottom: 14px; }
+    .dark .factors-title { color: #e2e8f0; }
+
+    .factor-card {
+      border-radius: 10px; padding: 13px 15px; margin-bottom: 10px;
+      border: 1px solid var(--color-border);
+    }
+    .factor-card:last-child { margin-bottom: 0; }
+
+    .factor-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .factor-name { font-size: 13px; font-weight: 600; color: var(--color-text); }
+    .dark .factor-name { color: #e2e8f0; }
+    .factor-impact { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; font-family: monospace; }
+    .factor-detail { font-size: 12px; line-height: 1.6; color: var(--color-muted); }
+    .dark .factor-detail { color: #8896ab; }
+    .factor-bar-track { height: 4px; border-radius: 4px; overflow: hidden; background: var(--color-hover); margin-top: 10px; }
+    .dark .factor-bar-track { background: #1e2535; }
+    .factor-bar-fill { height: 100%; border-radius: 4px; }
+
+    /* Severity palette */
+    .sev-critical .factor-card { background: rgba(220,38,38,0.05); border-left: 3px solid #dc2626; }
+    .sev-warning  .factor-card { background: rgba(217,119,6,0.06);  border-left: 3px solid #d97706; }
+    .sev-caution  .factor-card { background: rgba(22,163,74,0.05);  border-left: 3px solid #16a34a; }
+    .sev-critical .factor-impact { background: rgba(220,38,38,0.15); color: #dc2626; }
+    .sev-warning  .factor-impact { background: rgba(217,119,6,0.15);  color: #d97706; }
+    .sev-caution  .factor-impact { background: rgba(22,163,74,0.15);  color: #16a34a; }
+    .sev-critical .factor-bar-fill { background: #dc2626; }
+    .sev-warning  .factor-bar-fill { background: #d97706; }
+    .sev-caution  .factor-bar-fill { background: #16a34a; }
+
+    /* ═══ Recommendations section ═══ */
+    .recos-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 20px;
+    }
+    @media(max-width:640px) { .recos-grid { grid-template-columns: 1fr; } }
+
+    .reco-card {
+      border-radius: 12px; padding: 16px 18px;
+      border: 1px solid var(--color-border); background: var(--color-card);
+    }
+    .dark .reco-card { background: #161b27; border-color: #252f45; }
+    .reco-icon-wrap { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; margin-bottom: 10px; }
+    .reco-title { font-size: 13px; font-weight: 700; color: var(--color-text); margin-bottom: 4px; }
+    .dark .reco-title { color: #e2e8f0; }
+    .reco-desc { font-size: 12px; line-height: 1.6; color: var(--color-muted); }
+    .dark .reco-desc { color: #8896ab; }
+    .reco-urgent    .reco-icon-wrap { background: rgba(220,38,38,0.12); color: #dc2626; }
+    .reco-important .reco-icon-wrap { background: rgba(217,119,6,0.12);  color: #d97706; }
+    .reco-normal    .reco-icon-wrap { background: rgba(0,166,166,0.12);   color: var(--gdu-teal); }
+    .reco-info      .reco-icon-wrap { background: rgba(79,142,247,0.12);  color: #4f8ef7; }
+
+    /* ═══ Section separator ═══ */
+    .section-gap { margin-top: 20px; }
+
+    /* ═══ Responsive navbar ═══ */
+    @media(max-width:768px) {
+      .top-nav-links { display: none; }
+      .nav-search    { display: none; }
+      .user-name, .user-role { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ NAVBAR ═══ -->
+<header class="top-navbar">
+  <a class="navbar-brand" href="dashboard.html">
+    <img src="logo_ghosting.png" alt="GDU" onerror="this.style.display='none';this.nextSibling.style.display='flex'" />
+    <span style="display:none;align-items:center;justify-content:center;width:36px;height:36px;background:linear-gradient(135deg,#00a6a6,#f59e0b);border-radius:10px;color:#fff;font-weight:900;font-size:14px;">G</span>
+  </a>
+  <nav class="top-nav-links">
+    <a class="nav-link" href="dashboard.html"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+    <a class="nav-link active" href="pelanggan.html"><i class="fa-solid fa-users"></i> Pelanggan</a>
+    <a class="nav-link" href="#"><i class="fa-solid fa-upload"></i> Upload Data</a>
+  </nav>
+  <div class="navbar-right">
+    <div class="nav-search">
+      <i class="fa-solid fa-magnifying-glass" style="color:var(--gdu-subtle);font-size:13px"></i>
+      <input type="text" placeholder="Cari..." />
+    </div>
+    <button class="icon-btn" id="btn-theme" title="Toggle dark mode"><i class="fa-solid fa-moon"></i></button>
+    <button class="icon-btn"><i class="fa-solid fa-bell"></i><span class="notif-dot"></span></button>
+    <div class="user-pill">
+      <div class="user-avatar">FA</div>
+      <div><div class="user-name">Fahrezi</div><div class="user-role">Admin</div></div>
+    </div>
+    <button class="icon-btn" title="Keluar"><i class="fa-solid fa-right-from-bracket"></i></button>
+  </div>
+</header>
+
+<!-- ═══ BODY ═══ -->
+<div class="app-body">
+  <div class="gdu-page">
+    <div class="gdu-content fade-in">
+
+      <!-- Page header -->
+      <div class="page-header">
+        <div class="header-left">
+          <a class="btn-back" href="pelanggan.html">
+            <i class="fa-solid fa-angle-left" style="font-size:11px"></i> Kembali
+          </a>
+          <div>
+            <h1 class="page-title" id="page-title">Detail — …</h1>
+            <p class="page-subtitle">Analisis mendalam faktor risiko churn dan rekomendasi aksi</p>
+          </div>
+        </div>
+        <button class="btn-export" id="btn-export">
+          <i class="fa-solid fa-download" style="font-size:11px"></i> Export Laporan
+        </button>
+      </div>
+
+      <!-- Two-column grid -->
+      <div class="grid-detail">
+
+        <!-- ── Left: profile + score + info ── -->
+        <div>
+          <!-- Profile card -->
+          <div class="card" style="margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+              <div class="avatar-box" id="avatar-box">?</div>
+              <div>
+                <div class="cust-name-lg" id="cust-name">—</div>
+                <div class="cust-meta-sm" id="cust-meta">—</div>
+              </div>
+            </div>
+
+            <!-- Score -->
+            <div class="score-box">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                <span class="score-label">Skor Risiko Churn</span>
+                <span class="score-value" id="score-val">—</span>
+              </div>
+              <div class="score-track">
+                <div class="score-fill" id="score-fill" style="width:0%"></div>
+              </div>
+              <span class="risk-chip" id="risk-chip">—</span>
+            </div>
+          </div>
+
+          <!-- Info rows -->
+          <div class="card">
+            <div class="info-section-title">Info Pelanggan</div>
+            <div id="info-rows"></div>
+          </div>
+        </div>
+
+        <!-- ── Right: factors + recommendations ── -->
+        <div>
+          <!-- Churn factors -->
+          <div class="card">
+            <div class="factors-title">
+              <i class="fa-solid fa-magnifying-glass" style="color:var(--gdu-teal);margin-right:4px"></i>
+              Faktor Penyebab Churn
+            </div>
+            <div id="factors-list"></div>
+          </div>
+
+          <!-- Recommendations -->
+          <div class="section-gap">
+            <div class="card">
+              <div class="factors-title">
+                <i class="fa-solid fa-lightbulb" style="color:var(--gdu-amber);margin-right:4px"></i>
+                Rekomendasi Aksi
+              </div>
+              <div class="recos-grid" id="recos-grid"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════
+   Dummy customer dataset
+══════════════════════════════════ */
+const CUSTOMERS = {
+  'CUST-001': { id:'CUST-001', name:'Andi Wijaya',    plan:'Premium',  contract:'Annual',  score:82, tenure:18, revenue:520,  usage:8,  adoption:25, tickets:4,  lastLogin:45, nps:3, delay:0, churned:false },
+  'CUST-002': { id:'CUST-002', name:'Sari Dewi',      plan:'Basic',    contract:'Monthly', score:71, tenure:7,  revenue:150,  usage:15, adoption:40, tickets:2,  lastLogin:22, nps:5, delay:1, churned:false },
+  'CUST-003': { id:'CUST-003', name:'Budi Santoso',   plan:'Standard', contract:'Annual',  score:55, tenure:24, revenue:280,  usage:25, adoption:60, tickets:1,  lastLogin:10, nps:7, delay:0, churned:false },
+  'CUST-004': { id:'CUST-004', name:'Citra Lestari',  plan:'Premium',  contract:'Monthly', score:43, tenure:11, revenue:480,  usage:30, adoption:70, tickets:3,  lastLogin:8,  nps:6, delay:2, churned:false },
+  'CUST-005': { id:'CUST-005', name:'Denny Prasetyo', plan:'Basic',    contract:'Monthly', score:90, tenure:3,  revenue:120,  usage:4,  adoption:15, tickets:7,  lastLogin:70, nps:2, delay:4, churned:true  },
+  'CUST-006': { id:'CUST-006', name:'Eka Putri',      plan:'Standard', contract:'Annual',  score:28, tenure:36, revenue:260,  usage:40, adoption:85, tickets:0,  lastLogin:3,  nps:9, delay:0, churned:false },
+  'CUST-007': { id:'CUST-007', name:'Fajar Nugroho',  plan:'Premium',  contract:'Monthly', score:67, tenure:15, revenue:510,  usage:18, adoption:48, tickets:2,  lastLogin:35, nps:4, delay:1, churned:false },
+  'CUST-008': { id:'CUST-008', name:'Gita Ramadhani', plan:'Basic',    contract:'Annual',  score:19, tenure:29, revenue:140,  usage:50, adoption:90, tickets:1,  lastLogin:2,  nps:9, delay:0, churned:false },
+};
+
+/* ══════════════════════════════════
+   Logic ported from api/index.js
+══════════════════════════════════ */
+function getRisk(score) {
+  if (score >= 66) return { cls:'high', label:'Risiko Tinggi', color:'#e03d3d' };
+  if (score >= 31) return { cls:'med',  label:'Risiko Sedang', color:'#d4a017' };
+  return              { cls:'low',  label:'Risiko Rendah', color:'#2da44e' };
+}
+
+function getFactors(c) {
+  const factors = [];
+  if      (c.lastLogin > 60) factors.push({ sev:'critical', name:'Tidak Aktif Sangat Lama',        detail:`Terakhir login ${c.lastLogin} hari lalu — jauh di atas rata-rata normal.`, impact:35, bar:90 });
+  else if (c.lastLogin > 30) factors.push({ sev:'warning',  name:'Jarang Login',                   detail:`Terakhir login ${c.lastLogin} hari lalu. Engagement rendah.`, impact:22, bar:60 });
+  else if (c.lastLogin > 14) factors.push({ sev:'caution',  name:'Login Agak Jarang',              detail:`Terakhir login ${c.lastLogin} hari lalu. Pantau lebih lanjut.`, impact:10, bar:30 });
+
+  if      (c.tickets >= 10)  factors.push({ sev:'critical', name:'Banyak Keluhan / Tiket Support', detail:`${c.tickets} tiket dalam 90 hari — indikasi frustasi tinggi.`, impact:30, bar:80 });
+  else if (c.tickets >= 5)   factors.push({ sev:'warning',  name:'Keluhan Moderat',                detail:`${c.tickets} tiket support dalam 90 hari terakhir.`, impact:18, bar:50 });
+  else if (c.tickets >= 2)   factors.push({ sev:'caution',  name:'Ada Beberapa Tiket Support',     detail:`${c.tickets} tiket support dalam 90 hari terakhir.`, impact:8, bar:22 });
+
+  if      (c.adoption < 30)  factors.push({ sev:'critical', name:'Adopsi Fitur Sangat Rendah',     detail:`Hanya ${c.adoption}% fitur yang dipakai — nilai produk tidak tersampaikan.`, impact:28, bar:75 });
+  else if (c.adoption < 55)  factors.push({ sev:'warning',  name:'Adopsi Fitur Kurang Optimal',    detail:`${c.adoption}% adopsi fitur. Masih banyak fitur yang belum dimanfaatkan.`, impact:16, bar:45 });
+
+  if      (c.usage < 10)     factors.push({ sev:'critical', name:'Penggunaan Produk Sangat Rendah',detail:`Hanya ${c.usage} jam/bulan. Kemungkinan tidak mendapat nilai dari produk.`, impact:25, bar:70 });
+  else if (c.usage < 20)     factors.push({ sev:'warning',  name:'Penggunaan Produk Rendah',       detail:`${c.usage} jam/bulan. Di bawah rata-rata untuk plan ${c.plan}.`, impact:15, bar:42 });
+
+  if (c.contract === 'Monthly' || c.contract === 'monthly')
+    factors.push({ sev:'caution', name:'Kontrak Bulanan (Mudah Cancel)', detail:'Kontrak Monthly memberikan fleksibilitas tinggi untuk berhenti kapan saja.', impact:10, bar:28 });
+
+  if (c.delay >= 3)
+    factors.push({ sev:'warning', name:'Keterlambatan Pembayaran Berulang', detail:`${c.delay}x keterlambatan pembayaran — sinyal potensi churn karena finansial.`, impact:12, bar:35 });
+
+  if (c.nps <= 2)
+    factors.push({ sev:'caution', name:'Skor NPS Rendah', detail:`NPS score ${c.nps} — pelanggan cenderung tidak merekomendasikan produk.`, impact:8, bar:22 });
+
+  if (factors.length === 0)
+    factors.push({ sev:'caution', name:'Performa Dalam Batas Normal', detail:'Tidak ada faktor risiko signifikan yang terdeteksi saat ini.', impact:5, bar:10 });
+
+  return factors.slice(0, 4);
+}
+
+function getRecos(c) {
+  const r = [];
+  if (c.lastLogin > 30)
+    r.push({ type:'urgent',    icon:'fa-solid fa-phone',     title:'Re-engagement Call Segera',        desc:`Hubungi ${c.name || c.id} via telepon/email. Jadwalkan dalam 48 jam.` });
+  if (c.tickets >= 5)
+    r.push({ type:'important', icon:'fa-solid fa-wrench',    title:'Eskalasi Tiket & Personal Support', desc:'Assign dedicated support agent dan lakukan follow-up kepuasan.' });
+  if (c.adoption < 55 || c.usage < 20)
+    r.push({ type:'normal',    icon:'fa-solid fa-book',      title:'Sesi Onboarding & Edukasi Fitur',   desc:`Jadwalkan demo 1-on-1 untuk fitur yang belum dipakai. Fokus plan ${c.plan}.` });
+  if ((c.contract === 'Monthly' || c.contract === 'monthly') && c.score >= 60)
+    r.push({ type:'important', icon:'fa-solid fa-gift',      title:'Tawarkan Diskon Upgrade ke Annual', desc:'Berikan penawaran khusus 2–3 bulan gratis jika upgrade ke kontrak Annual.' });
+  if (c.nps <= 3)
+    r.push({ type:'info',      icon:'fa-solid fa-chart-bar', title:'Survey Kepuasan & Feedback Loop',   desc:'Kirim NPS survey detail dan buat action plan berdasarkan feedback.' });
+  if (r.length === 0)
+    r.push({ type:'normal',    icon:'fa-solid fa-heart',     title:'Pertahankan Kualitas Layanan',      desc:'Pelanggan dalam kondisi baik. Tetap monitor dan berikan update produk berkala.' });
+  return r.slice(0, 4);
+}
+
+/* ══════════════════════════════════
+   Resolve which customer to show
+  (reads ?id= from URL, fallback to first)
+══════════════════════════════════ */
+const params = new URLSearchParams(window.location.search);
+const custId = params.get('id') || 'CUST-005';
+const C = CUSTOMERS[custId] || Object.values(CUSTOMERS)[0];
+
+/* ══════════════════════════════════
+   Render page
+══════════════════════════════════ */
+const risk = getRisk(C.score);
+
+// Title
+document.title = `Detail — ${C.name} · GDU`;
+document.getElementById('page-title').textContent = `Detail — ${C.name}`;
+
+// Avatar
+const av = document.getElementById('avatar-box');
+av.textContent = (C.name.charAt(0) || '?').toUpperCase();
+
+// Profile meta
+document.getElementById('cust-name').textContent = C.name;
+document.getElementById('cust-meta').textContent = `${C.id} · ${C.plan} · ${C.contract}`;
+
+// Score
+document.getElementById('score-val').textContent = C.score;
+document.getElementById('score-val').style.color = risk.color;
+setTimeout(() => { document.getElementById('score-fill').style.width = C.score + '%'; }, 100);
+document.getElementById('score-fill').style.background = risk.color;
+
+// Risk chip
+const chip = document.getElementById('risk-chip');
+const chipBg = risk.cls === 'high' ? 'rgba(220,38,38,0.15)' : risk.cls === 'med' ? 'rgba(217,119,6,0.15)' : 'rgba(22,163,74,0.15)';
+chip.style.background = chipBg;
+chip.style.color = risk.color;
+chip.innerHTML = `<span style="width:6px;height:6px;border-radius:50%;background:${risk.color};display:inline-block"></span> ${risk.label}`;
+
+// Info rows
+const infoData = [
+  { label:'Tenure',       value:`${C.tenure} bulan` },
+  { label:'Revenue/Bln',  value:`$${(C.revenue || 0).toLocaleString('en-US', { maximumFractionDigits:2 })}` },
+  { label:'Penggunaan',   value:`${C.usage} jam/bln` },
+  { label:'Adopsi Fitur', value:`${C.adoption}%` },
+  { label:'Tiket Support',value:`${C.tickets} tiket` },
+  { label:'Last Login',   value:`${C.lastLogin} hari lalu` },
+  { label:'NPS Score',    value:`${C.nps}/10` },
+  { label:'Status',       value: C.churned ? 'Churned' : 'Aktif', color: C.churned ? '#dc2626' : '#16a34a' },
+];
+const infoContainer = document.getElementById('info-rows');
+infoData.forEach(item => {
+  const div = document.createElement('div');
+  div.className = 'info-row';
+  div.innerHTML = `
+    <span class="info-key">${item.label}</span>
+    <span class="info-val" style="${item.color ? `color:${item.color}` : ''}">${item.value}</span>
+  `;
+  infoContainer.appendChild(div);
+});
+
+// Factors
+const factors = getFactors(C);
+const factorsList = document.getElementById('factors-list');
+factors.forEach(f => {
+  const wrap = document.createElement('div');
+  wrap.className = `sev-${f.sev}`;
+  wrap.innerHTML = `
+    <div class="factor-card">
+      <div class="factor-head">
+        <span class="factor-name">${f.name}</span>
+        <span class="factor-impact">Impact: ${f.impact}%</span>
+      </div>
+      <div class="factor-detail">${f.detail}</div>
+      <div class="factor-bar-track">
+        <div class="factor-bar-fill" style="width:${f.bar}%"></div>
+      </div>
+    </div>
+  `;
+  factorsList.appendChild(wrap);
+});
+
+// Recommendations
+const recos = getRecos(C);
+const recosGrid = document.getElementById('recos-grid');
+recos.forEach(r => {
+  const div = document.createElement('div');
+  div.className = `reco-card reco-${r.type}`;
+  div.innerHTML = `
+    <div class="reco-icon-wrap"><i class="${r.icon}"></i></div>
+    <div class="reco-title">${r.title}</div>
+    <div class="reco-desc">${r.desc}</div>
+  `;
+  recosGrid.appendChild(div);
+});
+
+/* ══════════════════════════════════
+   Export (simple text report)
+══════════════════════════════════ */
+document.getElementById('btn-export').addEventListener('click', () => {
+  const lines = [
+    `LAPORAN RISIKO CHURN`,
+    `===================`,
+    `Customer : ${C.name} (${C.id})`,
+    `Plan     : ${C.plan} · ${C.contract}`,
+    `Skor     : ${C.score} — ${risk.label}`,
+    ``,
+    `INFO PELANGGAN`,
+    ...infoData.map(i => `  ${i.label.padEnd(14)}: ${i.value}`),
+    ``,
+    `FAKTOR RISIKO`,
+    ...factors.map(f => `  [${f.sev.toUpperCase()}] ${f.name} (Impact: ${f.impact}%)\n    ${f.detail}`),
+    ``,
+    `REKOMENDASI`,
+    ...recos.map(r => `  • ${r.title}\n    ${r.desc}`),
+  ];
+  const blob = new Blob([lines.join('\n')], { type:'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `laporan_${C.id}.txt`;
+  a.click();
+});
+
+/* ══════════════════════════════════
+   Dark mode toggle
+══════════════════════════════════ */
+document.getElementById('btn-theme').addEventListener('click', () => {
+  document.documentElement.classList.toggle('dark');
+  const isDark = document.documentElement.classList.contains('dark');
+  const icon = document.querySelector('#btn-theme i');
+  icon.className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+  icon.style.color = isDark ? '#facc15' : '#6b7280';
+});
+</script>
+</body>
+</html>

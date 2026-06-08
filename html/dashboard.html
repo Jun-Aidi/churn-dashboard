@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard – Ghosting Detection Unit</title>
+  <meta name="description" content="Dashboard retensi pelanggan: monitor skor churn, pola pelanggan, dan prioritas intervensi." />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <style>
+    /* ═══════════════════════════════════════════
+       CSS Custom Properties — Theme Variables
+       ═══════════════════════════════════════════ */
+    :root {
+      --gdu-bg: #f5efe4;
+      --gdu-panel: #15201d;
+      --gdu-card: rgba(255, 250, 240, 0.86);
+      --gdu-card-solid: #fffaf0;
+      --gdu-text: #15201d;
+      --gdu-muted: #60716c;
+      --gdu-subtle: #8a9995;
+      --gdu-border: rgba(21, 32, 29, 0.12);
+      --gdu-input: rgba(255, 255, 255, 0.78);
+      --gdu-hover: rgba(21, 32, 29, 0.06);
+      --gdu-teal: #00a6a6;
+      --gdu-teal-dark: #008f8f;
+      --gdu-amber: #f59e0b;
+      --gdu-red: #ef4444;
+      --gdu-shadow: 0 24px 80px rgba(21, 32, 29, 0.10);
+      --color-border: #eef0f4;
+      --color-text: #111827;
+      --color-muted: #6b7280;
+      --color-subtle: #9ca3af;
+      --color-input: #f9fafb;
+      --color-card: #ffffff;
+      --color-hover: #f3f4f6;
+      --color-row-hover: #f9fafb;
+    }
+
+    .dark {
+      --gdu-bg: #0d1117;
+      --gdu-panel: #101820;
+      --gdu-card: rgba(22, 27, 39, 0.88);
+      --gdu-card-solid: #161b27;
+      --gdu-text: #e2e8f0;
+      --gdu-muted: #aab7c8;
+      --gdu-subtle: #7c8aa0;
+      --gdu-border: rgba(226, 232, 240, 0.12);
+      --gdu-input: rgba(30, 37, 53, 0.92);
+      --gdu-hover: rgba(255, 255, 255, 0.07);
+      --gdu-teal: #2dd4bf;
+      --gdu-teal-dark: #14b8a6;
+      --gdu-amber: #fbbf24;
+      --gdu-red: #f87171;
+      --gdu-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
+      --color-border: #252f45;
+      --color-text: #e2e8f0;
+      --color-muted: #8896ab;
+      --color-subtle: #5d6e82;
+      --color-input: #1e2535;
+      --color-card: #161b27;
+      --color-hover: #1e2535;
+      --color-row-hover: #1a2236;
+    }
+
+    /* ═══ Base reset ═══ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--gdu-bg);
+      color: var(--gdu-text);
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--gdu-teal); }
+    .dark ::-webkit-scrollbar-thumb { background: #2e3b55; }
+
+    /* ═══ Animations ═══ */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in  { animation: fadeIn 0.35s ease both; }
+    .stagger-1 { animation-delay: 0.05s; }
+    .stagger-2 { animation-delay: 0.10s; }
+    .stagger-3 { animation-delay: 0.15s; }
+    .stagger-4 { animation-delay: 0.20s; }
+
+    /* ═══ Navbar ═══ */
+    .top-navbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 90;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      padding: 0 20px 0 24px;
+      background: var(--gdu-card);
+      border-bottom: 1px solid var(--gdu-border);
+      box-shadow: var(--gdu-shadow);
+      backdrop-filter: blur(18px);
+      transition: background-color 0.2s;
+      gap: 12px;
+    }
+
+    .navbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-right: 20px;
+      flex-shrink: 0;
+      text-decoration: none;
+    }
+
+    .navbar-brand img { height: 40px; width: auto; }
+
+    .top-nav-links {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      flex: 1;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--gdu-muted);
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: transparent;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .nav-link:hover { background: var(--gdu-hover); color: var(--gdu-text); }
+    .nav-link.active {
+      font-weight: 600;
+      color: var(--gdu-teal);
+      background: color-mix(in srgb, var(--gdu-teal) 14%, transparent);
+    }
+
+    .navbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+    .nav-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 10px;
+      padding: 7px 13px;
+      width: 190px;
+      border: 1px solid var(--gdu-border);
+      background: var(--gdu-input);
+      transition: background 0.2s;
+    }
+    .nav-search input {
+      background: transparent;
+      border: none;
+      outline: none;
+      font-size: 13px;
+      font-family: inherit;
+      width: 100%;
+      color: var(--gdu-text);
+    }
+    .nav-search input::placeholder { color: var(--gdu-subtle); }
+
+    .icon-btn {
+      position: relative;
+      width: 36px; height: 36px;
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      border: 1px solid var(--gdu-border);
+      background: var(--gdu-input);
+      color: var(--gdu-text);
+      font-size: 14px;
+      flex-shrink: 0;
+      transition: background 0.15s, color 0.15s;
+    }
+    .icon-btn:hover { background: var(--gdu-hover); }
+
+    .notif-dot {
+      position: absolute;
+      top: 7px; right: 7px;
+      width: 7px; height: 7px;
+      background: #ef4444;
+      border-radius: 50%;
+      border: 2px solid var(--gdu-card-solid);
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 10px 4px 4px;
+      border-radius: 10px;
+      border: 1px solid var(--gdu-border);
+      background: var(--gdu-input);
+      flex-shrink: 0;
+    }
+    .user-avatar {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700;
+      color: #fff;
+      background: linear-gradient(135deg, var(--gdu-teal) 0%, var(--gdu-amber) 100%);
+      flex-shrink: 0;
+      letter-spacing: -0.5px;
+    }
+    .user-name { font-size: 12.5px; font-weight: 600; color: var(--gdu-text); line-height: 1.2; }
+    .user-role { font-size: 10.5px; color: var(--gdu-muted); }
+
+    /* ═══ Layout wrapper ═══ */
+    .app-body {
+      padding-top: 60px;
+      padding: 60px 12px 12px 12px;
+      min-height: 100vh;
+    }
+
+    /* ═══ GDU Page ═══ */
+    .gdu-page {
+      position: relative;
+      overflow: hidden;
+      border-radius: 28px;
+      background: var(--gdu-bg);
+      color: var(--gdu-text);
+      min-height: calc(100vh - 72px);
+      padding: clamp(16px, 3vw, 28px);
+      margin-top: 8px;
+    }
+    .gdu-page::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.85;
+      background:
+        radial-gradient(circle at 8% 8%, color-mix(in srgb, var(--gdu-teal) 24%, transparent), transparent 28%),
+        radial-gradient(circle at 90% 4%, color-mix(in srgb, var(--gdu-amber) 22%, transparent), transparent 25%),
+        radial-gradient(circle at 52% 100%, color-mix(in srgb, var(--gdu-red) 14%, transparent), transparent 32%);
+    }
+    .gdu-page::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.52;
+      background:
+        linear-gradient(var(--gdu-border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--gdu-border) 1px, transparent 1px);
+      background-size: 44px 44px;
+    }
+    .gdu-content { position: relative; z-index: 1; }
+
+    /* ═══ Shell Card ═══ */
+    .shell-card {
+      background: var(--gdu-card);
+      border-radius: 28px;
+      padding: 24px;
+      box-shadow: var(--gdu-shadow);
+      border: 1px solid var(--gdu-border);
+      backdrop-filter: blur(18px);
+    }
+
+    /* ═══ Hero section ═══ */
+    .hero {
+      margin-bottom: 24px;
+      overflow: hidden;
+      border-radius: 2rem;
+      border: 1px solid var(--gdu-border);
+      background: var(--gdu-panel);
+      color: #fffaf0;
+      box-shadow: 0 28px 90px rgba(21,32,29,0.20);
+    }
+    .hero-inner {
+      position: relative;
+      display: grid;
+      gap: 16px;
+      padding: 28px;
+      grid-template-columns: 1.35fr 0.65fr;
+    }
+    .hero-blob-teal {
+      position: absolute;
+      right: -96px; top: -96px;
+      width: 288px; height: 288px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--gdu-teal) 25%, transparent);
+      filter: blur(48px);
+      pointer-events: none;
+    }
+    .hero-blob-amber {
+      position: absolute;
+      bottom: 0; left: 33%;
+      width: 224px; height: 224px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--gdu-amber) 20%, transparent);
+      filter: blur(48px);
+      pointer-events: none;
+    }
+
+    .hero-left { position: relative; }
+    .hero-brand {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .hero-brand img { height: 44px; width: auto; object-fit: contain; }
+    .hero-badge {
+      border-radius: 999px;
+      border: 1px solid rgba(255,250,240,0.15);
+      background: rgba(255,255,255,0.10);
+      padding: 6px 12px;
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: #8ee7df;
+    }
+    .hero-title {
+      font-size: clamp(22px, 3.5vw, 36px);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+    }
+    .hero-subtitle {
+      margin-top: 12px;
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.7;
+      color: rgba(255,250,240,0.70);
+    }
+
+    .hero-right {
+      position: relative;
+      border-radius: 1.5rem;
+      border: 1px solid rgba(255,250,240,0.10);
+      background: rgba(255,255,255,0.10);
+      padding: 16px;
+      backdrop-filter: blur(8px);
+    }
+    .pulse-label {
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: #8ee7df;
+    }
+    .pulse-value {
+      margin-top: 8px;
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+    }
+    .pulse-pct { font-size: 36px; font-weight: 900; letter-spacing: -0.06em; }
+    .pulse-desc { padding-bottom: 4px; font-size: 12px; font-weight: 600; color: rgba(255,250,240,0.65); }
+    .pulse-bar {
+      margin-top: 12px;
+      height: 8px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.10);
+    }
+    .pulse-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--gdu-teal), var(--gdu-amber), var(--gdu-red));
+    }
+    .pulse-grid {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      text-align: center;
+    }
+    .pulse-cell {
+      border-radius: 12px;
+      background: rgba(255,255,255,0.10);
+      padding: 8px;
+    }
+    .pulse-cell-val { font-size: 16px; font-weight: 900; }
+    .pulse-cell-lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: rgba(255,250,240,0.50); margin-top: 2px; }
+
+    /* ═══ Stat cards grid ═══ */
+    .grid-stat-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      position: relative;
+      overflow: hidden;
+      padding: 20px;
+    }
+    .stat-card-topbar {
+      position: absolute;
+      inset: 0;
+      height: 6px;
+      border-radius: 28px 28px 0 0;
+    }
+    .stat-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .stat-icon {
+      width: 40px; height: 40px;
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .stat-badge {
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .stat-badge.pos { background: rgba(0,166,166,0.12); color: var(--gdu-teal); }
+    .stat-badge.neg { background: rgba(239,68,68,0.12); color: var(--gdu-red); }
+    .stat-value {
+      font-size: 30px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.06em;
+      margin-top: 16px;
+    }
+    .stat-label {
+      margin-top: 8px;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--gdu-muted);
+    }
+
+    /* ═══ Charts grid ═══ */
+    .grid-charts {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .chart-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .chart-title { font-size: 18px; font-weight: 900; letter-spacing: -0.03em; color: var(--gdu-text); }
+    .chart-subtitle { margin-top: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--gdu-muted); }
+    .live-badge {
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--gdu-teal) 10%, transparent);
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 900;
+      color: var(--gdu-teal);
+    }
+    .chart-wrap { width: 100%; height: 220px; position: relative; }
+
+    /* Feature importance bars */
+    .fi-list { display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
+    .fi-item { display: flex; flex-direction: column; gap: 5px; }
+    .fi-row { display: flex; justify-content: space-between; align-items: center; }
+    .fi-name { font-size: 11.5px; font-weight: 600; color: var(--gdu-text); }
+    .fi-pct  { font-size: 11px; font-weight: 700; color: var(--gdu-muted); font-variant-numeric: tabular-nums; }
+    .fi-track {
+      height: 6px;
+      border-radius: 4px;
+      background: var(--gdu-hover);
+      overflow: hidden;
+    }
+    .fi-bar { height: 100%; border-radius: 4px; }
+
+    /* ═══ Risk legend strip ═══ */
+    .risk-strip {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      border-radius: 16px;
+      border: 1px solid var(--gdu-border);
+      background: var(--gdu-card);
+      padding: 12px 20px;
+      backdrop-filter: blur(8px);
+      margin-bottom: 24px;
+    }
+    .risk-strip-label {
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--gdu-muted);
+      margin-right: 4px;
+    }
+    .risk-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .risk-pill .range { opacity: 0.60; }
+
+    /* ═══ Customer table card ═══ */
+    .table-card-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .watchlist-label { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.18em; color: var(--gdu-teal); }
+    .table-title { margin-top: 4px; font-size: 20px; font-weight: 900; letter-spacing: -0.03em; color: var(--gdu-text); }
+    .table-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 16px;
+      border: 1px solid var(--gdu-border);
+      background: var(--gdu-input);
+      padding: 10px 16px;
+      width: 250px;
+    }
+    .search-box input {
+      background: transparent;
+      border: none;
+      outline: none;
+      font-size: 13.5px;
+      font-weight: 600;
+      font-family: inherit;
+      color: var(--gdu-text);
+      width: 100%;
+    }
+    .search-box input::placeholder { color: var(--gdu-subtle); }
+    .filter-select {
+      border-radius: 16px;
+      border: 1px solid var(--gdu-border);
+      background: var(--gdu-input);
+      padding: 10px 16px;
+      font-size: 13.5px;
+      font-weight: 700;
+      font-family: inherit;
+      color: var(--gdu-text);
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* Table */
+    .table-wrap {
+      overflow: hidden;
+      border-radius: 1.5rem;
+      border: 1px solid var(--gdu-border);
+      background: var(--gdu-input);
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 650px;
+    }
+    .data-table thead th {
+      text-align: left;
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--color-subtle);
+      padding: 12px 12px 12px;
+      border-bottom: 1px solid var(--gdu-border);
+      white-space: nowrap;
+    }
+    .data-table tbody tr {
+      cursor: pointer;
+      transition: background 0.12s;
+      border-bottom: 1px solid var(--gdu-border);
+    }
+    .data-table tbody tr:last-child { border-bottom: none; }
+    .data-table tbody tr:hover { background: var(--color-row-hover); }
+    .data-table td { padding: 13px 12px; }
+
+    .td-id { font-family: monospace; font-size: 12.5px; color: var(--color-subtle); }
+    .td-name { font-size: 13.5px; font-weight: 500; color: var(--color-text); }
+    .plan-tag {
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--color-border);
+      background: var(--color-input);
+      color: var(--color-text);
+    }
+    .score-wrap { display: flex; align-items: center; gap: 10px; }
+    .score-track {
+      width: 80px; height: 5px;
+      border-radius: 4px;
+      overflow: hidden;
+      background: var(--color-hover);
+    }
+    .score-fill { height: 100%; border-radius: 4px; }
+    .score-num { font-family: monospace; font-size: 12.5px; font-weight: 600; color: var(--color-text); }
+
+    .risk-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+    .risk-badge-high { background: rgba(220,38,38,0.12); color: #dc2626; }
+    .risk-badge-med  { background: rgba(217,119,6,0.12);  color: #d97706; }
+    .risk-badge-low  { background: rgba(22,163,74,0.12);  color: #16a34a; }
+
+    .td-tenure { font-size: 13px; color: var(--color-muted); }
+    .detail-btn {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--gdu-teal);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      transition: opacity 0.15s;
+    }
+    .detail-btn:hover { opacity: 0.7; }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 16px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--gdu-muted);
+    }
+    .pg-btns { display: flex; align-items: center; gap: 6px; }
+    .pg-btn {
+      height: 36px;
+      padding: 0 16px;
+      border-radius: 12px;
+      border: 1px solid var(--gdu-border);
+      background: var(--gdu-input);
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--gdu-text);
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.12s;
+    }
+    .pg-btn:hover { background: var(--gdu-hover); }
+    .pg-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .pg-current {
+      height: 36px;
+      padding: 0 16px;
+      border-radius: 12px;
+      background: var(--gdu-teal);
+      font-size: 13.5px;
+      font-weight: 900;
+      color: #fff;
+      display: flex; align-items: center;
+    }
+
+    /* ═══ Responsive ═══ */
+    @media (max-width: 1200px) {
+      .grid-stat-cards { grid-template-columns: repeat(2, 1fr); }
+      .grid-charts     { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 900px) {
+      .hero-inner { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .top-nav-links { display: none; }
+      .nav-search    { display: none; }
+      .user-name, .user-role { display: none; }
+    }
+    @media (max-width: 640px) {
+      .grid-stat-cards { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .hero-inner      { padding: 20px; }
+    }
+    @media (max-width: 420px) {
+      .grid-stat-cards { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════ NAVBAR ═══════════ -->
+<header class="top-navbar">
+  <a class="navbar-brand" href="#">
+    <img src="logo_ghosting.png" alt="Ghosting Detection Unit" onerror="this.style.display='none';this.nextSibling.style.display='flex'" />
+    <span style="display:none;align-items:center;justify-content:center;width:36px;height:36px;background:linear-gradient(135deg,#00a6a6,#f59e0b);border-radius:10px;color:#fff;font-weight:900;font-size:14px;">G</span>
+  </a>
+
+  <nav class="top-nav-links">
+    <a class="nav-link active" href="#"><i class="fa-solid fa-gauge-high" style="font-size:13px"></i> Dashboard</a>
+    <a class="nav-link" href="#"><i class="fa-solid fa-users" style="font-size:13px"></i> Pelanggan</a>
+    <a class="nav-link" href="#"><i class="fa-solid fa-upload" style="font-size:13px"></i> Upload Data</a>
+  </nav>
+
+  <div class="navbar-right">
+    <div class="nav-search">
+      <i class="fa-solid fa-magnifying-glass" style="color:var(--gdu-subtle);font-size:13px"></i>
+      <input type="text" placeholder="Cari..." />
+    </div>
+
+    <button class="icon-btn" id="btn-theme" title="Toggle dark mode">
+      <i class="fa-solid fa-moon" style="font-size:14px"></i>
+    </button>
+
+    <button class="icon-btn">
+      <i class="fa-solid fa-bell" style="font-size:14px"></i>
+      <span class="notif-dot"></span>
+    </button>
+
+    <div class="user-pill">
+      <div class="user-avatar">FA</div>
+      <div>
+        <div class="user-name">Fahrezi</div>
+        <div class="user-role">Admin</div>
+      </div>
+    </div>
+
+    <button class="icon-btn" title="Keluar">
+      <i class="fa-solid fa-right-from-bracket" style="font-size:14px"></i>
+    </button>
+  </div>
+</header>
+
+<!-- ═══════════ MAIN BODY ═══════════ -->
+<div class="app-body">
+  <div class="gdu-page">
+    <div class="gdu-content fade-in">
+
+      <!-- HERO -->
+      <section class="hero">
+        <div class="hero-inner">
+          <div class="hero-blob-teal"></div>
+          <div class="hero-blob-amber"></div>
+
+          <div class="hero-left">
+            <div class="hero-brand">
+              <img src="logo_ghosting.png" alt="GDU Logo" style="height:44px;width:auto;object-fit:contain" onerror="this.style.display='none'" />
+              <span class="hero-badge">Ghosting Detection Unit</span>
+            </div>
+            <h1 class="hero-title">Dashboard retensi untuk membaca risiko lebih awal.</h1>
+            <p class="hero-subtitle">
+              Monitor skor churn, pola pelanggan, dan prioritas intervensi dalam warna visual yang selaras dengan landing page.
+            </p>
+          </div>
+
+          <div class="hero-right">
+            <p class="pulse-label">High risk pulse</p>
+            <div class="pulse-value">
+              <div class="pulse-pct">28%</div>
+              <div class="pulse-desc">pelanggan perlu perhatian</div>
+            </div>
+            <div class="pulse-bar">
+              <div class="pulse-bar-fill" style="width:28%"></div>
+            </div>
+            <div class="pulse-grid">
+              <div class="pulse-cell">
+                <div class="pulse-cell-val">42</div>
+                <div class="pulse-cell-lbl">High</div>
+              </div>
+              <div class="pulse-cell">
+                <div class="pulse-cell-val">67</div>
+                <div class="pulse-cell-lbl">Medium</div>
+              </div>
+              <div class="pulse-cell">
+                <div class="pulse-cell-val">41</div>
+                <div class="pulse-cell-lbl">Low</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STAT CARDS -->
+      <div class="grid-stat-cards">
+        <!-- Total Pelanggan -->
+        <div class="shell-card stat-card fade-in stagger-1">
+          <div class="stat-card-topbar" style="background:linear-gradient(90deg,var(--gdu-teal),#0f766e)"></div>
+          <div style="margin-top:8px">
+            <div class="stat-card-head">
+              <div class="stat-icon" style="background:rgba(0,166,166,0.15)">
+                <i class="fa-solid fa-users" style="color:var(--gdu-teal)"></i>
+              </div>
+              <span class="stat-badge pos">+5.2%</span>
+            </div>
+            <div class="stat-value" style="color:var(--gdu-text)">150</div>
+            <div class="stat-label">Total Pelanggan</div>
+          </div>
+        </div>
+
+        <!-- Risiko Tinggi -->
+        <div class="shell-card stat-card fade-in stagger-2">
+          <div class="stat-card-topbar" style="background:linear-gradient(90deg,var(--gdu-red),#b91c1c)"></div>
+          <div style="margin-top:8px">
+            <div class="stat-card-head">
+              <div class="stat-icon" style="background:rgba(239,68,68,0.15)">
+                <i class="fa-solid fa-triangle-exclamation" style="color:var(--gdu-red)"></i>
+              </div>
+              <span class="stat-badge neg">+12%</span>
+            </div>
+            <div class="stat-value" style="color:var(--gdu-red)">42</div>
+            <div class="stat-label">Risiko Tinggi</div>
+          </div>
+        </div>
+
+        <!-- Risiko Sedang -->
+        <div class="shell-card stat-card fade-in stagger-3">
+          <div class="stat-card-topbar" style="background:linear-gradient(90deg,#f59e0b,#b45309)"></div>
+          <div style="margin-top:8px">
+            <div class="stat-card-head">
+              <div class="stat-icon" style="background:rgba(245,158,11,0.18)">
+                <i class="fa-solid fa-chart-line" style="color:#d97706"></i>
+              </div>
+              <span class="stat-badge pos" style="background:rgba(245,158,11,0.12);color:#d97706">-3%</span>
+            </div>
+            <div class="stat-value" style="color:#d97706">67</div>
+            <div class="stat-label">Risiko Sedang</div>
+          </div>
+        </div>
+
+        <!-- Risiko Rendah -->
+        <div class="shell-card stat-card fade-in stagger-4">
+          <div class="stat-card-topbar" style="background:linear-gradient(90deg,var(--gdu-teal),#115e59)"></div>
+          <div style="margin-top:8px">
+            <div class="stat-card-head">
+              <div class="stat-icon" style="background:rgba(0,166,166,0.15)">
+                <i class="fa-solid fa-circle-check" style="color:var(--gdu-teal)"></i>
+              </div>
+              <span class="stat-badge pos">+8%</span>
+            </div>
+            <div class="stat-value" style="color:var(--gdu-teal)">41</div>
+            <div class="stat-label">Risiko Rendah</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHARTS -->
+      <div class="grid-charts">
+        <!-- Churn Trend -->
+        <div class="shell-card fade-in">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Tren Churn Bulanan</div>
+              <div class="chart-subtitle">Distribusi skor risiko – 6 bulan terakhir</div>
+            </div>
+            <span class="live-badge">Live</span>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="churnChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Feature Importance -->
+        <div class="shell-card fade-in stagger-2">
+          <div style="margin-bottom:20px">
+            <div class="chart-title">Feature Importance</div>
+            <div class="chart-subtitle">Faktor paling berpengaruh pada model prediksi churn</div>
+          </div>
+          <div class="fi-list" id="fi-list"></div>
+        </div>
+      </div>
+
+      <!-- RISK LEGEND STRIP -->
+      <div class="risk-strip fade-in">
+        <span class="risk-strip-label">Risk Level:</span>
+        <span class="risk-pill" style="background:rgba(239,68,68,0.10);border:1.5px solid rgba(239,68,68,0.32);color:var(--gdu-red)">
+          <i class="fa-solid fa-fire" style="font-size:10px"></i> Urgent <span class="range">(66–100)</span>
+        </span>
+        <span class="risk-pill" style="background:rgba(245,158,11,0.12);border:1.5px solid rgba(245,158,11,0.38);color:#d97706">
+          <i class="fa-solid fa-eye" style="font-size:10px"></i> Monitor <span class="range">(31–65)</span>
+        </span>
+        <span class="risk-pill" style="background:rgba(0,166,166,0.10);border:1.5px solid rgba(0,166,166,0.32);color:var(--gdu-teal)">
+          <i class="fa-solid fa-shield-heart" style="font-size:10px"></i> Stabil <span class="range">(0–30)</span>
+        </span>
+      </div>
+
+      <!-- CUSTOMER TABLE -->
+      <div class="shell-card fade-in">
+        <div class="table-card-header">
+          <div>
+            <p class="watchlist-label">Customer watchlist</p>
+            <div class="table-title">Daftar Pelanggan</div>
+          </div>
+          <div class="table-controls">
+            <div class="search-box">
+              <i class="fa-solid fa-magnifying-glass" style="color:var(--gdu-teal);font-size:13px"></i>
+              <input type="text" id="search-input" placeholder="Cari pelanggan..." />
+            </div>
+            <select class="filter-select" id="filter-select">
+              <option value="all">Semua Kategori</option>
+              <option value="high">Risiko Tinggi</option>
+              <option value="med">Risiko Sedang</option>
+              <option value="low">Risiko Rendah</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <div style="overflow-x:auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Customer ID</th>
+                  <th>Nama</th>
+                  <th>Plan</th>
+                  <th>Skor Risiko</th>
+                  <th>Kategori</th>
+                  <th>Tenure</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="table-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="pagination">
+          <span id="pg-info">Menampilkan 1–10 dari 15 pelanggan</span>
+          <div class="pg-btns">
+            <button class="pg-btn" id="pg-prev" disabled>
+              <i class="fa-solid fa-arrow-left" style="font-size:11px;margin-right:4px"></i> Prev
+            </button>
+            <span class="pg-current" id="pg-label">1 / 2</span>
+            <button class="pg-btn" id="pg-next">
+              Next <i class="fa-solid fa-arrow-right" style="font-size:11px;margin-left:4px"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /gdu-content -->
+  </div><!-- /gdu-page -->
+</div><!-- /app-body -->
+
+<script>
+/* ══════════════════════════════════
+   Dummy data
+══════════════════════════════════ */
+const CUSTOMERS = [
+  { id:'CUST-001', name:'Andi Wijaya',       plan:'Premium', score:82, tenure:18 },
+  { id:'CUST-002', name:'Sari Dewi',          plan:'Basic',   score:71, tenure:7  },
+  { id:'CUST-003', name:'Budi Santoso',        plan:'Standard',score:55, tenure:24 },
+  { id:'CUST-004', name:'Citra Lestari',       plan:'Premium', score:43, tenure:11 },
+  { id:'CUST-005', name:'Denny Prasetyo',      plan:'Basic',   score:90, tenure:3  },
+  { id:'CUST-006', name:'Eka Putri',           plan:'Standard',score:28, tenure:36 },
+  { id:'CUST-007', name:'Fajar Nugroho',       plan:'Premium', score:67, tenure:15 },
+  { id:'CUST-008', name:'Gita Ramadhani',      plan:'Basic',   score:19, tenure:29 },
+  { id:'CUST-009', name:'Hendra Kusuma',       plan:'Standard',score:76, tenure:8  },
+  { id:'CUST-010', name:'Indah Permata',       plan:'Premium', score:34, tenure:21 },
+  { id:'CUST-011', name:'Joko Setiawan',       plan:'Basic',   score:88, tenure:5  },
+  { id:'CUST-012', name:'Kartika Sari',        plan:'Standard',score:22, tenure:40 },
+  { id:'CUST-013', name:'Luthfi Hidayat',      plan:'Premium', score:61, tenure:13 },
+  { id:'CUST-014', name:'Maya Anggraini',      plan:'Basic',   score:47, tenure:17 },
+  { id:'CUST-015', name:'Nanda Firmansyah',    plan:'Standard',score:93, tenure:2  },
+];
+
+const FI_DATA = [
+  { label:'Tenure',           pct:0.28 },
+  { label:'Last Login Days',  pct:0.22 },
+  { label:'Support Tickets',  pct:0.18 },
+  { label:'Feature Adoption', pct:0.14 },
+  { label:'NPS Score',        pct:0.10 },
+  { label:'Monthly Revenue',  pct:0.08 },
+];
+
+const BAR_COLORS = ['#008f8f','#00a6a6','#1ab0b0','#33baba','#4dc4c4','#66cece'];
+
+/* ══════════════════════════════════
+   Risk helper
+══════════════════════════════════ */
+function getRisk(score) {
+  if (score >= 66) return { cls:'high', label:'Risiko Tinggi', color:'#dc2626' };
+  if (score >= 31) return { cls:'med',  label:'Risiko Sedang', color:'#d97706' };
+  return { cls:'low', label:'Risiko Rendah', color:'#16a34a' };
+}
+
+/* ══════════════════════════════════
+   Table rendering
+══════════════════════════════════ */
+const PAGE_SIZE = 10;
+let currentPage = 1;
+let currentSearch = '';
+let currentFilter = 'all';
+
+function filtered() {
+  const q = currentSearch.toLowerCase();
+  return CUSTOMERS.filter(c => {
+    const match = c.name.toLowerCase().includes(q) || c.id.toLowerCase().includes(q);
+    if (currentFilter === 'all') return match;
+    return match && getRisk(c.score).cls === currentFilter;
+  });
+}
+
+function renderTable() {
+  const rows = filtered();
+  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  currentPage = Math.min(currentPage, totalPages);
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const page  = rows.slice(start, start + PAGE_SIZE);
+
+  const tbody = document.getElementById('table-body');
+  tbody.innerHTML = '';
+  page.forEach(c => {
+    const risk = getRisk(c.score);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="td-id">${c.id}</td>
+      <td class="td-name">${c.name}</td>
+      <td><span class="plan-tag">${c.plan}</span></td>
+      <td>
+        <div class="score-wrap">
+          <div class="score-track">
+            <div class="score-fill" style="width:${c.score}%;background:${risk.color}"></div>
+          </div>
+          <span class="score-num">${c.score}</span>
+        </div>
+      </td>
+      <td><span class="risk-badge risk-badge-${risk.cls}">${risk.label}</span></td>
+      <td class="td-tenure">${c.tenure} bln</td>
+      <td><button class="detail-btn">Detail <i class="fa-solid fa-angle-right" style="margin-left:4px"></i></button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const rangeStart = rows.length === 0 ? 0 : start + 1;
+  const rangeEnd   = Math.min(start + PAGE_SIZE, rows.length);
+  document.getElementById('pg-info').textContent  = `Menampilkan ${rangeStart}–${rangeEnd} dari ${rows.length} pelanggan`;
+  document.getElementById('pg-label').textContent = `${currentPage} / ${totalPages}`;
+  document.getElementById('pg-prev').disabled = currentPage <= 1;
+  document.getElementById('pg-next').disabled = currentPage >= totalPages;
+}
+
+document.getElementById('search-input').addEventListener('input', e => {
+  currentSearch = e.target.value;
+  currentPage = 1;
+  renderTable();
+});
+document.getElementById('filter-select').addEventListener('change', e => {
+  currentFilter = e.target.value;
+  currentPage = 1;
+  renderTable();
+});
+document.getElementById('pg-prev').addEventListener('click', () => { currentPage--; renderTable(); });
+document.getElementById('pg-next').addEventListener('click', () => { currentPage++; renderTable(); });
+
+renderTable();
+
+/* ══════════════════════════════════
+   Feature Importance bars
+══════════════════════════════════ */
+const fiList = document.getElementById('fi-list');
+FI_DATA.forEach((item, i) => {
+  const div = document.createElement('div');
+  div.className = 'fi-item';
+  div.innerHTML = `
+    <div class="fi-row">
+      <span class="fi-name">${item.label}</span>
+      <span class="fi-pct">${(item.pct * 100).toFixed(1)}%</span>
+    </div>
+    <div class="fi-track">
+      <div class="fi-bar" style="width:${item.pct * 100}%;background:${BAR_COLORS[i % BAR_COLORS.length]}"></div>
+    </div>
+  `;
+  fiList.appendChild(div);
+});
+
+/* ══════════════════════════════════
+   Churn Trend Chart (Chart.js)
+══════════════════════════════════ */
+const churnCtx = document.getElementById('churnChart').getContext('2d');
+const months   = ['Jan','Feb','Mar','Apr','Mei','Jun'];
+
+function getChartColors() {
+  const isDark = document.documentElement.classList.contains('dark');
+  return {
+    teal:  isDark ? '#2dd4bf' : '#00a6a6',
+    amber: isDark ? '#fbbf24' : '#f59e0b',
+    red:   isDark ? '#f87171' : '#ef4444',
+    muted: isDark ? '#aab7c8' : '#60716c',
+    grid:  isDark ? 'rgba(226,232,240,0.08)' : 'rgba(21,32,29,0.07)',
+  };
+}
+
+let churnChart;
+function buildChart() {
+  if (churnChart) churnChart.destroy();
+  const c = getChartColors();
+  churnChart = new Chart(churnCtx, {
+    type: 'bar',
+    data: {
+      labels: months,
+      datasets: [
+        { label:'Risiko Tinggi', data:[8,12,10,14,11,42], backgroundColor: c.red+'cc',   borderRadius:6 },
+        { label:'Risiko Sedang', data:[20,18,22,19,25,67], backgroundColor: c.amber+'cc', borderRadius:6 },
+        { label:'Risiko Rendah', data:[22,20,18,17,14,41], backgroundColor: c.teal+'cc',  borderRadius:6 },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: c.muted, font:{ family:'Inter', size:11, weight:'600' }, boxWidth:12, padding:16 }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(21,32,29,0.88)',
+          titleColor:'#fffaf0', bodyColor:'#fffaf0',
+          padding:10, cornerRadius:10, titleFont:{ weight:'700' }
+        }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          grid: { display:false },
+          ticks: { color:c.muted, font:{ family:'Inter', size:11 } }
+        },
+        y: {
+          stacked: true,
+          grid: { color: c.grid },
+          ticks: { color:c.muted, font:{ family:'Inter', size:11 } }
+        }
+      }
+    }
+  });
+}
+buildChart();
+
+/* ══════════════════════════════════
+   Dark mode toggle
+══════════════════════════════════ */
+const btnTheme = document.getElementById('btn-theme');
+btnTheme.addEventListener('click', () => {
+  document.documentElement.classList.toggle('dark');
+  const isDark = document.documentElement.classList.contains('dark');
+  btnTheme.querySelector('i').className = isDark
+    ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+  btnTheme.querySelector('i').style.color = isDark ? '#facc15' : '#6b7280';
+  buildChart();
+});
+</script>
+</body>
+</html>
