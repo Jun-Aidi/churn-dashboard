@@ -177,23 +177,20 @@ def upload_csv():
                 # Delete existing records for current user before inserting new ones
                 session.query(Customer).filter_by(user_id=current_user_id).delete()
 
+                # Map every column defined on the Customer table (except the
+                # identity/ownership/timestamp columns) so all model features
+                # and metadata are persisted, not just a hardcoded subset.
+                valid_cols = {c.name for c in Customer.__table__.columns}
+                skip_cols = {'id', 'customer_id', 'user_id', 'uploaded_at'}
+                mappable_cols = [c for c in valid_cols if c not in skip_cols]
+
                 inserted = 0
                 for _, row in df.iterrows():
-                    col_mapping = (
-                        'plan_type', 'contract_type', 'tenure_days',
-                        'monthly_usage_hrs', 'feature_adoption_pct',
-                        'days_since_login', 'total_users', 'nps_latest',
-                        'ticket_count', 'critical_tickets', 'open_tickets',
-                        'total_billed', 'avg_payment_value', 'late_payment_count',
-                        'dunning_count', 'avg_days_late', 'payment_count',
-                        'risk_score', 'risk_class',
-                    )
-
                     customer_data = {
                         'customer_id': row['customer_id'],
                         'user_id': current_user_id,
                     }
-                    for col in col_mapping:
+                    for col in mappable_cols:
                         if col in row.index:
                             val = row.get(col)
                             # Convert to Python scalar to avoid pandas type issues
