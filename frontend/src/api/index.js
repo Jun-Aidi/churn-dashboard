@@ -2,7 +2,9 @@
 // API Layer — Fetches data from Flask backend
 // ══════════════════════════════════════════
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+// Default = path relatif (/api/...) untuk PRODUKSI (Pola B, same-origin).
+// localhost hanya dipakai saat development via .env.development (npm run dev).
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
 
 // ── Auth interceptor: attaches Bearer token and handles 401 ──
 export async function fetchWithAuth(url, options = {}) {

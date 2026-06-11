@@ -2,7 +2,8 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 
 const AuthContext = createContext(null);
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+// Default = path relatif untuk produksi; localhost hanya dari .env.development (npm run dev).
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);

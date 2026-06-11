@@ -7,7 +7,8 @@
 
 import { fetchWithAuth } from '../../api/index';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+// Default = path relatif untuk produksi; localhost hanya dari .env.development (npm run dev).
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
 
 // Generate a session ID per browser tab
 const SESSION_ID = 'session_' + Math.random().toString(36).substring(2, 10);

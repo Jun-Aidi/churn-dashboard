@@ -44,3 +44,17 @@ JWT_SECRET = os.getenv('JWT_SECRET', 'change-me-in-production')
 DEBUG = os.getenv('FLASK_DEBUG', 'true').lower() == 'true'
 HOST = '0.0.0.0'
 PORT = 5000
+
+# ── CORS ──
+# Hanya dipakai saat DEBUG=true (development). Di produksi Pola B (reverse proxy
+# same-origin), CORS tidak diperlukan. Pisahkan beberapa origin dengan koma.
+# Contoh: CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+CORS_ORIGINS = [
+    o.strip() for o in os.getenv('CORS_ORIGINS', 'http://localhost:5173').split(',')
+    if o.strip()
+]
+
+# ── Batas Ukuran Request ──
+# Membatasi ukuran body (mis. upload CSV) untuk mencegah pemakaian memori berlebih.
+# Default 16 MB. Atur lewat MAX_CONTENT_LENGTH_MB di .env.
+MAX_CONTENT_LENGTH = int(os.getenv('MAX_CONTENT_LENGTH_MB', 16)) * 1024 * 1024

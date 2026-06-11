@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { fetchWithAuth } from '../api/index';
 
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000') + '/api';
+// Default = path relatif (-> base "/api") untuk produksi; localhost hanya dari .env.development.
+const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? '') + '/api';
 
 export default function Upload() {
   const [file, setFile] = useState(null);
