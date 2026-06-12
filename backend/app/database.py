@@ -83,6 +83,7 @@ class ChatHistory(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     session_id = Column(String(50), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=True, index=True)
     user_message = Column(Text, nullable=False)
     bot_response = Column(Text, nullable=False)
     intent_detected = Column(String(50))

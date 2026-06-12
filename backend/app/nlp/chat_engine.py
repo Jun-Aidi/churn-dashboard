@@ -113,6 +113,8 @@ def process_chat(message: str, session_id: Optional[str] = None, user_id: Option
         # Layer 2.5: Semantic cache lookup (conceptual questions only, per-user)
         cached = _cache_lookup_safe(text, user_id)
         if cached is not None:
+            # Cache hit tetap dicatat ke history (source='cache', tokens_used=0)
+            _save_chat_history(session_id, text, cached, user_id)
             return cached
 
         result = chat_with_llm(text, session_id, user_id=user_id)
@@ -124,7 +126,7 @@ def process_chat(message: str, session_id: Optional[str] = None, user_id: Option
         _cache_store_safe(text, result, user_id)
 
         # Save to chat history (if DB available)
-        _save_chat_history(session_id, text, result)
+        _save_chat_history(session_id, text, result, user_id)
 
         return result
 
@@ -169,7 +171,7 @@ def _cache_store_safe(text: str, result: dict, user_id):
         print(f"[Chat] Cache store skipped: {e}")
 
 
-def _save_chat_history(session_id: str, user_message: str, result: dict):
+def _save_chat_history(session_id: str, user_message: str, result: dict, user_id: Optional[int] = None):
     """Save conversation to database."""
     try:
         from app.database import get_session, close_session, ChatHistory
@@ -178,6 +180,7 @@ def _save_chat_history(session_id: str, user_message: str, result: dict):
         if session:
             chat = ChatHistory(
                 session_id=session_id,
+                user_id=user_id,
                 user_message=user_message,
                 bot_response=result.get('response', ''),
                 source=result.get('source', 'unknown'),
