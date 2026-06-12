@@ -1,0 +1,8 @@
+category,query,total_ms,source,n_llm_calls,llm_ms,llm_tokens,tokens_used,rag_search_ms,rerank_ms,cache_lookup_ms,cache_lookup_hit,cache_store_ms,save_history_ms,other_ms,response_chars
+data_specific,Tampilkan profil lengkap pelanggan C-0001,10128.3,llm_rag,2,9213.5,2530,2530,0,0,0.1,False,0.0,5.2,909.5,626
+data_specific,Pelanggan mana saja yang paling berisiko churn saat ini?,9768.5,llm_rag,2,9576.7,4706,4706,0,0,37.4,False,51.3,4.6,98.5,875
+aggregate,Berapa total pelanggan saya dan berapa yang berisiko tinggi?,3887.5,llm_rag,2,3880.8,2269,2269,0,0,0.0,False,0.0,4.1,2.6,92
+aggregate,Bagaimana perbandingan tingkat churn antar segmen plan dan tipe kontrak?,8161.4,llm_rag,2,8103.1,2495,2495,0,0,18.6,False,30.0,4.0,5.7,746
+conceptual,Apa saja strategi paling efektif untuk mencegah customer churn?,16830.4,llm_rag,2,16252.3,3009,3009,526.6,510.0,17.3,False,28.7,5.3,0.2,1731
+conceptual,Faktor-faktor apa yang paling mempengaruhi pelanggan berhenti berlangganan?,15597.7,llm_rag,2,14787.9,2947,2947,573.6,557.5,18.0,False,213.6,4.5,0.1,1176
+conceptual,Bagaimana cara meningkatkan retensi pelanggan jangka panjang?,16638.6,llm_direct,1,16586.8,1484,1484,0,0,17.4,False,30.0,4.3,0.1,2087

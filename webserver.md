@@ -193,6 +193,26 @@ server {
         try_files $uri $uri/ /index.html;   # SPA fallback untuk React Router
     }
 
+    # ── Backend: endpoint streaming chatbot (SSE) ──
+    # Harus DI ATAS "location /api/" — exact match (=) diprioritaskan Nginx.
+    # proxy_buffering off WAJIB: tanpa ini Nginx menahan seluruh respons sampai
+    # selesai, sehingga token tidak mengalir dan efek streaming hilang.
+    location = /api/chat/stream {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Streaming (Server-Sent Events)
+        proxy_http_version 1.1;             # keep-alive untuk streaming
+        proxy_set_header Connection "";     # jangan tutup koneksi upstream
+        proxy_buffering off;                # kirim token begitu diterima
+        proxy_cache off;
+        chunked_transfer_encoding on;
+        proxy_read_timeout 300s;            # jawaban LLM bisa panjang
+    }
+
     # ── Backend (proxy ke Gunicorn lokal) ──
     location /api/ {
         proxy_pass http://127.0.0.1:8000;
@@ -204,6 +224,22 @@ server {
     }
 }
 ```
+
+> **Catatan worker (penting untuk streaming).** Dengan Gunicorn sync worker
+> (default), satu koneksi streaming **menahan satu worker** selama jawaban
+> mengalir. Dengan `--workers 2`, dua chat stream bersamaan sudah memenuhi
+> semua worker. Untuk produksi dengan banyak pengguna chat, naikkan jumlah
+> worker atau pakai worker async, mis.:
+>
+> ```bash
+> pip install gevent
+> # pada ExecStart Gunicorn, tambahkan:
+> #   --worker-class gevent --worker-connections 1000
+> ```
+>
+> Backend sudah mengirim header `X-Accel-Buffering: no` pada respons SSE sebagai
+> lapis pengaman tambahan agar Nginx tidak mem-buffer, tetapi `proxy_buffering
+> off` di atas tetap dianjurkan agar eksplisit.
 
 Aktifkan & reload:
 
@@ -300,3 +336,14 @@ waitress-serve --listen=127.0.0.1:8000 run:app
 Konfigurasi Nginx sama persis (tetap `proxy_pass http://127.0.0.1:8000;`).
 Untuk auto-start, daftarkan sebagai Windows Service (mis. lewat NSSM) atau
 Task Scheduler. Sertifikat HTTPS bisa via win-acme sebagai pengganti Certbot.
+
+> **Streaming di Waitress.** Waitress menyalurkan respons generator (SSE)
+> apa adanya, tapi tiap koneksi streaming memakai satu thread. Naikkan jumlah
+> thread bila banyak chat bersamaan, mis.:
+>
+> ```powershell
+> waitress-serve --listen=127.0.0.1:8000 --threads=8 run:app
+> ```
+>
+> Pengaturan `proxy_buffering off` pada blok `location = /api/chat/stream` di
+> Nginx tetap berlaku dan tetap wajib.

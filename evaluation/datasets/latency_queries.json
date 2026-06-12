@@ -1,0 +1,40 @@
+{
+  "description": "Query uji untuk evaluasi latensi chatbot end-to-end. Dikelompokkan per jalur pemrosesan agar breakdown latensi bisa dibandingkan antar tipe pertanyaan. Placeholder {CUSTOMER_ID} diganti otomatis oleh skrip dengan customer_id nyata milik user admin.",
+  "queries": [
+    {
+      "category": "data_specific",
+      "text": "Tampilkan profil lengkap pelanggan {CUSTOMER_ID}",
+      "note": "Memicu tool get_customer_profile (LLM tool-calling, minimal 2 ronde LLM)"
+    },
+    {
+      "category": "data_specific",
+      "text": "Pelanggan mana saja yang paling berisiko churn saat ini?",
+      "note": "Memicu tool get_high_risk_customers"
+    },
+    {
+      "category": "aggregate",
+      "text": "Berapa total pelanggan saya dan berapa yang berisiko tinggi?",
+      "note": "Memicu tool get_risk_statistics; non-cacheable (entity guard)"
+    },
+    {
+      "category": "aggregate",
+      "text": "Bagaimana perbandingan tingkat churn antar segmen plan dan tipe kontrak?",
+      "note": "Memicu tool get_segment_analysis"
+    },
+    {
+      "category": "conceptual",
+      "text": "Apa saja strategi paling efektif untuk mencegah customer churn?",
+      "note": "Jalur RAG + reranking; cacheable"
+    },
+    {
+      "category": "conceptual",
+      "text": "Faktor-faktor apa yang paling mempengaruhi pelanggan berhenti berlangganan?",
+      "note": "Jalur RAG + reranking; cacheable"
+    },
+    {
+      "category": "conceptual",
+      "text": "Bagaimana cara meningkatkan retensi pelanggan jangka panjang?",
+      "note": "Jalur RAG + reranking; cacheable"
+    }
+  ]
+}

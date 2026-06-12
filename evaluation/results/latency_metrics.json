@@ -1,0 +1,20 @@
+{
+  "run_at": "2026-06-12 15:53:41",
+  "llm_model": "cx/gpt-5.5",
+  "rerank_enabled": true,
+  "rerank_candidate_k": 20,
+  "embedding_model": "paraphrase-multilingual-MiniLM-L12-v2",
+  "n_queries": 7,
+  "avg_total_ms": 11573.2,
+  "avg_stage_ms": {
+    "llm_ms": 11200.2,
+    "rag_search_ms": 157.2,
+    "cache_lookup_ms": 15.5,
+    "cache_store_ms": 50.5,
+    "save_history_ms": 4.6,
+    "other_ms": 145.2
+  },
+  "avg_rerank_ms": 152.5,
+  "avg_n_llm_calls": 1.9,
+  "dominant_stage": "llm_ms"
+}

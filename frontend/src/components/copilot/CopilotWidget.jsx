@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { processChat } from './chatEngine';
+import { processChatStream } from './chatEngine';
 
 function formatBotMessage(text) {
   if (!text) return '';
@@ -55,16 +55,34 @@ export default function CopilotWidget() {
 
   const handleSend = async (e) => {
     e?.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || isTyping) return;
     const userMsg = { id: Date.now(), sender: 'user', text: input, time: new Date() };
+    const botId = Date.now() + 1;
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setIsTyping(true);
-    setTimeout(async () => {
-      const response = await processChat(userMsg.text);
-      setMessages(prev => [...prev, { id: Date.now() + 1, sender: 'bot', text: response, time: new Date() }]);
+
+    // Create the bot bubble lazily on the first token so the typing indicator
+    // shows while we wait for time-to-first-token (tool calls / generation).
+    let started = false;
+    const ensureBotBubble = () => {
+      if (started) return;
+      started = true;
       setIsTyping(false);
-    }, 700 + Math.random() * 900);
+      setMessages(prev => [...prev, { id: botId, sender: 'bot', text: '', time: new Date() }]);
+    };
+
+    await processChatStream(userMsg.text, {
+      onToken: (_chunk, full) => {
+        ensureBotBubble();
+        setMessages(prev => prev.map(m => (m.id === botId ? { ...m, text: full } : m)));
+      },
+      onDone: (full) => {
+        ensureBotBubble();
+        setMessages(prev => prev.map(m => (m.id === botId ? { ...m, text: full } : m)));
+        setIsTyping(false);
+      },
+    });
   };
 
   if (!isOpen) return (

@@ -271,6 +271,156 @@ def chat_with_llm(user_message: str, session_id: str = "default", user_id: Optio
         }
 
 
+def _stream_completion(messages):
+    """Run ONE streaming completion round.
+
+    Yields ("content", text_chunk) for answer tokens as they arrive, then a
+    final ("end", info) where info = {mode, tool_calls, content, usage}.
+
+    `mode` is 'tools' when the model emitted tool calls (no user-visible text),
+    or 'content' when it streamed a natural-language answer.
+    """
+    stream = _client.chat.completions.create(
+        model=config.DEEPSEEK_MODEL,
+        messages=messages,
+        tools=TOOLS,
+        tool_choice="auto",
+        temperature=0.7,
+        max_tokens=2000,
+        stream=True,
+        stream_options={"include_usage": True},
+    )
+
+    tool_calls = {}        # index -> {id, name, arguments}
+    content_parts = []
+    usage_tokens = 0
+    mode = None
+
+    for chunk in stream:
+        # Usage arrives in the final chunk when include_usage is supported.
+        if getattr(chunk, "usage", None):
+            try:
+                usage_tokens = chunk.usage.total_tokens or 0
+            except Exception:
+                pass
+        if not chunk.choices:
+            continue
+        delta = chunk.choices[0].delta
+
+        if getattr(delta, "tool_calls", None):
+            mode = "tools"
+            for tc in delta.tool_calls:
+                slot = tool_calls.setdefault(
+                    tc.index, {"id": None, "name": "", "arguments": ""}
+                )
+                if tc.id:
+                    slot["id"] = tc.id
+                if tc.function:
+                    if tc.function.name:
+                        slot["name"] += tc.function.name
+                    if tc.function.arguments:
+                        slot["arguments"] += tc.function.arguments
+        elif getattr(delta, "content", None):
+            mode = "content"
+            content_parts.append(delta.content)
+            yield ("content", delta.content)
+
+    yield ("end", {
+        "mode": mode,
+        "tool_calls": tool_calls,
+        "content": "".join(content_parts),
+        "usage": usage_tokens,
+    })
+
+
+def chat_with_llm_stream(user_message: str, session_id: str = "default",
+                         user_id: Optional[int] = None):
+    """Streaming variant of chat_with_llm.
+
+    Resolves tool calls internally (not streamed — they produce no user-visible
+    text), then streams the final answer token-by-token. Yields event dicts:
+        {"type": "token", "text": str}              answer chunk
+        {"type": "done", "source": str,
+         "tokens_used": int, "full": str}           end-of-answer marker
+
+    `user_id` scopes all customer-data tool calls to the logged-in user.
+    """
+    if _client is None:
+        msg = "LLM tidak tersedia. Pastikan DEEPSEEK_API_KEY sudah dikonfigurasi."
+        yield {"type": "token", "text": msg}
+        yield {"type": "done", "source": "fallback", "tokens_used": 0, "full": msg}
+        return
+
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": user_message},
+    ]
+
+    total_tokens = 0
+    source = "llm_direct"
+    rounds = 0
+
+    try:
+        while True:
+            end_info = None
+            for kind, payload in _stream_completion(messages):
+                if kind == "content":
+                    yield {"type": "token", "text": payload}
+                elif kind == "end":
+                    end_info = payload
+
+            total_tokens += end_info["usage"] or 0
+
+            # More tool calls requested and budget remaining -> execute & loop.
+            if end_info["mode"] == "tools" and rounds < 3:
+                rounds += 1
+                source = "llm_rag"
+                tcs = end_info["tool_calls"]
+
+                messages.append({
+                    "role": "assistant",
+                    "content": None,
+                    "tool_calls": [
+                        {
+                            "id": slot["id"],
+                            "type": "function",
+                            "function": {"name": slot["name"],
+                                         "arguments": slot["arguments"]},
+                        }
+                        for _, slot in sorted(tcs.items())
+                    ],
+                })
+
+                for _, slot in sorted(tcs.items()):
+                    try:
+                        args = json.loads(slot["arguments"] or "{}")
+                    except json.JSONDecodeError:
+                        args = {}
+                    result = _execute_tool(slot["name"], args, user_id=user_id)
+                    messages.append({
+                        "role": "tool",
+                        "tool_call_id": slot["id"],
+                        "content": result,
+                    })
+                continue
+
+            # Final answer (content mode) or tool budget exhausted.
+            full = end_info["content"]
+            if not full:
+                full = "Maaf, saya tidak bisa memproses permintaan ini."
+                yield {"type": "token", "text": full}
+
+            yield {"type": "done", "source": source,
+                   "tokens_used": total_tokens, "full": full}
+            return
+
+    except Exception as e:
+        print(f"[LLM STREAM ERROR] {e}")
+        msg = f"Terjadi kesalahan saat memproses: {str(e)[:100]}"
+        yield {"type": "token", "text": msg}
+        yield {"type": "done", "source": "fallback", "tokens_used": 0, "full": msg}
+
+
 def is_available() -> bool:
     """Check if LLM client is ready."""
     return _client is not None

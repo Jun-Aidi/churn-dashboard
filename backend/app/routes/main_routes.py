@@ -2,8 +2,9 @@
 Flask Routes — API endpoints.
 """
 
-from flask import Blueprint, request, jsonify, g
-from app.nlp.chat_engine import process_chat
+from flask import Blueprint, request, jsonify, g, Response, stream_with_context
+import json
+from app.nlp.chat_engine import process_chat, process_chat_stream
 from app.services.customer_service import CustomerService
 from app.services.predict_service import predict_single, get_feature_importance
 from app.middleware.auth import auth_required
@@ -38,6 +39,43 @@ def chat():
         'source': result.get('source', 'unknown'),
         'tokens_used': result.get('tokens_used', 0),
     })
+
+
+@chat_bp.route('/chat/stream', methods=['POST'])
+@auth_required
+def chat_stream():
+    """Streaming chatbot endpoint (Server-Sent Events).
+
+    Streams the answer token-by-token for low perceived latency. Each SSE
+    message is a JSON event: {"type":"token","text":...} or
+    {"type":"done","source":...,"tokens_used":...}. Guardrails (Layer 1 input
+    filter + Layer 3 early-buffer/full-text validation) are enforced inside
+    process_chat_stream.
+    """
+    data = request.get_json()
+    if not data or 'message' not in data:
+        return jsonify({'error': 'Field "message" diperlukan'}), 400
+
+    message = data['message']
+    session_id = data.get('session_id', None)
+    # Resolve user_id BEFORE streaming starts (auth's g/db session is released
+    # once this view returns the Response object).
+    user_id = g.current_user.id
+
+    def event_stream():
+        try:
+            for ev in process_chat_stream(message, session_id, user_id=user_id):
+                yield f"data: {json.dumps(ev, ensure_ascii=False)}\n\n"
+        except Exception as e:
+            err = {"type": "done", "source": "fallback",
+                   "tokens_used": 0, "error": str(e)[:100]}
+            yield f"data: {json.dumps(err, ensure_ascii=False)}\n\n"
+
+    resp = Response(stream_with_context(event_stream()),
+                    mimetype='text/event-stream')
+    resp.headers['Cache-Control'] = 'no-cache'
+    resp.headers['X-Accel-Buffering'] = 'no'  # disable nginx buffering
+    return resp
 
 
 # ══════════════════════════════════════════════════════════════════════════════
