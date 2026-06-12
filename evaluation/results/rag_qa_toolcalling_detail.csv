@@ -1,0 +1,17 @@
+query,expected,accepted,called,correct
+Tampilkan profil pelanggan C-0001.,get_customer_profile,get_customer_profile,get_customer_profile,True
+Bagaimana detail risiko churn untuk pelanggan C-0042?,get_customer_profile,get_customer_profile,get_customer_profile,True
+Berapa skor risiko pelanggan dengan ID C-1500?,get_customer_profile,get_customer_profile,get_customer_profile,True
+Berapa total pelanggan dan berapa yang berisiko tinggi?,get_risk_statistics,get_risk_statistics,get_risk_statistics,True
+Tampilkan statistik risiko churn secara keseluruhan.,get_risk_statistics,get_risk_statistics,get_risk_statistics,True
+Berapa persentase pelanggan yang berisiko churn?,get_risk_statistics,get_risk_statistics|get_high_risk_customers,get_risk_statistics,True
+Siapa saja pelanggan dengan risiko churn tertinggi?,get_high_risk_customers,get_high_risk_customers,get_high_risk_customers,True
+Tampilkan daftar pelanggan high-risk.,get_high_risk_customers,get_high_risk_customers,get_high_risk_customers,True
+Pelanggan mana yang paling mungkin berhenti berlangganan?,get_high_risk_customers,get_high_risk_customers,get_high_risk_customers,True
+Bagaimana analisis churn per segmen pelanggan?,get_segment_analysis,get_segment_analysis,get_segment_analysis,True
+Tampilkan perbandingan risiko antar segmen pelanggan.,get_segment_analysis,get_segment_analysis,get_segment_analysis,True
+Segmen pelanggan mana yang punya churn rate tertinggi?,get_segment_analysis,get_segment_analysis|get_risk_statistics,get_segment_analysis,True
+"Menurut penelitian, apa metode terbaik untuk memprediksi churn?",search_papers,search_papers,search_papers,True
+Apa kata literatur ilmiah tentang faktor penyebab churn?,search_papers,search_papers,search_papers,True
+Jelaskan teknik SMOTE untuk data churn berdasarkan paper.,search_papers,search_papers,search_papers,True
+Apa strategi retensi yang direkomendasikan dalam jurnal?,search_papers,search_papers,search_papers,True

@@ -47,8 +47,28 @@ def chat():
 @customers_bp.route('/customers', methods=['GET'])
 @auth_required
 def get_customers():
-    """Get all customers with risk scores (filtered by current user)."""
+    """Get customers with risk scores (filtered by current user).
+
+    Backward compatible: with no query params it returns the full array
+    (as before). If `page` is provided, returns a paginated envelope
+    {customers, total, page, per_page, pages} and supports an optional
+    `risk` filter (high/med/low).
+    """
     service = CustomerService(user_id=g.current_user.id)
+
+    if 'page' in request.args:
+        try:
+            page = int(request.args.get('page', 1))
+        except (TypeError, ValueError):
+            page = 1
+        try:
+            per_page = int(request.args.get('per_page', 50))
+        except (TypeError, ValueError):
+            per_page = 50
+        per_page = max(1, min(per_page, 500))
+        risk_filter = request.args.get('risk') or None
+        return jsonify(service.get_customers_paginated(page, per_page, risk_filter))
+
     customers = service.get_all_customers()
     return jsonify(customers)
 
@@ -141,6 +161,7 @@ def upload_csv():
     import numpy as np
     from app.database import get_session, close_session, Customer
     from app.services.customer_service import _predict_dataframe
+    from app.services.customer_cache import invalidate_user_caches
 
     current_user_id = g.current_user.id
 
@@ -209,6 +230,10 @@ def upload_csv():
 
                 session.commit()
                 close_session(session)
+
+                # Data replaced for this user — invalidate cached DataFrame
+                # (and semantic chat cache once Phase 7 is enabled).
+                invalidate_user_caches(current_user_id)
 
                 return jsonify({
                     'success': True,

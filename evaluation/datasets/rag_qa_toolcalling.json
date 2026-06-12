@@ -1,0 +1,21 @@
+{
+  "description": "Tool-calling accuracy set. For each question, 'expected_tool' is the function the LLM SHOULD invoke first. Tools available in llm_client.TOOLS: get_customer_profile, get_risk_statistics, get_high_risk_customers, search_papers, get_segment_analysis. Use 'none' when no tool is expected (pure conceptual answer may go either to search_papers or direct answer — accepted_tools lists all acceptable choices).",
+  "samples": [
+    {"query": "Tampilkan profil pelanggan C-0001.", "expected_tool": "get_customer_profile", "accepted_tools": ["get_customer_profile"]},
+    {"query": "Bagaimana detail risiko churn untuk pelanggan C-0042?", "expected_tool": "get_customer_profile", "accepted_tools": ["get_customer_profile"]},
+    {"query": "Berapa skor risiko pelanggan dengan ID C-1500?", "expected_tool": "get_customer_profile", "accepted_tools": ["get_customer_profile"]},
+    {"query": "Berapa total pelanggan dan berapa yang berisiko tinggi?", "expected_tool": "get_risk_statistics", "accepted_tools": ["get_risk_statistics"]},
+    {"query": "Tampilkan statistik risiko churn secara keseluruhan.", "expected_tool": "get_risk_statistics", "accepted_tools": ["get_risk_statistics"]},
+    {"query": "Berapa persentase pelanggan yang berisiko churn?", "expected_tool": "get_risk_statistics", "accepted_tools": ["get_risk_statistics", "get_high_risk_customers"]},
+    {"query": "Siapa saja pelanggan dengan risiko churn tertinggi?", "expected_tool": "get_high_risk_customers", "accepted_tools": ["get_high_risk_customers"]},
+    {"query": "Tampilkan daftar pelanggan high-risk.", "expected_tool": "get_high_risk_customers", "accepted_tools": ["get_high_risk_customers"]},
+    {"query": "Pelanggan mana yang paling mungkin berhenti berlangganan?", "expected_tool": "get_high_risk_customers", "accepted_tools": ["get_high_risk_customers"]},
+    {"query": "Bagaimana analisis churn per segmen pelanggan?", "expected_tool": "get_segment_analysis", "accepted_tools": ["get_segment_analysis"]},
+    {"query": "Tampilkan perbandingan risiko antar segmen pelanggan.", "expected_tool": "get_segment_analysis", "accepted_tools": ["get_segment_analysis"]},
+    {"query": "Segmen pelanggan mana yang punya churn rate tertinggi?", "expected_tool": "get_segment_analysis", "accepted_tools": ["get_segment_analysis", "get_risk_statistics"]},
+    {"query": "Menurut penelitian, apa metode terbaik untuk memprediksi churn?", "expected_tool": "search_papers", "accepted_tools": ["search_papers"]},
+    {"query": "Apa kata literatur ilmiah tentang faktor penyebab churn?", "expected_tool": "search_papers", "accepted_tools": ["search_papers"]},
+    {"query": "Jelaskan teknik SMOTE untuk data churn berdasarkan paper.", "expected_tool": "search_papers", "accepted_tools": ["search_papers"]},
+    {"query": "Apa strategi retensi yang direkomendasikan dalam jurnal?", "expected_tool": "search_papers", "accepted_tools": ["search_papers"]}
+  ]
+}

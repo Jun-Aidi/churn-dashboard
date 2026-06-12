@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
+from flask_compress import Compress
 
 from config import DEBUG, CORS_ORIGINS, MAX_CONTENT_LENGTH
 
@@ -9,6 +10,14 @@ def create_app():
 
     # Batasi ukuran body request (lindungi upload/payload besar).
     app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
+
+    # Gzip compression for JSON/text responses (big win for /api/customers).
+    app.config['COMPRESS_MIMETYPES'] = [
+        'application/json', 'text/html', 'text/css', 'application/javascript'
+    ]
+    app.config['COMPRESS_LEVEL'] = 6
+    app.config['COMPRESS_MIN_SIZE'] = 500
+    Compress(app)
 
     # CORS:
     # - Pola B (reverse proxy, same-origin): frontend & backend di domain yang sama,
@@ -25,6 +34,10 @@ def create_app():
     # Initialize RAG engine (non-blocking)
     from app.nlp.rag_engine import init_rag
     init_rag()
+
+    # Initialize semantic chat cache (non-blocking)
+    from app.nlp.cache_engine import init_cache
+    init_cache()
 
     # Initialize LLM client (non-blocking)
     from app.nlp.llm_client import init_llm

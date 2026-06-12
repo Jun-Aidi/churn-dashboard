@@ -1,0 +1,114 @@
+{
+  "paraphrase": [
+    {
+      "a": "Apa itu customer churn?",
+      "b": "Jelaskan pengertian churn pelanggan.",
+      "hit": false,
+      "similarity": null
+    },
+    {
+      "a": "Bagaimana cara menurunkan churn rate?",
+      "b": "Apa langkah untuk mengurangi tingkat churn?",
+      "hit": false,
+      "similarity": null
+    },
+    {
+      "a": "Apa faktor penyebab pelanggan berhenti berlangganan?",
+      "b": "Hal apa saja yang membuat pelanggan churn?",
+      "hit": false,
+      "similarity": null
+    },
+    {
+      "a": "Apa strategi retensi pelanggan yang efektif?",
+      "b": "Bagaimana cara mempertahankan pelanggan agar tidak pergi?",
+      "hit": false,
+      "similarity": null
+    },
+    {
+      "a": "Apa perbedaan voluntary dan involuntary churn?",
+      "b": "Jelaskan beda churn sukarela dan tidak sukarela.",
+      "hit": false,
+      "similarity": null
+    },
+    {
+      "a": "Apa itu customer lifetime value?",
+      "b": "Jelaskan konsep nilai seumur hidup pelanggan.",
+      "hit": false,
+      "similarity": null
+    },
+    {
+      "a": "Mengapa feature selection penting untuk model churn?",
+      "b": "Apa manfaat pemilihan fitur dalam prediksi churn?",
+      "hit": false,
+      "similarity": null
+    },
+    {
+      "a": "Bagaimana machine learning memprediksi churn?",
+      "b": "Dengan cara apa model ML menebak pelanggan akan churn?",
+      "hit": false,
+      "similarity": null
+    },
+    {
+      "a": "Apa itu analisis RFM?",
+      "b": "Jelaskan metode RFM untuk segmentasi pelanggan.",
+      "hit": false,
+      "similarity": null
+    },
+    {
+      "a": "Apa indikator awal pelanggan akan churn?",
+      "b": "Tanda-tanda apa yang menunjukkan pelanggan akan berhenti?",
+      "hit": false,
+      "similarity": null
+    },
+    {
+      "a": "Bagaimana segmentasi pelanggan membantu retensi?",
+      "b": "Apa peran pengelompokan pelanggan dalam strategi retensi?",
+      "hit": false,
+      "similarity": null
+    },
+    {
+      "a": "Apa kelebihan random forest untuk prediksi churn?",
+      "b": "Mengapa random forest bagus untuk memprediksi churn?",
+      "hit": true,
+      "similarity": 0.9231
+    }
+  ],
+  "unrelated": [
+    {
+      "a": "Apa itu customer churn?",
+      "b": "Bagaimana cara melatih model random forest?",
+      "false_hit": false,
+      "similarity": null
+    },
+    {
+      "a": "Apa strategi retensi pelanggan?",
+      "b": "Apa itu confusion matrix?",
+      "false_hit": false,
+      "similarity": null
+    },
+    {
+      "a": "Apa itu customer lifetime value?",
+      "b": "Jelaskan algoritma k-means clustering.",
+      "false_hit": false,
+      "similarity": null
+    },
+    {
+      "a": "Mengapa feature selection penting?",
+      "b": "Apa perbedaan precision dan recall?",
+      "false_hit": false,
+      "similarity": null
+    },
+    {
+      "a": "Apa faktor penyebab churn?",
+      "b": "Bagaimana cara kerja support vector machine?",
+      "false_hit": false,
+      "similarity": null
+    },
+    {
+      "a": "Apa itu analisis RFM?",
+      "b": "Apa manfaat normalisasi data?",
+      "false_hit": false,
+      "similarity": null
+    }
+  ]
+}

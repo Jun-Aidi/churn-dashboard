@@ -1,0 +1,52 @@
+{
+  "run_at": "2026-06-12 07:49:12",
+  "embedding_model": "paraphrase-multilingual-MiniLM-L12-v2",
+  "reranker_model": "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1",
+  "candidate_k": 20,
+  "final_k": 4,
+  "n_queries_total": 30,
+  "n_queries_informative": 25,
+  "summary": {
+    "baseline": {
+      "Hit@4": 0.8,
+      "MRR": 0.7328,
+      "nDCG@4": 0.5849,
+      "Precision@4": 0.5,
+      "latency_ms": 22.23
+    },
+    "rerank": {
+      "Hit@4": 0.96,
+      "MRR": 0.8957,
+      "nDCG@4": 0.8014,
+      "Precision@4": 0.65,
+      "latency_ms": 580.16
+    }
+  },
+  "significance": {
+    "test": "wilcoxon_ndcg",
+    "statistic": 15.0,
+    "p_value": 0.003585280250606251
+  },
+  "skipped": [
+    {
+      "id": "q01",
+      "reason": "0 relevant in candidate pool"
+    },
+    {
+      "id": "q12",
+      "reason": "0 relevant in candidate pool"
+    },
+    {
+      "id": "q15",
+      "reason": "0 relevant in candidate pool"
+    },
+    {
+      "id": "q20",
+      "reason": "0 relevant in candidate pool"
+    },
+    {
+      "id": "q24",
+      "reason": "0 relevant in candidate pool"
+    }
+  ]
+}

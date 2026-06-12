@@ -1,0 +1,2 @@
+run_at,n_samples,n_injection,n_legit,precision,recall,f1,accuracy,fpr_legit_blocked,fnr_attacks_passed,confusion_matrix,n_misclassified
+2026-06-12 07:48:07,99,49,50,1.0,0.7959,0.8864,0.899,0.0,0.2041,"{'tn': 50, 'fp': 0, 'fn': 10, 'tp': 39}",10

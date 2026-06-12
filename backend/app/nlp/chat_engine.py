@@ -1,6 +1,6 @@
 """
 Chat Engine — Main entry point for chatbot.
-Uses LLM (DeepSeek) as primary brain with optional BiLSTM fast-path.
+Uses LLM (DeepSeek) as primary brain with RAG retrieval.
 Implements 3-layer guardrails.
 """
 
@@ -110,10 +110,18 @@ def process_chat(message: str, session_id: Optional[str] = None, user_id: Option
 
     # ── LLM Pipeline ──
     if llm_available():
+        # Layer 2.5: Semantic cache lookup (conceptual questions only, per-user)
+        cached = _cache_lookup_safe(text, user_id)
+        if cached is not None:
+            return cached
+
         result = chat_with_llm(text, session_id, user_id=user_id)
 
         # Layer 3: Output Validation
         result['response'] = _validate_output(result['response'])
+
+        # Store conceptual answers in the semantic cache (per-user)
+        _cache_store_safe(text, result, user_id)
 
         # Save to chat history (if DB available)
         _save_chat_history(session_id, text, result)
@@ -131,6 +139,34 @@ def process_chat(message: str, session_id: Optional[str] = None, user_id: Option
         'source': 'fallback',
         'tokens_used': 0
     }
+
+
+def _cache_lookup_safe(text: str, user_id):
+    """Look up the semantic cache, swallowing any errors."""
+    if user_id is None:
+        return None
+    try:
+        from app.nlp.cache_engine import cache_lookup
+        return cache_lookup(text, user_id)
+    except Exception as e:
+        print(f"[Chat] Cache lookup skipped: {e}")
+        return None
+
+
+def _cache_store_safe(text: str, result: dict, user_id):
+    """Store a conceptual answer in the semantic cache, swallowing errors.
+
+    Only store answers that came straight from the LLM/RAG pipeline (not
+    blocked/fallback/cache responses)."""
+    if user_id is None:
+        return
+    if result.get('source') in ('blocked', 'fallback', 'cache'):
+        return
+    try:
+        from app.nlp.cache_engine import cache_store
+        cache_store(text, result.get('response', ''), user_id)
+    except Exception as e:
+        print(f"[Chat] Cache store skipped: {e}")
 
 
 def _save_chat_history(session_id: str, user_message: str, result: dict):

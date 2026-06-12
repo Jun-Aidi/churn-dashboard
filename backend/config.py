@@ -29,7 +29,24 @@ DEEPSEEK_MODEL = os.getenv('DEEPSEEK_MODEL', 'deepseek-v4-flash')
 CHROMA_PERSIST_DIR = os.path.join(BASE_DIR, 'chroma_db')
 
 # ── Embedding Model ──
-EMBEDDING_MODEL = 'nomic-ai/nomic-embed-text-v1.5'
+# Multilingual bi-encoder: query chatbot berbahasa Indonesia, korpus paper
+# berbahasa Inggris (cross-lingual retrieval). 384-dim, max 128 token.
+# Satu sumber kebenaran — build_vectorstore.py & rag_engine.py membaca dari sini.
+EMBEDDING_MODEL = 'paraphrase-multilingual-MiniLM-L12-v2'
+
+# ── RAG Reranking (Fase 6) ──
+# Cross-encoder multilingual untuk retrieve-then-rerank. Harus multilingual
+# agar gain cross-lingual (query ID -> dokumen EN) tidak hilang di tahap rerank.
+RERANK_ENABLED = os.getenv('RERANK_ENABLED', 'true').lower() == 'true'
+RERANK_MODEL = os.getenv('RERANK_MODEL', 'cross-encoder/mmarco-mMiniLMv2-L12-H384-v1')
+RERANK_CANDIDATE_K = int(os.getenv('RERANK_CANDIDATE_K', 20))
+
+# ── Semantic Caching (Fase 7) ──
+# Cache jawaban LLM untuk pertanyaan konseptual yang maknanya mirip.
+# Scoped per user_id, hanya pertanyaan cacheable, dengan TTL pengaman.
+SEMANTIC_CACHE_ENABLED = os.getenv('SEMANTIC_CACHE_ENABLED', 'true').lower() == 'true'
+CACHE_THRESHOLD = float(os.getenv('CACHE_THRESHOLD', 0.92))
+CACHE_TTL_SECONDS = int(os.getenv('CACHE_TTL_SECONDS', 3600))
 
 # ── Paths ──
 DATA_PATH = os.path.join(BASE_DIR, 'data', 'merged_dataset.csv')

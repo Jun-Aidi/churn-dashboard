@@ -1,0 +1,19 @@
+{
+  "run_at": "2026-06-12 07:48:07",
+  "n_samples": 99,
+  "n_injection": 49,
+  "n_legit": 50,
+  "precision": 1.0,
+  "recall": 0.7959,
+  "f1": 0.8864,
+  "accuracy": 0.899,
+  "fpr_legit_blocked": 0.0,
+  "fnr_attacks_passed": 0.2041,
+  "confusion_matrix": {
+    "tn": 50,
+    "fp": 0,
+    "fn": 10,
+    "tp": 39
+  },
+  "n_misclassified": 10
+}

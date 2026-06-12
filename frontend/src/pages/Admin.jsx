@@ -420,8 +420,8 @@ export default function Admin() {
                 color="var(--gdu-teal)"
               />
               <StatCard
-                title="Total Prediksi"
-                value={stats?.total_predictions}
+                title="Pelanggan Terskor"
+                value={stats?.total_scored_customers}
                 icon="fa-solid fa-brain"
                 color="var(--gdu-amber)"
               />

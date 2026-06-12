@@ -7,7 +7,7 @@ from flask import Blueprint, request, jsonify, g
 import bcrypt
 from sqlalchemy import func
 
-from app.database import get_session, close_session, Customer, Prediction, ChatHistory
+from app.database import get_session, close_session, Customer, ChatHistory
 from app.models.user import User
 from app.utils.jwt_utils import create_token
 from app.utils.rate_limiter import LoginRateLimiter
@@ -386,8 +386,8 @@ def get_stats():
     """Return system statistics (admin only).
 
     Returns counts for active/inactive users, total customers,
-    total predictions, and total chat sessions (distinct session_ids).
-    Returns 503 if database is unavailable.
+    total scored customers (with a computed risk_score), and total chat
+    sessions (distinct session_ids). Returns 503 if database is unavailable.
     """
     session = get_session()
     if session is None:
@@ -397,7 +397,9 @@ def get_stats():
         active_users = session.query(User).filter_by(is_active=True).count()
         inactive_users = session.query(User).filter_by(is_active=False).count()
         total_customers = session.query(Customer).count()
-        total_predictions = session.query(Prediction).count()
+        total_scored_customers = session.query(Customer).filter(
+            Customer.risk_score.isnot(None)
+        ).count()
         total_chat_sessions = session.query(
             func.count(func.distinct(ChatHistory.session_id))
         ).scalar() or 0
@@ -406,7 +408,7 @@ def get_stats():
             "active_users": active_users,
             "inactive_users": inactive_users,
             "total_customers": total_customers,
-            "total_predictions": total_predictions,
+            "total_scored_customers": total_scored_customers,
             "total_chat_sessions": total_chat_sessions
         }), 200
 

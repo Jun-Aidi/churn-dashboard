@@ -1,0 +1,14 @@
+{
+  "run_at": "2026-06-12 07:53:19",
+  "llm_model": "deepseek-v4-flash",
+  "n_samples": 16,
+  "n_correct": 16,
+  "tool_calling_accuracy": 1.0,
+  "per_tool_accuracy": {
+    "get_customer_profile": 1.0,
+    "get_risk_statistics": 1.0,
+    "get_high_risk_customers": 1.0,
+    "get_segment_analysis": 1.0,
+    "search_papers": 1.0
+  }
+}

@@ -1,30 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { fetchTrend } from '../api/index';
 
 export function useTrend() {
-  const [trendData, setTrendData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['trend'],
+    queryFn: fetchTrend,
+  });
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await fetchTrend();
-        if (!cancelled) setTrendData(data);
-      } catch (err) {
-        if (!cancelled) setError(err.message);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    load();
-    return () => { cancelled = true; };
-  }, []);
-
-  return { trendData, loading, error };
+  return {
+    trendData: data || [],
+    loading: isLoading,
+    error: error ? (error.message || 'Gagal memuat data') : null,
+  };
 }

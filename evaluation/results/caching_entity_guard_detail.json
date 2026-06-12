@@ -1,0 +1,122 @@
+[
+  {
+    "text": "Apa itu customer churn?",
+    "expected_cacheable": true,
+    "predicted_cacheable": true,
+    "correct": true
+  },
+  {
+    "text": "Jelaskan strategi retensi pelanggan.",
+    "expected_cacheable": true,
+    "predicted_cacheable": true,
+    "correct": true
+  },
+  {
+    "text": "Apa faktor utama penyebab churn?",
+    "expected_cacheable": true,
+    "predicted_cacheable": true,
+    "correct": true
+  },
+  {
+    "text": "Bagaimana machine learning memprediksi churn?",
+    "expected_cacheable": true,
+    "predicted_cacheable": true,
+    "correct": true
+  },
+  {
+    "text": "Apa itu customer lifetime value?",
+    "expected_cacheable": true,
+    "predicted_cacheable": true,
+    "correct": true
+  },
+  {
+    "text": "Mengapa feature selection penting dalam model churn?",
+    "expected_cacheable": true,
+    "predicted_cacheable": true,
+    "correct": true
+  },
+  {
+    "text": "Apa perbedaan voluntary dan involuntary churn?",
+    "expected_cacheable": true,
+    "predicted_cacheable": true,
+    "correct": true
+  },
+  {
+    "text": "Jelaskan konsep RFM analysis.",
+    "expected_cacheable": true,
+    "predicted_cacheable": true,
+    "correct": true
+  },
+  {
+    "text": "Apa rekomendasi umum untuk meningkatkan loyalitas pelanggan?",
+    "expected_cacheable": true,
+    "predicted_cacheable": true,
+    "correct": true
+  },
+  {
+    "text": "Bagaimana cara mengukur efektivitas kampanye retensi?",
+    "expected_cacheable": true,
+    "predicted_cacheable": true,
+    "correct": true
+  },
+  {
+    "text": "Berapa jumlah pelanggan high-risk di dashboard saya?",
+    "expected_cacheable": false,
+    "predicted_cacheable": false,
+    "correct": true
+  },
+  {
+    "text": "Tampilkan profil pelanggan C-0001.",
+    "expected_cacheable": false,
+    "predicted_cacheable": false,
+    "correct": true
+  },
+  {
+    "text": "Berapa total pelanggan yang berisiko tinggi?",
+    "expected_cacheable": false,
+    "predicted_cacheable": false,
+    "correct": true
+  },
+  {
+    "text": "Siapa saja pelanggan dengan risiko churn tertinggi?",
+    "expected_cacheable": false,
+    "predicted_cacheable": false,
+    "correct": true
+  },
+  {
+    "text": "Berapa skor risiko pelanggan C-1234?",
+    "expected_cacheable": false,
+    "predicted_cacheable": false,
+    "correct": true
+  },
+  {
+    "text": "Apa data pelanggan saya hari ini?",
+    "expected_cacheable": false,
+    "predicted_cacheable": false,
+    "correct": true
+  },
+  {
+    "text": "Jumlah pelanggan churn bulan ini berapa?",
+    "expected_cacheable": false,
+    "predicted_cacheable": false,
+    "correct": true
+  },
+  {
+    "text": "Tampilkan statistik risiko untuk pelanggan saya.",
+    "expected_cacheable": false,
+    "predicted_cacheable": false,
+    "correct": true
+  },
+  {
+    "text": "Siapa pelanggan dengan tenure terpendek?",
+    "expected_cacheable": false,
+    "predicted_cacheable": false,
+    "correct": true
+  },
+  {
+    "text": "Berapa rata-rata risiko tinggi pada segmen pelanggan saya?",
+    "expected_cacheable": false,
+    "predicted_cacheable": false,
+    "correct": true
+  }
+]

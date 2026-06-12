@@ -1,6 +1,7 @@
 # Flask
 flask>=3.0.0
 flask-cors>=5.0.0
+flask-compress>=1.14
 
 # Data & ML
 pandas>=2.0.0
@@ -30,9 +31,13 @@ langchain-text-splitters>=0.0.1
 # LLM (DeepSeek - OpenAI compatible)
 openai>=1.0
 
-# NLP
-Sastrawi>=1.0.1
-
 # Utilities
 python-dotenv>=1.0.0
 ipykernel>=6.0.0
+
+# Evaluation suite (evaluation/ — experiment appendix, not used by runtime)
+# scikit-learn / scipy are already listed above and reused for metrics.
+matplotlib>=3.7.0
+# Optional, only for RAGAS faithfulness / answer-relevance (needs API key):
+# ragas>=0.1.0
+# deepeval>=0.21.0

@@ -1,0 +1,47 @@
+{
+  "description": "Datasets for semantic-cache evaluation. 'paraphrase_pairs' are conceptual questions where b is a paraphrase of a (a hit is EXPECTED when b is queried after a is stored). 'unrelated_pairs' are conceptually different questions (a hit is NOT expected -> used to detect false-positive cache hits). 'cacheable_labels' tests the entity guard is_cacheable(): conceptual=true, live-data/entity=false.",
+  "paraphrase_pairs": [
+    {"a": "Apa itu customer churn?", "b": "Jelaskan pengertian churn pelanggan."},
+    {"a": "Bagaimana cara menurunkan churn rate?", "b": "Apa langkah untuk mengurangi tingkat churn?"},
+    {"a": "Apa faktor penyebab pelanggan berhenti berlangganan?", "b": "Hal apa saja yang membuat pelanggan churn?"},
+    {"a": "Apa strategi retensi pelanggan yang efektif?", "b": "Bagaimana cara mempertahankan pelanggan agar tidak pergi?"},
+    {"a": "Apa perbedaan voluntary dan involuntary churn?", "b": "Jelaskan beda churn sukarela dan tidak sukarela."},
+    {"a": "Apa itu customer lifetime value?", "b": "Jelaskan konsep nilai seumur hidup pelanggan."},
+    {"a": "Mengapa feature selection penting untuk model churn?", "b": "Apa manfaat pemilihan fitur dalam prediksi churn?"},
+    {"a": "Bagaimana machine learning memprediksi churn?", "b": "Dengan cara apa model ML menebak pelanggan akan churn?"},
+    {"a": "Apa itu analisis RFM?", "b": "Jelaskan metode RFM untuk segmentasi pelanggan."},
+    {"a": "Apa indikator awal pelanggan akan churn?", "b": "Tanda-tanda apa yang menunjukkan pelanggan akan berhenti?"},
+    {"a": "Bagaimana segmentasi pelanggan membantu retensi?", "b": "Apa peran pengelompokan pelanggan dalam strategi retensi?"},
+    {"a": "Apa kelebihan random forest untuk prediksi churn?", "b": "Mengapa random forest bagus untuk memprediksi churn?"}
+  ],
+  "unrelated_pairs": [
+    {"a": "Apa itu customer churn?", "b": "Bagaimana cara melatih model random forest?"},
+    {"a": "Apa strategi retensi pelanggan?", "b": "Apa itu confusion matrix?"},
+    {"a": "Apa itu customer lifetime value?", "b": "Jelaskan algoritma k-means clustering."},
+    {"a": "Mengapa feature selection penting?", "b": "Apa perbedaan precision dan recall?"},
+    {"a": "Apa faktor penyebab churn?", "b": "Bagaimana cara kerja support vector machine?"},
+    {"a": "Apa itu analisis RFM?", "b": "Apa manfaat normalisasi data?"}
+  ],
+  "cacheable_labels": [
+    {"text": "Apa itu customer churn?", "cacheable": true},
+    {"text": "Jelaskan strategi retensi pelanggan.", "cacheable": true},
+    {"text": "Apa faktor utama penyebab churn?", "cacheable": true},
+    {"text": "Bagaimana machine learning memprediksi churn?", "cacheable": true},
+    {"text": "Apa itu customer lifetime value?", "cacheable": true},
+    {"text": "Mengapa feature selection penting dalam model churn?", "cacheable": true},
+    {"text": "Apa perbedaan voluntary dan involuntary churn?", "cacheable": true},
+    {"text": "Jelaskan konsep RFM analysis.", "cacheable": true},
+    {"text": "Apa rekomendasi umum untuk meningkatkan loyalitas pelanggan?", "cacheable": true},
+    {"text": "Bagaimana cara mengukur efektivitas kampanye retensi?", "cacheable": true},
+    {"text": "Berapa jumlah pelanggan high-risk di dashboard saya?", "cacheable": false},
+    {"text": "Tampilkan profil pelanggan C-0001.", "cacheable": false},
+    {"text": "Berapa total pelanggan yang berisiko tinggi?", "cacheable": false},
+    {"text": "Siapa saja pelanggan dengan risiko churn tertinggi?", "cacheable": false},
+    {"text": "Berapa skor risiko pelanggan C-1234?", "cacheable": false},
+    {"text": "Apa data pelanggan saya hari ini?", "cacheable": false},
+    {"text": "Jumlah pelanggan churn bulan ini berapa?", "cacheable": false},
+    {"text": "Tampilkan statistik risiko untuk pelanggan saya.", "cacheable": false},
+    {"text": "Siapa pelanggan dengan tenure terpendek?", "cacheable": false},
+    {"text": "Berapa rata-rata risiko tinggi pada segmen pelanggan saya?", "cacheable": false}
+  ]
+}

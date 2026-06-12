@@ -14,6 +14,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 import config
 from app.database import get_session, close_session, Customer
+from app.services.customer_cache import customer_data_cache
 
 # ── Load Model Bundle ──
 _bundle = joblib.load(config.MODEL_PATH)
@@ -145,7 +146,20 @@ class CustomerService:
         self._load_data()
 
     def _load_data(self):
-        """Load data from MySQL only. No automatic CSV fallback."""
+        """Load data from MySQL only. No automatic CSV fallback.
+
+        Uses a short-TTL per-user cache so multiple endpoints hit within the
+        same page load (e.g. /customers, /trend, /customers/stats) share a
+        single DB query + DataFrame build instead of repeating the full load.
+        """
+        # Try the per-user cache first.
+        if self._user_id is not None:
+            cached = customer_data_cache.get(self._user_id)
+            if cached is not None:
+                self._use_db = True
+                self.df = cached
+                return
+
         session = get_session()
         if session:
             try:
@@ -155,16 +169,23 @@ class CustomerService:
                 customers = query.all()
                 if customers:
                     self._use_db = True
-                    rows = []
-                    for c in customers:
-                        rows.append({col.name: getattr(c, col.name) for col in Customer.__table__.columns})
+                    cols = [col.name for col in Customer.__table__.columns]
+                    rows = [
+                        {col: getattr(c, col) for col in cols}
+                        for c in customers
+                    ]
                     self.df = pd.DataFrame(rows)
-                    # If risk_score not computed yet, predict and update DB
-                    risk_score_series = self.df['risk_score'].isna()
-                    if bool(risk_score_series.all()) or bool(risk_score_series.any()):
-                        self.df = _predict_dataframe(self.df)
-                        # Update risk scores in DB
-                        self._update_risk_in_db(session)
+                    # Safety net only: if some rows have no risk_score yet
+                    # (e.g. legacy data), predict ONLY those rows in memory.
+                    # GET must never write back to the DB — scoring happens at
+                    # insert (add_customer) and upload time.
+                    needs_pred = self.df['risk_score'].isna()
+                    if needs_pred.any():
+                        predicted = _predict_dataframe(self.df[needs_pred].copy())
+                        self.df.loc[needs_pred, 'risk_score'] = predicted['risk_score'].values
+                        self.df.loc[needs_pred, 'risk_class'] = predicted['risk_class'].values
+                    if self._user_id is not None:
+                        customer_data_cache.set(self._user_id, self.df)
                     return
             except Exception as e:
                 print(f"[CustomerService] DB read failed: {e}")
@@ -174,23 +195,6 @@ class CustomerService:
         # No CSV fallback - database must be populated via /api/upload endpoint
         self.df = pd.DataFrame()
         print("[CustomerService] No data in database. Upload CSV via /api/upload to populate data.")
-
-    def _update_risk_in_db(self, session):
-        """Update risk_score and risk_class in database."""
-        if self.df is None:
-            return
-        try:
-            for _, row in self.df.iterrows():
-                session.query(Customer).filter_by(
-                    customer_id=row['customer_id']
-                ).update({
-                    'risk_score': float(row['risk_score']),
-                    'risk_class': row['risk_class']
-                })
-            session.commit()
-        except Exception as e:
-            print(f"[CustomerService] Failed to update risk in DB: {e}")
-            session.rollback()
 
     def _customer_to_dict(self, row: pd.Series) -> dict:
         """Convert a DataFrame row to API response dict."""
@@ -232,7 +236,33 @@ class CustomerService:
         """Get all customers with risk scores."""
         if self.df is None or self.df.empty:
             return []
-        return [self._customer_to_dict(row) for _, row in self.df.iterrows()]
+        # to_dict('records') is much faster than iterrows() for row->dict.
+        return [self._customer_to_dict(rec) for rec in self.df.to_dict('records')]
+
+    def get_customers_paginated(self, page: int = 1, per_page: int = 50,
+                                risk_filter: Optional[str] = None) -> dict:
+        """Return a single page of customers, optionally filtered by risk_class.
+
+        Note: per-category counts for tabs should come from get_stats() (full
+        dataset), not from a single page.
+        """
+        if self.df is None or self.df.empty:
+            return {'customers': [], 'total': 0, 'page': page,
+                    'per_page': per_page, 'pages': 0}
+
+        df = self.df if not risk_filter else self.df[self.df['risk_class'] == risk_filter]
+        total = len(df)
+        page = max(1, page)
+        start = (page - 1) * per_page
+        end = start + per_page
+        rows = df.iloc[start:end]
+        return {
+            'customers': [self._customer_to_dict(rec) for rec in rows.to_dict('records')],
+            'total': total,
+            'page': page,
+            'per_page': per_page,
+            'pages': (total + per_page - 1) // per_page if per_page else 0,
+        }
 
     def get_customer(self, customer_id: str) -> Optional[dict]:
         """Get a single customer by ID."""
@@ -262,10 +292,10 @@ class CustomerService:
         med_risk = int((self.df['risk_class'] == 'med').sum())
         low_risk = int((self.df['risk_class'] == 'low').sum())
 
-        # Revenue
-        self.df['_monthly_rev'] = self.df['total_billed'] / (self.df['tenure_days'] / 30).clip(lower=1)
-        total_revenue = float(self.df['_monthly_rev'].sum())
-        revenue_at_risk = float(self.df[self.df['risk_class'] == 'high']['_monthly_rev'].sum())
+        # Revenue (computed without mutating the cached DataFrame)
+        monthly_rev = self.df['total_billed'] / (self.df['tenure_days'] / 30).clip(lower=1)
+        total_revenue = float(monthly_rev.sum())
+        revenue_at_risk = float(monthly_rev[self.df['risk_class'] == 'high'].sum())
 
         inactive_30d = int((self.df['days_since_login'] > 30).sum())
         high_tickets = int((self.df['ticket_count'] >= 10).sum())
@@ -413,6 +443,10 @@ class CustomerService:
             customer = Customer(**customer_data)
             session.add(customer)
             session.commit()
+
+            # New row added — drop this user's cached DataFrame so subsequent
+            # reads reflect the change immediately.
+            customer_data_cache.invalidate(self._user_id)
 
             saved = {col.name: getattr(customer, col.name) for col in Customer.__table__.columns}
             return self._customer_to_dict(pd.Series(saved))

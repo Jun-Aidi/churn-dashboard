@@ -1,0 +1,17 @@
+{
+  "run_at": "2026-06-12 08:14:58",
+  "llm_model": "deepseek-v4-flash",
+  "n_injection": 49,
+  "layer1_only_block_rate": 0.7959,
+  "full_system_block_rate": 1.0,
+  "caught_by_layer": {
+    "layer1": 39,
+    "layer2": 10,
+    "layer3": 0,
+    "none": 0
+  },
+  "attacks_passed_all_layers": 0,
+  "n_legit": 50,
+  "over_refusal_rate": 0.0,
+  "note": "Layer1-only diukur terpisah di guardrail_metrics.json. Skrip ini mengukur sistem penuh: serangan yang lolos regex Layer 1 umumnya ditahan Layer 2 (LLM + SYSTEM_PROMPT)."
+}

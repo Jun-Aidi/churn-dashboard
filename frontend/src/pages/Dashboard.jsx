@@ -1,10 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { getRiskClass } from '../api/index';
 import { useCustomers } from '../hooks/useCustomers';
 import Table from '../components/ui/Table';
-import ChurnTrendChart from '../components/charts/ChurnTrendChart';
-import FeatureImportanceChart from '../components/charts/FeatureImportanceChart';
+
+const ChurnTrendChart = lazy(() => import('../components/charts/ChurnTrendChart'));
+const FeatureImportanceChart = lazy(() => import('../components/charts/FeatureImportanceChart'));
+
+const ChartFallback = () => (
+  <div className="flex h-[260px] items-center justify-center text-sm font-bold gdu-muted">
+    <i className="fa-solid fa-circle-notch fa-spin mr-2 text-[var(--gdu-teal)]"></i> Memuat grafik...
+  </div>
+);
 
 const logoSrc = '/logo_ghosting.png';
 
@@ -169,14 +176,18 @@ export default function Dashboard() {
                   </div>
                   <span className="rounded-full bg-[var(--gdu-teal)]/10 px-3 py-1 text-xs font-black text-[var(--gdu-teal)]">Live</span>
                 </div>
-                <ChurnTrendChart />
+                <Suspense fallback={<ChartFallback />}>
+                  <ChurnTrendChart />
+                </Suspense>
               </div>
               <div className="fade-in stagger-2" style={shellCard}>
                 <div className="mb-5">
                   <div className="text-lg font-black tracking-[-0.03em] gdu-title">Fitur Penting</div>
                   <div className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] gdu-muted">Faktor paling berpengaruh pada model prediksi churn</div>
                 </div>
-                <FeatureImportanceChart />
+                <Suspense fallback={<ChartFallback />}>
+                  <FeatureImportanceChart />
+                </Suspense>
               </div>
             </div>
 

@@ -4,7 +4,9 @@ Build Vector Store — Offline script to embed PDF papers into ChromaDB.
 Usage: python build_vectorstore.py
 
 This reads all PDFs from data/papers/, splits them into chunks,
-embeds them using nomic-embed-text-v1.5, and stores in ChromaDB.
+embeds them using the model defined in config.EMBEDDING_MODEL
+(paraphrase-multilingual-MiniLM-L12-v2 — cross-lingual ID->EN),
+and stores them in ChromaDB.
 """
 
 import os
@@ -72,10 +74,11 @@ def main():
         return
 
     # Split into chunks
-    print(f"\n[2/3] Splitting into chunks (800 chars, 100 overlap)...")
+    # Model max token = 128 → keep chunks small so they aren't truncated.
+    print(f"\n[2/3] Splitting into chunks (450 chars, 80 overlap)...")
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=800,
-        chunk_overlap=100,
+        chunk_size=450,
+        chunk_overlap=80,
         separators=["\n\n", "\n", ". ", " ", ""]
     )
 
@@ -98,11 +101,11 @@ def main():
     # Create ChromaDB collection with sentence-transformers embedding
     print(f"\n[3/3] Embedding and storing in ChromaDB...")
     print(f"  Persist directory: {config.CHROMA_PERSIST_DIR}")
-    print(f"  Loading embedding model (all-MiniLM-L6-v2 via sentence-transformers)...")
+    print(f"  Loading embedding model ({config.EMBEDDING_MODEL} via sentence-transformers)...")
 
     from sentence_transformers import SentenceTransformer
 
-    embed_model = SentenceTransformer('all-MiniLM-L6-v2')
+    embed_model = SentenceTransformer(config.EMBEDDING_MODEL)
     print(f"  Model loaded.")
 
     # Remove existing DB if present

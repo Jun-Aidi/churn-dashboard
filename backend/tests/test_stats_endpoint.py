@@ -89,8 +89,8 @@ class TestStatsEndpoint:
                 m.filter_by.return_value.count.return_value = 1
             elif call_count[0] == 3:  # total_customers
                 m.count.return_value = 1200
-            elif call_count[0] == 4:  # total_predictions
-                m.count.return_value = 3500
+            elif call_count[0] == 4:  # total_scored_customers (filter risk_score not null)
+                m.filter.return_value.count.return_value = 900
             elif call_count[0] == 5:  # total_chat_sessions (distinct count)
                 m.scalar.return_value = 42
             return m
@@ -107,7 +107,7 @@ class TestStatsEndpoint:
         assert data['active_users'] == 5
         assert data['inactive_users'] == 1
         assert data['total_customers'] == 1200
-        assert data['total_predictions'] == 3500
+        assert data['total_scored_customers'] == 900
         assert data['total_chat_sessions'] == 42
 
     @patch('app.middleware.auth.get_session')

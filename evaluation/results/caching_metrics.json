@@ -1,0 +1,92 @@
+{
+  "run_at": "2026-06-12 07:51:53",
+  "embedding_model": "paraphrase-multilingual-MiniLM-L12-v2",
+  "cache_threshold": 0.92,
+  "cache_ttl_seconds": 3600,
+  "entity_guard": {
+    "accuracy": 1.0,
+    "precision_cacheable": 1.0,
+    "recall_cacheable": 1.0,
+    "confusion": {
+      "tp": 10,
+      "fp": 0,
+      "tn": 10,
+      "fn": 0
+    }
+  },
+  "paraphrase_hit_rate": {
+    "n_pairs": 12,
+    "hits": 1,
+    "hit_rate": 0.0833,
+    "avg_similarity_on_hit": 0.9231,
+    "avg_lookup_ms": 17.911
+  },
+  "unrelated_false_positive": {
+    "n_pairs": 6,
+    "false_hits": 0,
+    "false_positive_rate": 0.0
+  },
+  "cross_user_leakage": {
+    "n_tested": 12,
+    "leaks": 0,
+    "leakage_rate": 0.0
+  },
+  "invalidation": {
+    "hit_before_invalidate": true,
+    "hit_after_invalidate": false,
+    "invalidation_works": true
+  },
+  "threshold_sweep": [
+    {
+      "threshold": 0.7,
+      "hit_rate": 0.6667,
+      "false_positive_rate": 0.0
+    },
+    {
+      "threshold": 0.75,
+      "hit_rate": 0.6667,
+      "false_positive_rate": 0.0
+    },
+    {
+      "threshold": 0.8,
+      "hit_rate": 0.6667,
+      "false_positive_rate": 0.0
+    },
+    {
+      "threshold": 0.83,
+      "hit_rate": 0.3333,
+      "false_positive_rate": 0.0
+    },
+    {
+      "threshold": 0.85,
+      "hit_rate": 0.25,
+      "false_positive_rate": 0.0
+    },
+    {
+      "threshold": 0.88,
+      "hit_rate": 0.1667,
+      "false_positive_rate": 0.0
+    },
+    {
+      "threshold": 0.9,
+      "hit_rate": 0.0833,
+      "false_positive_rate": 0.0
+    },
+    {
+      "threshold": 0.92,
+      "hit_rate": 0.0833,
+      "false_positive_rate": 0.0
+    },
+    {
+      "threshold": 0.94,
+      "hit_rate": 0.0,
+      "false_positive_rate": 0.0
+    },
+    {
+      "threshold": 0.95,
+      "hit_rate": 0.0,
+      "false_positive_rate": 0.0
+    }
+  ],
+  "token_saving_note": "Mechanism verified: a cache hit returns tokens_used=0, saving an entire LLM generation (initial + tool-call rounds). Absolute token savings = the token cost of the avoided LLM call (measure live via tokens_used in chat history for exact figures)."
+}

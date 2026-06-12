@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchCustomers, fetchCustomer, getRiskClass } from '../api/index';
 
 /**
@@ -45,70 +45,38 @@ function buildCounts(customers) {
 }
 
 export function useCustomers() {
-  const [customers, setCustomers] = useState([]);
-  const [counts, setCounts] = useState({ high: 0, med: 0, low: 0 });
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [reloadKey, setReloadKey] = useState(0);
+  const queryClient = useQueryClient();
 
-  const refresh = () => setReloadKey(k => k + 1);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['customers'],
+    queryFn: fetchCustomers,
+  });
 
-  useEffect(() => {
-    let cancelled = false;
+  const normalized = (data || []).map(normalize);
+  const counts = buildCounts(normalized);
 
-    async function load() {
-      try {
-        setLoading(true);
-        setError(null);
-        const raw = await fetchCustomers();
-        if (cancelled) return;
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['customers'] });
 
-        const normalized = raw.map(normalize);
-        const c = buildCounts(normalized);
-
-        setCustomers(normalized);
-        setCounts(c);
-        setTotal(normalized.length);
-      } catch (err) {
-        if (!cancelled) setError(err.message);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    load();
-    return () => { cancelled = true; };
-  }, [reloadKey]);
-
-  return { customers, counts, total, loading, error, refresh };
+  return {
+    customers: normalized,
+    counts,
+    total: normalized.length,
+    loading: isLoading,
+    error: error ? (error.message || 'Gagal memuat data') : null,
+    refresh,
+  };
 }
 
 export function useCustomer(id) {
-  const [customer, setCustomer] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['customer', id],
+    queryFn: () => fetchCustomer(id),
+    enabled: Boolean(id),
+  });
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      try {
-        setLoading(true);
-        setError(null);
-        const raw = await fetchCustomer(id);
-        if (cancelled) return;
-        setCustomer(normalize(raw));
-      } catch (err) {
-        if (!cancelled) setError(err.message);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    load();
-    return () => { cancelled = true; };
-  }, [id]);
-
-  return { customer, loading, error };
+  return {
+    customer: data ? normalize(data) : null,
+    loading: isLoading,
+    error: error ? (error.message || 'Gagal memuat data') : null,
+  };
 }
