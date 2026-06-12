@@ -58,6 +58,10 @@ source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 pip install gunicorn
+
+# (Opsional) untuk worker async gevent — direkomendasikan bila banyak chat
+# streaming bersamaan. Lihat penjelasan di bagian 2.
+pip install gevent
 ```
 
 > Setiap kali masuk shell baru untuk menjalankan/maintenance backend, jangan lupa
@@ -117,7 +121,18 @@ gunicorn --workers 2 --bind 127.0.0.1:8000 run:app
 
 Agar Gunicorn berjalan otomatis dan restart bila crash.
 
+Ada **dua varian** worker. Pilih salah satu untuk `ExecStart`:
+
+- **Varian A — sync (default):** sederhana, cukup untuk trafik chat ringan.
+  Ingat: tiap request streaming **menahan satu worker** selama jawaban mengalir.
+- **Varian B — gevent (async):** satu worker melayani banyak chat stream
+  bersamaan karena sebagian besar waktunya menunggu API LLM (I/O). Model tetap
+  dimuat sekali per proses (RAM per proses ~1,1 GB, tidak digandakan per koneksi).
+  Disarankan bila banyak pengguna chat sekaligus. Wajib `pip install gevent`.
+
 Buat file `/etc/systemd/system/churn-backend.service`:
+
+### Varian A — sync worker (default)
 
 ```ini
 [Unit]
@@ -140,6 +155,46 @@ RestartSec=3
 [Install]
 WantedBy=multi-user.target
 ```
+
+### Varian B — gevent worker (async, untuk streaming)
+
+```ini
+[Unit]
+Description=Churn Dashboard Backend (Gunicorn + gevent)
+After=network.target mysql.service
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/churn-dashboard/backend
+# gevent: --workers = paralelisme CPU (per core); --worker-connections =
+# jumlah koneksi/greenlet bersamaan per worker (mayoritas menunggu LLM).
+ExecStart=/var/www/churn-dashboard/backend/venv/bin/gunicorn \
+    --workers 2 \
+    --worker-class gevent \
+    --worker-connections 1000 \
+    --timeout 120 \
+    --bind 127.0.0.1:8000 \
+    run:app
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+```
+
+> **Catatan pemilihan jumlah worker.** Tiap worker memuat model embedding +
+> reranker + model churn ke RAM (~1,1 GB per worker, menetap selama proses
+> hidup — bukan lonjakan sebentar). Jadi `--workers 2` ≈ ~2,2 GB. Pada gevent,
+> **jangan** menaikkan `--workers` untuk menampung lebih banyak chat stream
+> (itu menggandakan RAM); cukup naikkan `--worker-connections`. Naikkan
+> `--workers` hanya untuk memakai lebih banyak core CPU (mis. inferensi
+> embedding/rerank yang bersifat CPU-bound).
+>
+> **Catatan batas gevent.** gevent hanya mempercepat bagian *menunggu I/O*
+> (panggilan LLM, streaming SSE). Bagian CPU-bound (embedding, reranking,
+> pandas) tetap serial di dalam satu worker dan sesaat menahan greenlet lain —
+> di situlah jumlah `--workers` (proses) berperan.
 
 Aktifkan:
 
