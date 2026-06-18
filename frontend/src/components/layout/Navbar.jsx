@@ -19,7 +19,6 @@ function getInitials(name) {
 }
 
 export default function TopNavbar() {
-  const [searchVal, setSearchVal] = useState('');
   const [mobileOpen, setMobileOpen] = useState(false);
   const { dark, toggle } = useTheme();
   const { user, isAdmin, logout } = useAuth();
@@ -85,22 +84,6 @@ export default function TopNavbar() {
 
       {/* Right side */}
       <div className="flex items-center gap-2 flex-shrink-0">
-        {/* Search */}
-        <div
-          className="top-search flex items-center gap-2 rounded-[10px] px-[13px] py-[7px] w-[190px] border transition-colors duration-200"
-          style={{ background: 'var(--gdu-input)', borderColor: 'var(--gdu-border)' }}
-        >
-          <i className="fa-solid fa-magnifying-glass text-[13px]" style={{ color: 'var(--gdu-subtle)' }}></i>
-          <input
-            type="text"
-            placeholder="Cari..."
-            value={searchVal}
-            onChange={e => setSearchVal(e.target.value)}
-            className="bg-transparent border-none outline-none text-[13px] w-full font-[inherit]"
-            style={{ color: 'var(--gdu-text)' }}
-          />
-        </div>
-
         {/* Dark mode toggle */}
         <button
           onClick={toggle}
@@ -109,15 +92,6 @@ export default function TopNavbar() {
           title={dark ? 'Mode Terang' : 'Mode Gelap'}
         >
           <i className={`fa-solid ${dark ? 'fa-sun text-yellow-400' : 'fa-moon text-[#6b7280]'} text-sm`}></i>
-        </button>
-
-        {/* Bell */}
-        <button
-          className="relative w-9 h-9 rounded-[9px] flex items-center justify-center cursor-pointer transition-colors duration-200 border flex-shrink-0"
-          style={{ background: 'var(--gdu-input)', borderColor: 'var(--gdu-border)', color: 'var(--gdu-text)' }}
-        >
-          <i className="fa-solid fa-bell text-sm"></i>
-          <span className="absolute top-[7px] right-[7px] w-[7px] h-[7px] bg-red-500 rounded-full border-2 border-white dark:border-[#161b27]"></span>
         </button>
 
         {/* User profile */}

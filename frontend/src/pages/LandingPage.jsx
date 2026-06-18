@@ -5,7 +5,7 @@ const logoSrc = '/logo_ghosting.png';
 
 const features = [
   {
-    icon: 'fa-solid fa-radar',
+    icon: 'fa-solid fa-tower-broadcast',
     accent: '#00a6a6',
     title: 'Radar Churn Real-time',
     description:
